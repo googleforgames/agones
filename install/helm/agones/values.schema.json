@@ -370,6 +370,14 @@
             "allocator"
           ]
         },
+        "sdkServer": {
+          "type": "object",
+          "properties": {
+            "requestsRateLimit": {
+              "type": "string"
+            }
+          }
+        },
         "controller": {
           "type": "object",
           "properties": {

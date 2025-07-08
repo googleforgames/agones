@@ -141,7 +141,7 @@ type SDKServer struct {
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
 func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
-	agonesClient versioned.Interface, logLevel logrus.Level, healthPort int) (*SDKServer, error) {
+	agonesClient versioned.Interface, logLevel logrus.Level, healthPort int, requestsRateLimit time.Duration) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	resync := 0 * time.Second
 
@@ -219,11 +219,12 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 
 	// we haven't synced yet
 	s.gsWaitForSync.Add(1)
-	s.workerqueue = workerqueue.NewWorkerQueue(
+	s.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(
 		s.syncGameServer,
 		s.logger,
 		logfields.GameServerKey,
-		strings.Join([]string{agones.GroupName, s.namespace, s.gameServerName}, "."))
+		strings.Join([]string{agones.GroupName, s.namespace, s.gameServerName}, "."),
+		workerqueue.ConstantRateLimiter(requestsRateLimit))
 
 	s.logger.Info("Created GameServer sidecar")
 
