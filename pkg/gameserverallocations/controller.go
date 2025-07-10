@@ -19,6 +19,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -34,12 +35,16 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
+	"agones.dev/agones/pkg/allocation/converters"
+	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameserverallocations/distributedallocator/buffer"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
+	"agones.dev/agones/pkg/util/leader"
 	"agones.dev/agones/pkg/util/runtime"
 )
 
@@ -53,6 +58,8 @@ type Extensions struct {
 	baseLogger *logrus.Entry
 	recorder   record.EventRecorder
 	allocator  *Allocator
+
+	requestBuffer chan *buffer.PendingRequest
 }
 
 // NewExtensions returns the extensions controller for a GameServerAllocation
@@ -78,6 +85,8 @@ func NewExtensions(apiServer *apiserver.APIServer,
 			remoteAllocationTimeout,
 			totalAllocationTimeout,
 			allocationBatchWaitTime),
+
+		requestBuffer: make(chan *buffer.PendingRequest, 1000),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
@@ -85,6 +94,22 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
+
+	bufferedAllocatorEnabled := true
+	if bufferedAllocatorEnabled {
+		batchTimeout := 500 * time.Millisecond
+		maxBatchSize := 100
+		clientID := os.Getenv("POD_NAME")
+		batchSource := buffer.BatchSourceFromPendingRequests(
+			context.TODO(), c.requestBuffer, batchTimeout, maxBatchSize,
+		)
+		go leader.RunLeaderTracking(context.TODO(), kubeClient, "agones-processor-leader-election", "agones-system", 8443, func(clientCtx context.Context, addr string) {
+			err := buffer.PullAndDispatchBatches(clientCtx, addr, clientID, batchSource)
+			if err != nil {
+				c.baseLogger.WithError(err).Error("processor client exited")
+			}
+		})
+	}
 
 	return c
 }
@@ -101,7 +126,12 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 		},
 		ShortNames: []string{"gsa"},
 	}
+
 	c.api.AddAPIResource(allocationv1.SchemeGroupVersion.String(), resource, func(w http.ResponseWriter, r *http.Request, n string) error {
+		bufferedAllocatorEnabled := true
+		if bufferedAllocatorEnabled {
+			return c.processBufferedAllocationRequest(ctx, w, r, n)
+		}
 		return c.processAllocationRequest(ctx, w, r, n)
 	})
 }
@@ -131,7 +161,7 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 		return nil
 	}
 
-	gsa, err := c.allocationDeserialization(r, namespace)
+	gsa, err := c.AllocationDeserialization(r, namespace)
 	if err != nil {
 		return err
 	}
@@ -150,13 +180,13 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 		code = http.StatusOK
 	}
 
-	err = c.serialisation(r, w, result, code, scheme.Codecs)
+	err = c.Serialisation(r, w, result, code, scheme.Codecs)
 	return err
 }
 
-// allocationDeserialization processes the request and namespace, and attempts to deserialise its values
+// AllocationDeserialization processes the request and namespace, and attempts to deserialise its values
 // into a GameServerAllocation. Returns an error if it fails for whatever reason.
-func (c *Extensions) allocationDeserialization(r *http.Request, namespace string) (*allocationv1.GameServerAllocation, error) {
+func (c *Extensions) AllocationDeserialization(r *http.Request, namespace string) (*allocationv1.GameServerAllocation, error) {
 	gsa := &allocationv1.GameServerAllocation{}
 
 	gvks, _, err := scheme.Scheme.ObjectKinds(gsa)
@@ -195,11 +225,11 @@ func (c *Extensions) allocationDeserialization(r *http.Request, namespace string
 	return gsa, nil
 }
 
-// serialisation takes a runtime.Object, and serialise it to the ResponseWriter in the requested format
-func (c *Extensions) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, statusCode int, codecs serializer.CodecFactory) error {
+// Serialisation takes a runtime.Object, and serialise it to the ResponseWriter in the requested format
+func (c *Extensions) Serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, statusCode int, codecs serializer.CodecFactory) error {
 	info, err := apiserver.AcceptedSerializer(r, codecs)
 	if err != nil {
-		return errors.Wrapf(err, "failed to find serialisation info for %T object", obj)
+		return errors.Wrapf(err, "failed to find Serialisation info for %T object", obj)
 	}
 
 	w.Header().Set("Content-Type", info.MediaType)
@@ -209,4 +239,46 @@ func (c *Extensions) serialisation(r *http.Request, w http.ResponseWriter, obj k
 
 	err = info.Serializer.Encode(obj, w)
 	return errors.Wrapf(err, "error encoding %T", obj)
+}
+
+func (c *Extensions) processBufferedAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) error {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
+		return nil
+	}
+	gsa, err := c.AllocationDeserialization(r, namespace)
+	if err != nil {
+		return err
+	}
+	in := converters.ConvertGSAToAllocationRequest(gsa)
+	pr := &buffer.PendingRequest{
+		Req:    in,
+		RespCh: make(chan *pb.AllocationResponse, 1),
+		ErrCh:  make(chan error, 1),
+	}
+	c.requestBuffer <- pr
+
+	var result k8sruntime.Object
+	var code int
+
+	select {
+	case resp := <-pr.RespCh:
+		source := ""
+		if resp != nil {
+			source = resp.Source
+		}
+		result = converters.ConvertAllocationResponseToGSA(resp, source)
+		code = http.StatusCreated
+	case err := <-pr.ErrCh:
+		c.baseLogger.WithField("request", in).WithError(err).Error("[Extensions] Error from processor")
+		return err
+	case <-ctx.Done():
+		c.baseLogger.WithField("request", in).Error("[Extensions] Context cancelled while waiting for processor response")
+		return ctx.Err()
+	}
+
+	return c.Serialisation(r, w, result, code, scheme.Codecs)
 }

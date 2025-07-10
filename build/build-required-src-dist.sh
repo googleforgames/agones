@@ -26,7 +26,7 @@ tar -zcf ${TMP_DEPS_SRC} -C ${SRC_ROOT}/vendor/ \
   github.com/hashicorp/golang-lru \
   github.com/hashicorp/hcl
 
-for ddir in ${SRC_ROOT}/cmd/controller/bin/ ${SRC_ROOT}/cmd/extensions/bin/ ${SRC_ROOT}/cmd/ping/bin/ ${SRC_ROOT}/cmd/sdk-server/bin/ ${SRC_ROOT}/cmd/allocator/bin/ ; do
+for ddir in ${SRC_ROOT}/cmd/controller/bin/ ${SRC_ROOT}/cmd/extensions/bin/ ${SRC_ROOT}/cmd/ping/bin/ ${SRC_ROOT}/cmd/sdk-server/bin/ ${SRC_ROOT}/cmd/allocator/bin/ ${SRC_ROOT}/cmd/processor/bin/ ; do
   mkdir -p ${ddir}
   cp ${TMP_DEPS_SRC} ${ddir}
 done

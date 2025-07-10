@@ -525,3 +525,170 @@ data:
 {{- end }}
 {{- end }}
 {{- end }}
+---
+# Deploy pods to run the agones-processor code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-processor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: processor
+    app: {{ template "agones.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: processor
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  template:
+    metadata:
+      labels:
+        multicluster.agones.dev/role: processor
+        app: {{ template "agones.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: agones.dev/agones-system
+                operator: Exists
+      tolerations:
+        - effect: NoExecute
+          key: agones.dev/agones-system
+          operator: Equal
+          value: "true"
+      serviceAccountName: agones-controller
+      terminationGracePeriodSeconds: 27
+      containers:
+      - name: agones-processor
+        image: "{{ .Values.agones.image.registry }}/agones-processor:{{ .Values.agones.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+        env:
+        - name: HTTP_PORT
+          value: "8443"
+        - name: GRPC_PORT
+          value: "8443"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-processor"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: FEATURE_GATES
+          value: ""
+        ports:
+        - name: https
+          containerPort: 8443
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-processor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: processor
+spec:
+  clusterIP: None
+  selector:
+    multicluster.agones.dev/role: processor
+  ports:
+    - port: 8443
+      name: grpc
+      targetPort: 8443
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agones-allocator-lease
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agones-allocator-lease
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: agones-allocator
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: agones-allocator-lease
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agones-allocator-get-pods
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agones-allocator-get-pods
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: agones-allocator
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: agones-allocator-get-pods
+  apiGroup: rbac.authorization.k8s.io

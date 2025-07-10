@@ -46,10 +46,21 @@ kind-install:
 
 # pushes the current dev version of agones to the kind single node cluster.
 kind-push:
-	kind load docker-image $(sidecar_linux_amd64_tag) --name="$(KIND_PROFILE)"
-	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"
-	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)"
-	kind load docker-image $(allocator_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(sidecar_linux_amd64_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(controller_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(ping_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(allocator_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(extensions_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(processor_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image  $(sidecar_tag) --name="$(KIND_PROFILE)"
+
+kind-tag-images:
+	docker tag $(controller_amd64_tag) $(controller_tag)
+	docker tag $(sidecar_linux_amd64_tag) $(sidecar_tag)
+	docker tag $(allocator_amd64_tag) $(allocator_tag)
+	docker tag $(extensions_amd64_tag) $(extensions_tag)
+	docker tag $(ping_amd64_tag) $(ping_tag)
+	docker tag $(processor_amd64_tag) $(processor_tag)
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:

@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package allocation;
+option go_package = "./allocation";
+
+import "proto/allocation/allocation.proto";
+
+
+// The Processor service supports a pull-based protocol for batch allocation.
+service Processor {
+  // Bidirectional stream: all messages are wrapped in ProcessorMessage, with client_id for routing.
+  rpc StreamBatches(stream ProcessorMessage) returns (stream ProcessorMessage);
+}
+
+// Envelope for all processor messages, with client_id for routing.
+message ProcessorMessage {
+  string client_id = 1; // Unique per client connection/session
+  oneof payload {
+    PullRequest pull = 2;
+    Batch batch = 3;
+    BatchResponse batch_response = 4;
+  }
+}
+
+// The processor sends this to request a batch from the forwarder.
+message PullRequest {
+  string message = 1; // can be empty or used for debugging
+}
+
+// A batch of allocation requests.
+message Batch {
+  repeated allocation.AllocationRequest requests = 1;
+}
+
+// The processor responds with this after processing a batch.
+message BatchResponse {
+  repeated allocation.AllocationResponse responses = 1;
+  repeated string errors = 2; // errors[i] matches responses[i] if not empty
+}

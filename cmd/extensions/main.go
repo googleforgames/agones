@@ -30,12 +30,14 @@ import (
 	"agones.dev/agones/pkg/fleetautoscalers"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameserverallocations"
+	"agones.dev/agones/pkg/gameserverallocations/distributedallocator/buffer"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/httpserver"
+	"agones.dev/agones/pkg/util/leader"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -195,6 +197,23 @@ func main() {
 
 	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
+
+	bufferedAllocatorEnabled := true
+	requestBuffer := make(chan *buffer.PendingRequest, 1000)
+	if bufferedAllocatorEnabled {
+		batchTimeout := 500 * time.Millisecond
+		maxBatchSize := 100
+		clientID := os.Getenv("POD_NAME")
+
+		batchSource := buffer.BatchSourceFromPendingRequests(ctx, requestBuffer, batchTimeout, maxBatchSize)
+
+		go leader.RunLeaderTracking(ctx, kubeClient, "agones-processor-leader-election", "agones-system", 8443, func(clientCtx context.Context, addr string) {
+			err := buffer.PullAndDispatchBatches(ctx, addr, clientID, batchSource)
+			if err != nil {
+				logger.WithError(err).Error("processor client exited")
+			}
+		})
+	}
 
 	gameservers.NewExtensions(controllerHooks, wh)
 	gameserversets.NewExtensions(controllerHooks, wh)

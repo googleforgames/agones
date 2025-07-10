@@ -111,6 +111,12 @@ build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 extensions_tag = $(REGISTRY)/agones-extensions:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
+
+# Processor image tags
+processor_tag = $(REGISTRY)/agones-processor:$(VERSION)
+processor_amd64_tag = $(processor_tag)-amd64
+processor_arm64_tag = $(processor_tag)-arm64
+
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 
@@ -137,6 +143,7 @@ push_allocator_manifest = $(allocator_amd64_tag)
 push_controller_manifest = $(controller_amd64_tag)
 push_extensions_manifest = $(extensions_amd64_tag)
 push_ping_manifest = $(ping_amd64_tag)
+push_processor_manifest = $(processor_amd64_tag)
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
@@ -282,7 +289,7 @@ endif
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image
+build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image build-processor-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -307,7 +314,7 @@ test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test helm-l
 # Run go tests
 test-go: $(ensure-build-image)
 	$(GO_TEST) $(agones_package)/pkg/... \
-	    $(agones_package)/sdks/... $(agones_package)/cmd/...
+		$(agones_package)/sdks/... $(agones_package)/cmd/...
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
@@ -339,7 +346,7 @@ ifdef E2E_USE_GOTESTSUM
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) -timeout=30m $(ARGS) $(agones_package)/test/e2e -args \
-	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 endif
 	echo "Finishing e2e integration test!"
 
@@ -355,7 +362,7 @@ ifdef E2E_USE_GOTESTSUM
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/controller -args \
-	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 endif
 	echo "Finishing e2e controller failure test!"
 
@@ -373,7 +380,7 @@ ifdef E2E_USE_GOTESTSUM
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/extensions -args \
-	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 endif
 	echo "Finishing e2e extensions high availability test!"
 
@@ -391,7 +398,7 @@ ifdef E2E_USE_GOTESTSUM
 		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 else
 	$(GO_TEST) $(ARGS) -parallel=1 $(agones_package)/test/e2e/allocator -args \
-	    $(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
+		$(GO_E2E_TEST_ARGS) $(GO_E2E_TEST_INTEGRATION_ARGS)
 endif
 	echo "Finishing e2e allocation pod deletion test!"
 
@@ -420,7 +427,7 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image
+push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image push-processor-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
@@ -705,6 +712,47 @@ build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-
 build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create-arm64-builder
 	docker buildx build --provenance false $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
 
+
+# Build a static binary for the processor
+build-processor-binary: $(ensure-build-image) build-processor-binary-linux-amd64
+ifeq ($(WITH_ARM64), 1)
+build-processor-binary: build-processor-binary-linux-arm64
+endif
+
+build-processor-binary-linux-amd64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/processor/bin/processor.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
+build-processor-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/processor/bin/processor.linux.arm64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
+
+# Build the image for the processor service
+build-processor-image: build-processor-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-processor-image: build-processor-image-arm64
+endif
+
+build-processor-image-amd64: $(ensure-build-image) build-processor-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/processor/ --tag=$(processor_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build processor image in buildx command
+build-processor-image-arm64: $(ensure-build-image) build-processor-binary create-arm64-builder
+	docker buildx build --provenance false --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/processor/ --tag=$(processor_arm64_tag) $(DOCKER_BUILD_ARGS)
+
+# Pushes up the processor image
+push-processor-image: push-processor-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-processor-image: push-processor-image-arm64
+endif
+	# Docker >=24.0.6
+	docker buildx imagetools create --tag $(processor_tag) $(push_processor_manifest)
+
+push-processor-image-amd64: build-processor-image-amd64
+	docker push $(processor_amd64_tag)
+push-processor-image-arm64: build-processor-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-processor-image-arm64
+
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
@@ -794,7 +842,7 @@ setup-prometheus:
 	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait \
- 		--namespace metrics --create-namespace \
+		--namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
 
@@ -829,7 +877,7 @@ setup-prometheus-stack:
 	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) helm upgrade prometheus-stack prometheus-community/kube-prometheus-stack --install --wait --version 19.0.2 \
- 		--namespace monitoring --create-namespace \
+		--namespace monitoring --create-namespace \
 		--set prometheus.server.global.scrape_interval=$(SCRAPE_INTERVAL) \
 		--set prometheus.server.persistentVolume.enabled=$(PVC) \
 		--set prometheus.server.persistentVolume.size=$(PV_SIZE) \
