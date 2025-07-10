@@ -270,10 +270,9 @@ steps:
   # Run the upgrade tests parallel, fail this step if any of the tests fail
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
-    dir: build
     entrypoint: bash
     args:
-      - ./e2e_upgrade_test.sh
+      - build/e2e_upgrade_test.sh
       - ${_BASE_VERSION}
     waitFor:
       - wait-to-become-leader
@@ -294,10 +293,9 @@ steps:
   # kick off the child e2e test cloud builds in parallel, fail this build if any of the child build fails
   - name: gcr.io/cloud-builders/gcloud
     id: submit-e2e-test-cloud-build
-    dir: build
     entrypoint: bash
     args:
-      - ./e2e_test.sh
+      - build/e2e_test.sh
       - ${_REGISTRY}
     waitFor:
       - cancel-orphan-e2e-tests
