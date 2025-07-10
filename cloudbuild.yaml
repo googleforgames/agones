@@ -271,6 +271,7 @@ steps:
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
     dir: build
+    entrypoint: bash
     args:
       - ./e2e_upgrade_test.sh
       - ${_BASE_VERSION}
@@ -294,6 +295,7 @@ steps:
   - name: gcr.io/cloud-builders/gcloud
     id: submit-e2e-test-cloud-build
     dir: build
+    entrypoint: bash
     args:
       - ./e2e_test.sh
       - ${_REGISTRY}
