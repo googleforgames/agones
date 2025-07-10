@@ -274,6 +274,7 @@ steps:
     args:
       - build/e2e_upgrade_test.sh
       - ${_BASE_VERSION}
+      - ${PROJECT_ID}
     waitFor:
       - wait-to-become-leader
       - push-upgrade-test

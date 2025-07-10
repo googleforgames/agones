@@ -18,6 +18,7 @@ set -e
 set -o pipefail
 
 BASE_VERSION=$1
+PROJECT_ID=$2
 
 apt-get update && apt-get install -y jq
 export SHELL="/bin/bash"
