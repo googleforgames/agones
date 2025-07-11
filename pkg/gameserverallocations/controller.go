@@ -54,11 +54,11 @@ func init() {
 
 // Extensions is a GameServerAllocation controller within the Extensions service
 type Extensions struct {
-	api        *apiserver.APIServer
-	baseLogger *logrus.Entry
-	recorder   record.EventRecorder
-	allocator  *Allocator
-
+	api           *apiserver.APIServer
+	baseLogger    *logrus.Entry
+	recorder      record.EventRecorder
+	allocator     *Allocator
+	kubeClient    kubernetes.Interface
 	requestBuffer chan *buffer.PendingRequest
 }
 
@@ -75,19 +75,10 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	allocationBatchWaitTime time.Duration,
 ) *Extensions {
 	c := &Extensions{
-		api: apiServer,
-		allocator: NewAllocator(
-			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-			kubeInformerFactory.Core().V1().Secrets(),
-			agonesClient.AgonesV1(),
-			kubeClient,
-			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
-			remoteAllocationTimeout,
-			totalAllocationTimeout,
-			allocationBatchWaitTime),
-
-		requestBuffer: make(chan *buffer.PendingRequest, 1000),
+		api:        apiServer,
+		kubeClient: kubeClient,
 	}
+
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -97,18 +88,17 @@ func NewExtensions(apiServer *apiserver.APIServer,
 
 	bufferedAllocatorEnabled := true
 	if bufferedAllocatorEnabled {
-		batchTimeout := 500 * time.Millisecond
-		maxBatchSize := 100
-		clientID := os.Getenv("POD_NAME")
-		batchSource := buffer.BatchSourceFromPendingRequests(
-			context.TODO(), c.requestBuffer, batchTimeout, maxBatchSize,
-		)
-		go leader.RunLeaderTracking(context.TODO(), kubeClient, "agones-processor-leader-election", "agones-system", 8443, func(clientCtx context.Context, addr string) {
-			err := buffer.PullAndDispatchBatches(clientCtx, addr, clientID, batchSource)
-			if err != nil {
-				c.baseLogger.WithError(err).Error("processor client exited")
-			}
-		})
+		c.requestBuffer = make(chan *buffer.PendingRequest, 1000)
+	} else {
+		c.allocator = NewAllocator(
+			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+			kubeInformerFactory.Core().V1().Secrets(),
+			agonesClient.AgonesV1(),
+			kubeClient,
+			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
+			remoteAllocationTimeout,
+			totalAllocationTimeout,
+			allocationBatchWaitTime)
 	}
 
 	return c
@@ -139,8 +129,24 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 // Run runs this extensions controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
 func (c *Extensions) Run(ctx context.Context, _ int) error {
-	if err := c.allocator.Run(ctx); err != nil {
-		return err
+	bufferedAllocatorEnabled := true
+	if bufferedAllocatorEnabled {
+		batchTimeout := 500 * time.Millisecond
+		maxBatchSize := 100
+		clientID := os.Getenv("POD_NAME")
+		batchSource := buffer.BatchSourceFromPendingRequests(
+			context.TODO(), c.requestBuffer, batchTimeout, maxBatchSize,
+		)
+		go leader.RunLeaderTracking(ctx, c.kubeClient, "agones-processor-leader-election", "agones-system", 8443, func(clientCtx context.Context, addr string) {
+			err := buffer.PullAndDispatchBatches(clientCtx, addr, clientID, batchSource)
+			if err != nil {
+				c.baseLogger.WithError(err).Error("processor client exited")
+			}
+		})
+	} else {
+		if err := c.allocator.Run(ctx); err != nil {
+			return err
+		}
 	}
 
 	c.registerAPIResource(ctx)
