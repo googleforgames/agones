@@ -165,14 +165,17 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 
 // Run initiates the listeners.
 func (c *Allocator) Run(ctx context.Context) error {
+	c.loggerForGameServerAllocationKey("Allocator").Info("Starting Sync Allocator")
 	if err := c.Sync(ctx); err != nil {
 		return err
 	}
 
+	c.loggerForGameServerAllocationKey("Allocator").Info("Starting Informer Factory")
 	if err := c.allocationCache.Run(ctx); err != nil {
 		return err
 	}
 
+	c.loggerForGameServerAllocationKey("Allocator").Info("Starting Allocator listn")
 	// workers and logic for batching allocations
 	go c.ListenAndAllocate(ctx, maxBatchQueue)
 
