@@ -198,9 +198,8 @@ func main() {
 	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
 
-	bufferedAllocatorEnabled := true
-	requestBuffer := make(chan *buffer.PendingRequest, 1000)
-	if bufferedAllocatorEnabled {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		requestBuffer := make(chan *buffer.PendingRequest, 1000)
 		batchTimeout := 500 * time.Millisecond
 		maxBatchSize := 100
 		clientID := os.Getenv("POD_NAME")

@@ -86,8 +86,7 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
 
-	bufferedAllocatorEnabled := true
-	if bufferedAllocatorEnabled {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		c.requestBuffer = make(chan *buffer.PendingRequest, 1000)
 	} else {
 		c.allocator = NewAllocator(
@@ -118,8 +117,7 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 	}
 
 	c.api.AddAPIResource(allocationv1.SchemeGroupVersion.String(), resource, func(w http.ResponseWriter, r *http.Request, n string) error {
-		bufferedAllocatorEnabled := true
-		if bufferedAllocatorEnabled {
+		if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 			return c.processBufferedAllocationRequest(ctx, w, r, n)
 		}
 		return c.processAllocationRequest(ctx, w, r, n)
@@ -129,8 +127,7 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 // Run runs this extensions controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
 func (c *Extensions) Run(ctx context.Context, _ int) error {
-	bufferedAllocatorEnabled := true
-	if bufferedAllocatorEnabled {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		batchTimeout := 500 * time.Millisecond
 		maxBatchSize := 100
 		clientID := os.Getenv("POD_NAME")

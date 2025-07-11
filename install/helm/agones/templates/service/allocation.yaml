@@ -526,6 +526,8 @@ data:
 {{- end }}
 {{- end }}
 ---
+{{- $featureGates := include "agones.featureGates" . | fromYaml }}
+{{- if $featureGates.ProcessorAllocator }}
 # Deploy pods to run the agones-processor code
 apiVersion: apps/v1
 kind: Deployment
@@ -692,3 +694,4 @@ roleRef:
   kind: Role
   name: agones-allocator-get-pods
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

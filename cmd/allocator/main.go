@@ -438,8 +438,7 @@ func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, ago
 		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
 	}
 
-	bufferedAllocatorEnabled := true
-	if bufferedAllocatorEnabled {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		h.requestBuffer = make(chan *buffer.PendingRequest, 1000)
 		batchTimeout := 500 * time.Millisecond
 		maxBatchSize := 100
@@ -680,8 +679,7 @@ type serviceHandler struct {
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
 
-	bufferedAllocatorEnabled := true
-	if bufferedAllocatorEnabled {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		logger.WithField("request", in).Infof("[Allocator] Buffering allocation request for batching")
 		pr := &buffer.PendingRequest{Req: in, RespCh: make(chan *pb.AllocationResponse, 1), ErrCh: make(chan error, 1)}
 		h.requestBuffer <- pr
