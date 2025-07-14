@@ -49,7 +49,7 @@ do
         testCluster="gke-autopilot-e2e-test-cluster-${version//./-}"
     fi
     testClusterLocation="${region}"
-    { stdbuf -oL -eL gcloud builds submit . --suppress-logs --config=../ci/e2e-test-cloudbuild.yaml \
+    { stdbuf -oL -eL gcloud builds submit . --suppress-logs --config=./ci/e2e-test-cloudbuild.yaml \
         --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID} \
         |& stdbuf -i0 -oL -eL grep -v " tarball " \
         |& stdbuf -i0 -oL -eL sed "s/^/${cloudProduct}-${version}: /"; } &
