@@ -19,6 +19,7 @@ set -o pipefail
 
 BASE_VERSION=$1
 PROJECT_ID=$2
+logBucketName="upgrade-test-container-logs"
 
 apt-get update && apt-get install -y jq
 export SHELL="/bin/bash"
@@ -27,12 +28,33 @@ mkdir -p /go/src/agones.dev/ /root/.kube/
 ln -s /workspace /go/src/agones.dev/agones
 cd /go/src/agones.dev/agones/test/upgrade
 
+# --- Function to print failure logs ---
+print_failure_logs() {
+    local cluster_name=$1
+    echo "ERROR: Upgrade test failed on cluster: $cluster_name"
+
+    job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
+    kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
+    for pod in $job_pods; do
+        containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
+        for container in $containers; do
+            if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
+                echo "----- Logs from pod: $pod, container: $container -----"
+                kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
+            fi
+        done
+    done
+
+    log_url="https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2Fupgrade-test-container-logs%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
+    echo "Logs from log bucket: $log_url"
+}
+# ------------------------------------------------------
+
 pids=()
 typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
 tmpdir=$(mktemp -d)
 trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
 
-logBucketName="upgrade-test-container-logs"
 # Update image tags to include the current build version.
 DevVersion="${BASE_VERSION}-dev-$(git rev-parse --short=7 HEAD)"
 export DevVersion
@@ -50,8 +72,7 @@ do
     for version in "${!versionsAndRegions[@]}"
     do
     region=${versionsAndRegions[$version]}
-    if [ "$cloudProduct" = generic ]
-    then
+    if [ "$cloudProduct" = generic ]; then
         testCluster="standard-upgrade-test-cluster-${version//./-}"
     else
         testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
@@ -62,7 +83,7 @@ do
 
     gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
 
-    if [ "$cloudProduct" = gke-autopilot ] ; then
+    if [ "$cloudProduct" = gke-autopilot ]; then
         # For autopilot clusters use evictable "balloon" pods to keep a buffer in node pool autoscaling.
         kubectl apply -f evictablePods.yaml
     fi
@@ -125,22 +146,8 @@ do
     # Wait for the pod to become ready (or timeout)
     if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
         echo "ERROR: The pod for job 'upgrade-test-runner' did not become ready within the timeout period."
-        job_pod_name=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[0].metadata.name}")
-        kubectl logs --tail=20 "$job_pod_name" || echo "Unable to retrieve logs for pod: $job_pod_name"
-
-        job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
-
-        for pod in $job_pods; do
-        containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
-        for container in $containers; do
-            if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
-            echo "----- Logs from pod: $pod, container: $container -----"
-            kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
-            fi
-        done
-        done
-
-        echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${logBucketName}%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
+        print_failure_logs "$testCluster"
+        exit 1
     fi
 
     echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
@@ -155,32 +162,35 @@ done
 for pid in "${pids[@]}"; do
     # This block executes when the process exits and pid status==0
     if wait $pid; then
-    outputLog="${waitPids[$pid]}"
-    # wait for output to finish writing to file
-    until [ -s "$outputLog" ]; do sleep 1; done
-    output_json=$(<"${outputLog}")
+        outputLog="${waitPids[$pid]}"
+        # wait for output to finish writing to file
+        until [ -s "$outputLog" ]; do sleep 1; done
+        output_json=$(<"${outputLog}")
 
-    echo "Reading output from log file: $outputLog:"
-    echo "$output_json" | jq '.'
+        echo "Reading output from log file: $outputLog:"
+        echo "$output_json" | jq '.'
 
-    job_condition_type=$(echo "$output_json" | jq -r '.type')
-    job_condition_message=$(echo "$output_json" | jq -r '.message')
+        job_condition_type=$(echo "$output_json" | jq -r '.type')
+        job_condition_message=$(echo "$output_json" | jq -r '.message')
 
-    # "Complete" is successful job run.
-    # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
-    if [ "$job_condition_type" == "Complete" ] || [ "$job_condition_type" == "SuccessCriteriaMet" ] ; then
-        echo "Job completed successfully on cluster associated with log: $outputLog"
-        continue
-    else
-        echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
-        exit 1
-    fi
+        # "Complete" is successful job run.
+        # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
+        if [ "$job_condition_type" == "Complete" ] || [ "$job_condition_type" == "SuccessCriteriaMet" ]; then
+            echo "Job completed successfully on cluster associated with log: $outputLog"
+            continue
+        else
+            echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
+            print_failure_logs "$(basename "$outputLog" .log)"
+            exit 1
+        fi
     # This block executes when the process exits and pid status!=0
     else
-    status=$?
-    outputLog="${waitPids[$pid]}"
-    echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
-    exit $status
+        status=$?
+        outputLog="${waitPids[$pid]}"
+        echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
+        print_failure_logs "$(basename "$outputLog" .log)"
+        exit $status
     fi
 done
+
 echo "End of Upgrade Tests"
