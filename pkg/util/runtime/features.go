@@ -79,6 +79,10 @@ const (
 	////////////////
 	// Dev features
 
+	// FeatureReuseAllocated is a feature flag to keep an allocated game server in the allocation
+	// cache, so that the game server may be reallocated. Note that this may cause write conflicts.
+	FeatureReuseAllocated Feature = "ReuseAllocated"
+
 	////////////////
 	// Example feature
 
@@ -160,6 +164,7 @@ var (
 		FeatureSidecarContainers:             false,
 
 		// Dev features
+		FeatureReuseAllocated: false,
 
 		// Example feature
 		FeatureExample: false,
