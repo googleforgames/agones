@@ -83,10 +83,12 @@ func main() {
 	ctx := context.Background()
 	config, err := rest.InClusterConfig()
 	if err != nil {
+		logger.WithError(err).Fatal("Failed to create in-cluster config")
 		panic("Failed to create in-cluster config: " + err.Error())
 	}
 	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
+		logger.WithError(err).Fatal("Failed to create Kubernetes client")
 		panic("Failed to create Kubernetes client: " + err.Error())
 	}
 	namespace := os.Getenv("POD_NAMESPACE")
@@ -114,7 +116,7 @@ func main() {
 		RenewDeadline: 10 * time.Second,
 		RetryPeriod:   2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(ctx context.Context) {
+			OnStartedLeading: func(_ context.Context) {
 				logger.Debug("Processor is now the leader")
 			},
 			OnStoppedLeading: func() {
@@ -130,6 +132,10 @@ func main() {
 		},
 		ReleaseOnCancel: true,
 	})
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to create leader elector")
+		panic("Failed to create leader elector: " + err.Error())
+	}
 
 	go leaderElection.Run(ctx)
 

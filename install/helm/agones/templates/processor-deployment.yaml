@@ -93,7 +93,7 @@ spec:
       {{- if .Values.agones.createPriorityClass }}
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
-      serviceAccountName: {{ .Values.agones.serviceaccount.processor.name }}
+      serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
       terminationGracePeriodSeconds: {{ mul .Values.agones.processor.readiness.periodSeconds .Values.agones.processor.readiness.failureThreshold 3 }}
       containers:
       - name: agones-processor
