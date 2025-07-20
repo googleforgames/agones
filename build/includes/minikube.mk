@@ -43,12 +43,14 @@ minikube-push:
 	$(MINIKUBE) image load $(ping_amd64_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image load $(allocator_amd64_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image load $(extensions_amd64_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(processor_amd64_tag) -p $(MINIKUBE_PROFILE)
 
 	$(MINIKUBE) image tag $(sidecar_linux_amd64_tag) $(sidecar_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(controller_amd64_tag) $(controller_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(ping_amd64_tag) $(ping_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(allocator_amd64_tag) $(allocator_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(extensions_amd64_tag) $(extensions_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(processor_amd64_tag) $(extensions_tag) -p $(MINIKUBE_PROFILE)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml

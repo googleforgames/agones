@@ -573,6 +573,7 @@ images:
   - ${_REGISTRY}/agones-sdk
   - ${_REGISTRY}/agones-ping
   - ${_REGISTRY}/agones-allocator
+  - ${_REGISTRY}/agones-operator
 logsBucket: gs://agones-build-logs
 options:
   machineType: E2_HIGHCPU_32
