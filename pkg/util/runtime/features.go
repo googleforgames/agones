@@ -79,6 +79,9 @@ const (
 	////////////////
 	// Dev features
 
+	// FeatureProcessorAllocator is a feature flag to enable/disable the processor allocator feature.
+	FeatureProcessorAllocator = "ProcessorAllocator"
+
 	////////////////
 	// Example feature
 
@@ -160,6 +163,7 @@ var (
 		FeatureSidecarContainers:             false,
 
 		// Dev features
+		FeatureProcessorAllocator: false,
 
 		// Example feature
 		FeatureExample: false,
