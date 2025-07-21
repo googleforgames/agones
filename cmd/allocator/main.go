@@ -33,9 +33,11 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameserverallocations"
+	"agones.dev/agones/pkg/gameserverallocations/distributedallocator/buffer"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/fswatch"
+	"agones.dev/agones/pkg/util/leader"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -430,34 +432,50 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 }
 
 func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, grpcUnallocatedStatusCode codes.Code) *serviceHandler {
-	defaultResync := 30 * time.Second
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
-	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
-	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
-
-	allocator := gameserverallocations.NewAllocator(
-		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-		kubeInformerFactory.Core().V1().Secrets(),
-		agonesClient.AgonesV1(),
-		kubeClient,
-		gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
-		remoteAllocationTimeout,
-		totalRemoteAllocationTimeout,
-		allocationBatchWaitTime)
-
 	h := serviceHandler{
-		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-			return allocator.Allocate(ctx, gsa)
-		},
 		mTLSDisabled:              mTLSDisabled,
 		tlsDisabled:               tlsDisabled,
 		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
 	}
 
-	kubeInformerFactory.Start(ctx.Done())
-	agonesInformerFactory.Start(ctx.Done())
-	if err := allocator.Run(ctx); err != nil {
-		logger.WithError(err).Fatal("starting allocator failed.")
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		h.requestBuffer = make(chan *buffer.PendingRequest, 1000)
+		batchTimeout := 500 * time.Millisecond
+		maxBatchSize := 100
+		clientID := os.Getenv("POD_NAME")
+
+		batchSource := buffer.BatchSourceFromPendingRequests(ctx, h.requestBuffer, batchTimeout, maxBatchSize)
+
+		go leader.RunLeaderTracking(ctx, kubeClient, "agones-processor-leader-election", "agones-system", 8443, func(clientCtx context.Context, addr string) {
+			err := buffer.PullAndDispatchBatches(ctx, addr, clientID, batchSource)
+			if err != nil {
+				logger.WithError(err).Error("processor client exited")
+			}
+		})
+	} else {
+		defaultResync := 30 * time.Second
+		agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+		kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+		gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+
+		allocator := gameserverallocations.NewAllocator(
+			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+			kubeInformerFactory.Core().V1().Secrets(),
+			agonesClient.AgonesV1(),
+			kubeClient,
+			gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
+			remoteAllocationTimeout,
+			totalRemoteAllocationTimeout,
+			allocationBatchWaitTime)
+		h.allocationCallback = func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
+			return allocator.Allocate(ctx, gsa)
+		}
+
+		kubeInformerFactory.Start(ctx.Done())
+		agonesInformerFactory.Start(ctx.Done())
+		if err := allocator.Run(ctx); err != nil {
+			logger.WithError(err).Fatal("starting allocator failed.")
+		}
 	}
 
 	if !h.tlsDisabled {
@@ -653,11 +671,31 @@ type serviceHandler struct {
 	tlsDisabled  bool
 
 	grpcUnallocatedStatusCode codes.Code
+
+	requestBuffer chan *buffer.PendingRequest
 }
 
 // Allocate implements the Allocate gRPC method definition
-func (h *serviceHandler) Allocate(_ context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
+
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		logger.WithField("request", in).Infof("[Allocator] Buffering allocation request for batching")
+		pr := &buffer.PendingRequest{Req: in, RespCh: make(chan *pb.AllocationResponse, 1), ErrCh: make(chan error, 1)}
+		h.requestBuffer <- pr
+		select {
+		case resp := <-pr.RespCh:
+			logger.WithField("request", in).Infof("[Allocator] Received allocation response from processor")
+			return resp, nil
+		case err := <-pr.ErrCh:
+			logger.WithField("request", in).WithError(err).Error("[Allocator] Error from processor")
+			return nil, err
+		case <-ctx.Done():
+			logger.WithField("request", in).Error("[Allocator] Context cancelled while waiting for processor response")
+			return nil, ctx.Err()
+		}
+	}
+
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	gsa.ApplyDefaults()
 	resultObj, err := h.allocationCallback(gsa)
