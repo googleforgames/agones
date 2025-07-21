@@ -36,6 +36,7 @@ ScheduledAutoscaler: false
 SidecarContainers: false
 
 # Dev features
+ProcessorAllocator: false
 
 # Example feature
 Example: false
