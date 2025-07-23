@@ -18,15 +18,15 @@ package main
 import (
 	"context"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 
+	"github.com/google/uuid"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -35,21 +35,29 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	leaderelection "k8s.io/client-go/tools/leaderelection"
-	leaderelectionresourcelock "k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 const (
-	logLevelFlag = "log-level"
+	logLevelFlag       = "log-level"
+	leaderElectionFlag = "leader-election"
+	podNamespace       = "pod-namespace"
 )
 
 type processorConfig struct {
-	LogLevel string
+	LogLevel       string
+	LeaderElection bool
+	PodNamespace   string
 }
 
 func parseEnvFlags() processorConfig {
 	viper.SetDefault(logLevelFlag, "Info")
+	viper.SetDefault(leaderElectionFlag, false)
+	viper.SetDefault(podNamespace, "")
 
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Log level")
+	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Enable leader election")
+	pflag.String(podNamespace, viper.GetString(podNamespace), "Pod namespace")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -57,11 +65,16 @@ func parseEnvFlags() processorConfig {
 	_ = viper.BindPFlags(pflag.CommandLine)
 
 	return processorConfig{
-		LogLevel: viper.GetString(logLevelFlag),
+		LogLevel:       viper.GetString(logLevelFlag),
+		LeaderElection: viper.GetBool(leaderElectionFlag),
+		PodNamespace:   viper.GetString(podNamespace),
 	}
 }
 
 func main() {
+	ctx, cancelCtx := context.WithCancel(context.Background())
+	defer cancelCtx()
+
 	conf := parseEnvFlags()
 
 	logger := runtime.NewLoggerWithSource("main")
@@ -80,7 +93,6 @@ func main() {
 	healthserver := &httpserver.Server{Logger: logger}
 	health := healthcheck.NewHandler()
 
-	ctx := context.Background()
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		logger.WithError(err).Fatal("Failed to create in-cluster config")
@@ -91,64 +103,86 @@ func main() {
 		logger.WithError(err).Fatal("Failed to create Kubernetes client")
 		panic("Failed to create Kubernetes client: " + err.Error())
 	}
-	namespace := os.Getenv("POD_NAMESPACE")
-	lockName := "agones-processor-leader-election"
-	hostname, err := os.Hostname()
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to get hostname")
-		panic("Failed to get hostname")
-	}
-
-	lock := &leaderelectionresourcelock.LeaseLock{
-		LeaseMeta: metav1.ObjectMeta{
-			Name:      lockName,
-			Namespace: namespace,
-		},
-		Client: kubeClient.CoordinationV1(),
-		LockConfig: leaderelectionresourcelock.ResourceLockConfig{
-			Identity: hostname,
-		},
-	}
-
-	leaderElection, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
-		Lock:          lock,
-		LeaseDuration: 15 * time.Second,
-		RenewDeadline: 10 * time.Second,
-		RetryPeriod:   2 * time.Second,
-		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(_ context.Context) {
-				logger.Debug("Processor is now the leader")
-			},
-			OnStoppedLeading: func() {
-				logger.Debug("Processor has stopped leading")
-			},
-			OnNewLeader: func(newIdentity string) {
-				if newIdentity == hostname {
-					logger.Debug("Processor has become the leader")
-				} else {
-					logger.Debug("Processor has a new leader: ", newIdentity)
-				}
-			},
-		},
-		ReleaseOnCancel: true,
-	})
-	if err != nil {
-		logger.WithError(err).Fatal("Failed to create leader elector")
-		panic("Failed to create leader elector: " + err.Error())
-	}
-
-	go leaderElection.Run(ctx)
 
 	go func() {
 		healthserver.Handle("/", health)
 		_ = healthserver.Run(context.Background(), 0)
 	}()
 
-	go func() {
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-		<-ch
-	}()
+	signals.NewSigTermHandler(func() {
+		logger.Info("Pod shutdown has been requested, failing readiness check")
+		cancelCtx()
+		time.Sleep(1 * time.Second)
+		os.Exit(0)
+	})
+
+	whenLeader(ctx, cancelCtx, logger, conf.LeaderElection, kubeClient, conf.PodNamespace, func(ctx context.Context) {
+		logger.Info("Starting processor work as leader")
+
+		// Simulate processor work (to ensure the leader is working)
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				logger.Info("Processor work completed")
+				return
+			case <-ticker.C:
+				logger.Info("Processor is active as leader")
+			}
+		}
+	})
 
 	logger.Info("Processor exited gracefully.")
+}
+
+func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.Entry, doLeaderElection bool, kubeClient *kubernetes.Clientset, namespace string, start func(_ context.Context)) {
+	if !doLeaderElection {
+		start(ctx)
+		return
+	}
+
+	id := uuid.New().String()
+
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: metav1.ObjectMeta{
+			Name:      "agones-processor-lock",
+			Namespace: namespace,
+		},
+		Client: kubeClient.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: id,
+		},
+	}
+
+	logger.WithField("id", id).Info("Leader Election ID")
+
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Lock: lock,
+		// IMPORTANT: you MUST ensure that any code you have that
+		// is protected by the lease must terminate **before**
+		// you call cancel. Otherwise, you could have a background
+		// loop still running and another process could
+		// get elected before your background loop finished, violating
+		// the stated goal of the lease.
+		ReleaseOnCancel: true,
+		LeaseDuration:   15 * time.Second,
+		RenewDeadline:   10 * time.Second,
+		RetryPeriod:     2 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: start,
+			OnStoppedLeading: func() {
+				logger.WithField("id", id).Info("Leader Lost")
+				cancel()
+				os.Exit(0)
+			},
+			OnNewLeader: func(identity string) {
+				if identity == id {
+					return
+				}
+				logger.WithField("id", id).Info("New Leader Elected")
+			},
+		},
+	})
 }

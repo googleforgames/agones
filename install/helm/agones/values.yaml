@@ -287,25 +287,30 @@ agones:
     allocationBatchWaitTime: 500ms
     topologySpreadConstraints: []
   processor:
-    replicas: 2
-    resources: {}
-      # requests:
-      #   cpu: 1
-      #   memory: 256Mi
-    nodeSelector: {}
-    annotations: {}
-    labels: {}
-    http:
-      port: 8080
-    readiness:
-      initialDelaySeconds: 3
-      periodSeconds: 3
-      failureThreshold: 3
-    healthCheck:
-      initialDelaySeconds: 3
-      periodSeconds: 3
-      failureThreshold: 3
-      timeoutSeconds: 1
+      replicas: 2
+      resources: {}
+      nodeSelector: {}
+      annotations: {}
+      labels: {}
+      tolerations:
+      - key: "agones.dev/agones-system"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+      affinity: {}
+      topologySpreadConstraints: []
+      logLevel: info
+      http:
+        port: 8080
+      readiness:
+        initialDelaySeconds: 3
+        periodSeconds: 3
+        failureThreshold: 3
+      healthCheck:
+        initialDelaySeconds: 3
+        periodSeconds: 3
+        failureThreshold: 3
+        timeoutSeconds: 1
   image:
     registry: us-docker.pkg.dev/agones-images/release
     tag: 1.51.0-dev

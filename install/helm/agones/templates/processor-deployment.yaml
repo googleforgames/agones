@@ -106,6 +106,14 @@ spec:
         env:
         - name: LOG_LEVEL
           value: {{ .Values.agones.processor.logLevel | quote }}
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if gt (int .Values.agones.processor.replicas) 1 }}
+        - name: LEADER_ELECTION
+          value: "true"
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /live
