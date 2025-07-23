@@ -34,18 +34,23 @@ print_failure_logs() {
     echo "ERROR: Upgrade test failed on cluster: $cluster_name"
 
     job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
-    kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
-    for pod in $job_pods; do
-        containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
-        for container in $containers; do
-            if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
-                echo "----- Logs from pod: $pod, container: $container -----"
-                kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
-            fi
+    if [[ -z "$job_pods" ]]; then
+        echo "No pods found for job upgrade-test-runner. They might have failed to schedule or were deleted."
+    else
+        kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
+        for pod in $job_pods; do
+            containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
+            for container in $containers; do
+                if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
+                    echo "----- Logs from pod: $pod, container: $container -----"
+                    kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
+                fi
+            done
         done
-    done
+    fi
 
-    log_url="https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2Fupgrade-test-container-logs%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
+    encoded_query="resource.labels.container_name%3D(%22upgrade-test-controller%22%20OR%20%22sdk-client-test%22)"
+    log_url="https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${logBucketName}%2Fviews%2F_AllLogs;query=${encoded_query};cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
     echo "Logs from log bucket: $log_url"
 }
 # ------------------------------------------------------
