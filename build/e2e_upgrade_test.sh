@@ -19,7 +19,7 @@ set -o pipefail
 
 BASE_VERSION=$1
 PROJECT_ID=$2
-logBucketName="upgrade-test-container-logs"
+BUCKET_NAME="upgrade-test-container-logs"
 
 apt-get update && apt-get install -y jq
 export SHELL="/bin/bash"
@@ -49,9 +49,7 @@ print_failure_logs() {
         done
     fi
 
-    encoded_query="resource.labels.container_name%3D(%22upgrade-test-controller%22%20OR%20%22sdk-client-test%22)"
-    log_url="https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${logBucketName}%2Fviews%2F_AllLogs;query=${encoded_query};cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
-    echo "Logs from log bucket: $log_url"
+    echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
 }
 # ------------------------------------------------------
 
