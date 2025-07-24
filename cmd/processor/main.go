@@ -44,6 +44,10 @@ const (
 	podNamespace       = "pod-namespace"
 )
 
+var (
+	logger = runtime.NewLoggerWithSource("main")
+)
+
 type processorConfig struct {
 	LogLevel       string
 	LeaderElection bool
@@ -77,8 +81,8 @@ func main() {
 
 	conf := parseEnvFlags()
 
-	logger := runtime.NewLoggerWithSource("main")
 	logger.WithField("version", pkg.Version).WithField("processorConf", conf).
+		WithField("featureGates", runtime.EncodeFeatures()).
 		Info("Starting agones-processor")
 
 	logger.WithField("logLevel", conf.LogLevel).Info("Setting LogLevel configuration")
