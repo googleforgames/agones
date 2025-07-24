@@ -40,7 +40,6 @@ rm ./${outputpath}/allocation.pb.go || true
 rm ./${outputpath}/allocation.gw.pb.go || true
 rm ./${outputpath}/allocation_grpc.pb.go || true
 rm ./${outputpath}/processor.pb.go || true
-# rm ./${outputpath}/processor.gw.pb.go || true
 rm ./${outputpath}/processor_grpc.pb.go || true
 
 # generate the go code
@@ -49,11 +48,9 @@ protoc -I ${googleapis} -I ${gatewaygrpc} -I . -I ./vendor ${processor_protofile
 
 # generate grpc gateway
 protoc -I ${googleapis} -I ${gatewaygrpc} -I . -I ./vendor ${protofile} --go_out=proto --grpc-gateway_out=logtostderr=true:proto
-# protoc -I ${googleapis} -I ${gatewaygrpc} -I . -I ./vendor ${processor_protofile} --go_out=proto --grpc-gateway_out=logtostderr=true:proto
 
 # generate openapi v2
 protoc -I ${googleapis} -I ${gatewaygrpc} -I . -I ./vendor ${protofile} --openapiv2_opt=logtostderr=true,simple_operation_ids=true,disable_default_errors=true --openapiv2_out=json_names_for_fields=false,logtostderr=true:.
-# protoc -I ${googleapis} -I ${gatewaygrpc} -I . -I ./vendor ${processor_protofile} --openapiv2_opt=logtostderr=true,simple_operation_ids=true,disable_default_errors=true --openapiv2_out=json_names_for_fields=false,logtostderr=true:.
 
 # hard coding because protoc-gen-openapiv2 doesn't work well in description
 cat ./${protopath}/allocation.swagger.json | jq '.definitions.allocationAllocationRequest.properties.multiClusterSetting |= .+{"description": "If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally."}' | sponge ./${protopath}/allocation.swagger.json
@@ -71,7 +68,6 @@ header ${protopath}/allocation.pb.go
 header ${protopath}/allocation.pb.gw.go
 header ${protopath}/allocation_grpc.pb.go
 header ${protopath}/processor.pb.go
-# header ${protopath}/processor.pb.gw.go
 header ${protopath}/processor_grpc.pb.go
 
 mv ${protopath}/allocation.pb.go ${outputpath}/allocation.pb.go
@@ -79,7 +75,6 @@ mv ${protopath}/allocation.pb.gw.go ${outputpath}/allocation.pb.gw.go
 mv ${protopath}/allocation_grpc.pb.go ${outputpath}/allocation_grpc.pb.go
 
 mv ${protopath}/processor.pb.go ${outputpath}/processor.pb.go
-# mv ${protopath}/processor.pb.gw.go ${outputpath}/processor.pb.gw.go
 mv ${protopath}/processor_grpc.pb.go ${outputpath}/processor_grpc.pb.go
 
 goimports -w ./${outputpath}

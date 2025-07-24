@@ -38,6 +38,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProcessorClient interface {
+	// StreamBatches processes a stream of ProcessorMessage requests and returns a stream of ProcessorMessage responses.
 	StreamBatches(ctx context.Context, opts ...grpc.CallOption) (Processor_StreamBatchesClient, error)
 }
 
@@ -84,6 +85,7 @@ func (x *processorStreamBatchesClient) Recv() (*ProcessorMessage, error) {
 // All implementations should embed UnimplementedProcessorServer
 // for forward compatibility
 type ProcessorServer interface {
+	// StreamBatches processes a stream of ProcessorMessage requests and returns a stream of ProcessorMessage responses.
 	StreamBatches(Processor_StreamBatchesServer) error
 }
 

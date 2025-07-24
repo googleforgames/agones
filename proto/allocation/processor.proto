@@ -19,30 +19,47 @@ option go_package = "./allocation";
 
 import "proto/allocation/allocation.proto";
 
-
+// [Stage: Dev]
+// [FeatureFlag:ProcessorAllocator]
+// The Processor service is used to process batches of allocation requests
+// and is designed to be used in a pull model with gRPC streaming.
 service Processor {
+  // StreamBatches processes a stream of ProcessorMessage requests and returns a stream of ProcessorMessage responses.
   rpc StreamBatches(stream ProcessorMessage) returns (stream ProcessorMessage);
 }
 
+// The ProcessorMessage is used to send and receive messages between the client and server.
 message ProcessorMessage {
+  // The client ID is used to identify the client that is sending the message.
   string client_id = 1;
 
+  // The payload is a oneof field that can contain either a PullRequest, Batch, or BatchResponse.
   oneof payload {
+    // A PullRequest is used to request a batch of allocation requests.
     PullRequest pull = 2;
-    Batch batch = 3;
+    // A BatchRequest is used to send a batch of allocation requests.
+    BatchRequest batch_request = 3;
+    // A BatchResponse is used to send a response to a batch of allocation requests.
     BatchResponse batch_response = 4;
   }
 }
 
+// A PullRequest is used to request a batch of allocation requests.
 message PullRequest {
   string message = 1;
 }
 
-message Batch {
+// A Batch is used to send a batch of allocation requests.
+message BatchRequest {
+  // The requests is a repeated field of AllocationRequest messages.
   repeated allocation.AllocationRequest requests = 1;
 }
 
+// A BatchResponse is used to send a response to a batch of allocation requests.
 message BatchResponse {
+  // The responses is a repeated field of AllocationResponse messages.
   repeated allocation.AllocationResponse responses = 1;
+
+  // The errors is a repeated field of error messages.
   repeated string errors = 2;
 }
