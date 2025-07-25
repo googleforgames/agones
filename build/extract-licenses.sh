@@ -47,7 +47,7 @@ while read -r entry; do
   append_license ${LIBRARY} ${entry}
 done <<< "$(find vendor/ -regextype posix-extended -iregex '.*LICENSE(\.txt)?')"
 
-for ddir in ${SRC_ROOT}/cmd/controller/bin/ ${SRC_ROOT}/cmd/extensions/bin/ ${SRC_ROOT}/cmd/ping/bin/ ${SRC_ROOT}/cmd/sdk-server/bin/ ${SRC_ROOT}/cmd/allocator/bin/ ; do
+for ddir in ${SRC_ROOT}/cmd/controller/bin/ ${SRC_ROOT}/cmd/extensions/bin/ ${SRC_ROOT}/cmd/ping/bin/ ${SRC_ROOT}/cmd/sdk-server/bin/ ${SRC_ROOT}/cmd/allocator/bin/ ${SRC_ROOT}/cmd/processor/bin/; do
   mkdir -p ${ddir}
   cp ${TMP_LICENSES} ${ddir}
 done

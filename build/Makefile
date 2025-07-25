@@ -113,6 +113,7 @@ extensions_tag = $(REGISTRY)/agones-extensions:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
+processor_tag = $(REGISTRY)/agones-processor:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
 sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-linux-amd64
@@ -130,6 +131,8 @@ extensions_amd64_tag = $(extensions_tag)-amd64
 extensions_arm64_tag = $(extensions_tag)-arm64
 ping_amd64_tag = $(ping_tag)-amd64
 ping_arm64_tag = $(ping_tag)-arm64
+processor_amd64_tag = $(processor_tag)-amd64
+processor_arm64_tag = $(processor_tag)-arm64
 
 # build list of images to include in the manifest for the sidecar image.
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
@@ -137,6 +140,8 @@ push_allocator_manifest = $(allocator_amd64_tag)
 push_controller_manifest = $(controller_amd64_tag)
 push_extensions_manifest = $(extensions_amd64_tag)
 push_ping_manifest = $(ping_amd64_tag)
+push_processor_manifest = $(processor_amd64_tag)
+
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
@@ -276,13 +281,14 @@ push_allocator_manifest += $(allocator_arm64_tag)
 push_controller_manifest += $(controller_arm64_tag)
 push_extensions_manifest += $(extensions_arm64_tag)
 push_ping_manifest += $(ping_arm64_tag)
+push_processor_manifest += $(processor_arm64_tag)
 endif
 
 # build all
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image
+build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image build-processor-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -420,7 +426,7 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image
+push: push-controller-image push-extensions-image push-agones-sdk-image push-ping-image push-allocator-image push-processor-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
@@ -704,6 +710,46 @@ build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-
 # creating docker builder and then using that builder to build allocator image in buildx command
 build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create-arm64-builder
 	docker buildx build --provenance false $(agones_path)/cmd/allocator/ --builder $(BUILDX_ARM64_BUILDER) --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+
+# push the processor image
+build-processor-binary: $(ensure-build-image) build-processor-binary-linux-amd64
+ifeq ($(WITH_ARM64), 1)
+build-processor-binary: build-processor-binary-linux-arm64
+endif
+
+build-processor-binary-linux-amd64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/processor/bin/processor.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
+build-processor-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/processor/bin/processor.linux.arm64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
+
+# Build the image for the processor service
+build-processor-image: build-processor-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-processor-image: build-processor-image-arm64
+endif
+
+build-processor-image-amd64: $(ensure-build-image) build-processor-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/processor/ --tag=$(processor_amd64_tag) $(DOCKER_BUILD_ARGS)
+# creating docker builder and then using that builder to build processor image in buildx command
+build-processor-image-arm64: $(ensure-build-image) build-processor-binary create-arm64-builder
+	docker buildx build --provenance false --platform linux/arm64 --builder $(BUILDX_ARM64_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/processor/ --tag=$(processor_arm64_tag) $(DOCKER_BUILD_ARGS)
+
+# Pushes up the processor image
+push-processor-image: push-processor-image-amd64
+ifeq ($(WITH_ARM64), 1)
+push-processor-image: push-processor-image-arm64
+endif
+	# Docker >=24.0.6
+	docker buildx imagetools create --tag $(processor_tag) $(push_processor_manifest)
+
+push-processor-image-amd64: build-processor-image-amd64
+	docker push $(processor_amd64_tag)
+push-processor-image-arm64: build-processor-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-processor-image-arm64
 
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64

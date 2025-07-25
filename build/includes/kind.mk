@@ -50,6 +50,7 @@ kind-push:
 	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(allocator_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image $(processor_tag) --name="$(KIND_PROFILE)"
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:
