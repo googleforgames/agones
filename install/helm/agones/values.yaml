@@ -300,6 +300,7 @@ agones:
       affinity: {}
       topologySpreadConstraints: []
       logLevel: info
+      leaderElection: {}
       http:
         port: 8080
       readiness:

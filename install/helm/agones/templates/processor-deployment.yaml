@@ -113,6 +113,12 @@ spec:
         {{- if gt (int .Values.agones.processor.replicas) 1 }}
         - name: LEADER_ELECTION
           value: "true"
+        - name: LEASE_DURATION
+          value: {{ .Values.agones.processor.leaderElection.leaseDuration | default "15s" | quote }}
+        - name: RENEW_DEADLINE
+          value: {{ .Values.agones.processor.leaderElection.renewDeadline | default "10s" | quote }}
+        - name: RETRY_PERIOD
+          value: {{ .Values.agones.processor.leaderElection.retryPeriod | default "2s" | quote }}
         {{- end }}
         livenessProbe:
           httpGet:
