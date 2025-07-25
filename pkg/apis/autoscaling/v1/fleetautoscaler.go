@@ -87,12 +87,12 @@ type FleetAutoscalerPolicy struct {
 	// List policy config params. Present only if FleetAutoscalerPolicyType = List.
 	// +optional
 	List *ListPolicy `json:"list,omitempty"`
-	// [Stage:Dev]
+	// [Stage:Beta]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// Schedule policy config params. Present only if FleetAutoscalerPolicyType = Schedule.
 	// +optional
 	Schedule *SchedulePolicy `json:"schedule,omitempty"`
-	// [Stage:Dev]
+	// [Stage:Beta]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
 	// +optional
@@ -133,12 +133,12 @@ const (
 	// ListPolicyType is for List based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ListPolicyType
 	ListPolicyType FleetAutoscalerPolicyType = "List"
-	// [Stage:Dev]
+	// [Stage:Beta]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// SchedulePolicyType is for Schedule based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with SchedulePolicyType
 	SchedulePolicyType FleetAutoscalerPolicyType = "Schedule"
-	// [Stage:Dev]
+	// [Stage:Beta]
 	// [FeatureFlag:ScheduledAutoscaler]
 	// ChainPolicyType is for Chain based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ChainPolicyType
