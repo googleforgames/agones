@@ -50,7 +50,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 ---
@@ -75,7 +75,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 ---
@@ -100,7 +100,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 ---
@@ -112,7 +112,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.51.0-dev"
+    chart: "agones-1.51.0-dev-1865ad2"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -129,7 +129,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.51.0-dev"
+    chart: "agones-1.51.0-dev-1865ad2"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -145,7 +145,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.51.0-dev"
+    chart: "agones-1.51.0-dev-1865ad2"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -161,7 +161,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.51.0-dev"
+    chart: "agones-1.51.0-dev-1865ad2"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -191,7 +191,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -6021,7 +6021,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -6214,7 +6214,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -11876,7 +11876,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -11955,7 +11955,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -17753,7 +17753,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 rules:
@@ -17783,7 +17783,7 @@ metadata:
   name: agones-controller
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 rules:
@@ -17837,7 +17837,7 @@ metadata:
   name: agones-sdk
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 rules:
@@ -17856,7 +17856,7 @@ metadata:
   name: agones-allocator
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17875,7 +17875,7 @@ metadata:
   name: agones-controller-access
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17904,6 +17904,58 @@ subjects:
     name: agones-controller
     namespace: agones-system
 ---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agones-allocator-lease
+  namespace: agones-system
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agones-allocator-get-pods
+  namespace: agones-system
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agones-allocator-lease
+  namespace: agones-system
+subjects:
+  - kind: ServiceAccount
+    name: agones-allocator
+    namespace: agones-system
+roleRef:
+  kind: Role
+  name: agones-allocator-lease
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agones-allocator-get-pods
+  namespace: agones-system
+subjects:
+  - kind: ServiceAccount
+    name: agones-allocator
+    namespace: agones-system
+roleRef:
+  kind: Role
+  name: agones-allocator-get-pods
+  apiGroup: rbac.authorization.k8s.io
+---
 # Source: agones/templates/serviceaccounts/controller.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -17927,7 +17979,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 subjects:
@@ -17961,7 +18013,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -17995,7 +18047,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18015,7 +18067,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18038,7 +18090,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18075,7 +18127,7 @@ metadata:
   labels:
     agones.dev/role: extensions
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18112,7 +18164,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18135,7 +18187,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18146,6 +18198,23 @@ spec:
       name: http
       targetPort: 8080
       protocol: TCP
+---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-processor
+  namespace: agones-system
+  labels:
+    multicluster.agones.dev/role: processor
+spec:
+  clusterIP: None
+  selector:
+    multicluster.agones.dev/role: processor
+  ports:
+    - port: 8443
+      name: grpc
+      targetPort: 8443
 ---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -18169,7 +18238,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18211,7 +18280,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "us-docker.pkg.dev/agones-images/release/agones-controller:1.51.0-dev"
+        image: "vanguardregistry.azurecr.io/tlacroix/agones-controller:1.51.0-dev-1865ad2"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18225,7 +18294,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "us-docker.pkg.dev/agones-images/release/agones-sdk:1.51.0-dev"
+          value: "vanguardregistry.azurecr.io/tlacroix/agones-sdk:1.51.0-dev-1865ad2"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -18345,7 +18414,7 @@ metadata:
   labels:
     component: extensions
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18389,7 +18458,7 @@ spec:
       terminationGracePeriodSeconds: 27
       containers:
       - name: agones-extensions
-        image: "us-docker.pkg.dev/agones-images/release/agones-extensions:1.51.0-dev"
+        image: "vanguardregistry.azurecr.io/tlacroix/agones-extensions:1.51.0-dev-1865ad2"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18499,7 +18568,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18534,7 +18603,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "us-docker.pkg.dev/agones-images/release/agones-ping:1.51.0-dev"
+          image: "vanguardregistry.azurecr.io/tlacroix/agones-ping:1.51.0-dev-1865ad2"
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
@@ -18612,7 +18681,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "us-docker.pkg.dev/agones-images/release/agones-allocator:1.51.0-dev"
+        image: "vanguardregistry.azurecr.io/tlacroix/agones-allocator:1.51.0-dev-1865ad2"
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -18691,6 +18760,108 @@ spec:
           name: client-ca
           readOnly: true
 ---
+# Source: agones/templates/service/allocation.yaml
+# Deploy pods to run the agones-processor code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-processor
+  namespace: agones-system
+  labels:
+    multicluster.agones.dev/role: processor
+    app: agones
+    release: agones-manual
+    heritage: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: processor
+      app: agones
+      release: agones-manual
+      heritage: Helm
+  template:
+    metadata:
+      labels:
+        multicluster.agones.dev/role: processor
+        app: agones
+        release: agones-manual
+        heritage: Helm
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: agones.dev/agones-system
+                operator: Exists
+      tolerations:
+        - effect: NoExecute
+          key: agones.dev/agones-system
+          operator: Equal
+          value: "true"
+      serviceAccountName: agones-controller
+      terminationGracePeriodSeconds: 27
+      containers:
+      - name: agones-processor
+        image: "vanguardregistry.azurecr.io/tlacroix/agones-processor:1.51.0-dev-1865ad2"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+        env:
+        - name: HTTP_PORT
+          value: "8443"
+        - name: GRPC_PORT
+          value: "8443"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-processor"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: FEATURE_GATES
+          value: ""
+        ports:
+        - name: https
+          containerPort: 8443
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
 # Source: agones/templates/extensions.yaml
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
@@ -18699,7 +18870,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 spec:
@@ -18750,7 +18921,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -18793,7 +18964,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -18838,7 +19009,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.51.0-dev
+    chart: agones-1.51.0-dev-1865ad2
     release: agones-manual
     heritage: Helm
 webhooks:
