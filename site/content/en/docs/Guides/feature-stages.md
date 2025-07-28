@@ -54,7 +54,7 @@ The current set of `alpha` and `beta` feature gates:
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386) | `GKEAutopilotExtendedDurationPods` | Enabled  | `Beta`   | 1.44.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |
-| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Disabled | `Beta`   | 1.50.0 |
+| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Enabled  | `Beta`   | 1.50.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
 | [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
