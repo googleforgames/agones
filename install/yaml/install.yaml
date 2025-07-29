@@ -18742,7 +18742,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# Source: agones/templates/processor-deployment.yaml
+# Source: agones/templates/processor.yaml
 # Copyright 2025 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

@@ -286,7 +286,7 @@ agones:
     totalRemoteAllocationTimeout: 30s
     allocationBatchWaitTime: 500ms
     topologySpreadConstraints: []
-  processor:
+    processor:
       replicas: 2
       resources: {}
       nodeSelector: {}

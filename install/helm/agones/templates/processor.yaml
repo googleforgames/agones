@@ -26,7 +26,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  replicas: {{ .Values.agones.processor.replicas }}
+  replicas: {{ .Values.agones.allocator.processor.replicas }}
   selector:
     matchLabels:
       agones.dev/role: processor
@@ -40,33 +40,33 @@ spec:
       annotations:
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: {{ .Values.agones.processor.http.port | quote }}
+        prometheus.io/port: {{ .Values.agones.allocator.processor.http.port | quote }}
         prometheus.io/path: "/metrics"
 {{- end }}
-{{- if .Values.agones.processor.annotations }}
-{{- toYaml .Values.agones.processor.annotations | nindent 8 }}
+{{- if .Values.agones.allocator.processor.annotations }}
+{{- toYaml .Values.agones.allocator.processor.annotations | nindent 8 }}
 {{- end }}
       labels:
         agones.dev/role: processor
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
-{{- if .Values.agones.processor.labels }}
-{{- toYaml .Values.agones.processor.labels | nindent 8 }}
+{{- if .Values.agones.allocator.processor.labels }}
+{{- toYaml .Values.agones.allocator.processor.labels | nindent 8 }}
 {{- end }}
     spec:
-      {{- if .Values.agones.processor.topologySpreadConstraints }}
+      {{- if .Values.agones.allocator.processor.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml .Values.agones.processor.topologySpreadConstraints | nindent 8 }}
+        {{- toYaml .Values.agones.allocator.processor.topologySpreadConstraints | nindent 8 }}
       {{- end }}
       affinity:
-      {{- if .Values.agones.processor.affinity }}
+      {{- if .Values.agones.allocator.processor.affinity }}
       {{- if .Values.agones.requireDedicatedNodes }}
-      {{- fail "agones.processor.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}
+      {{- fail "agones.allocator.processor.affinity and agones.requireDedicatedNodes cannot be set at the same time!" }}
       {{- end}}
       {{- end}}
-      {{- if .Values.agones.processor.affinity }}
-{{ toYaml .Values.agones.processor.affinity | indent 8 }}
+      {{- if .Values.agones.allocator.processor.affinity }}
+{{ toYaml .Values.agones.allocator.processor.affinity | indent 8 }}
       {{- else}}
         nodeAffinity:
           {{- if .Values.agones.requireDedicatedNodes }}
@@ -82,19 +82,19 @@ spec:
               - key: agones.dev/agones-system
                 operator: Exists
       {{- end }}
-      {{- if .Values.agones.processor.nodeSelector }}
+      {{- if .Values.agones.allocator.processor.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.agones.processor.nodeSelector | indent 8 }}
+{{ toYaml .Values.agones.allocator.processor.nodeSelector | indent 8 }}
       {{- end }}
-      {{- if .Values.agones.processor.tolerations }}
+      {{- if .Values.agones.allocator.processor.tolerations }}
       tolerations:
-{{ toYaml .Values.agones.processor.tolerations | indent 8 }}
+{{ toYaml .Values.agones.allocator.processor.tolerations | indent 8 }}
       {{- end }}
       {{- if .Values.agones.createPriorityClass }}
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
-      terminationGracePeriodSeconds: {{ mul .Values.agones.processor.readiness.periodSeconds .Values.agones.processor.readiness.failureThreshold 3 }}
+      terminationGracePeriodSeconds: {{ mul .Values.agones.allocator.processor.readiness.periodSeconds .Values.agones.allocator.processor.readiness.failureThreshold 3 }}
       containers:
       - name: agones-processor
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.processor.name}}:{{ default .Values.agones.image.tag .Values.agones.image.processor.tag }}"
@@ -105,42 +105,42 @@ spec:
           allowPrivilegeEscalation: false
         env:
         - name: LOG_LEVEL
-          value: {{ .Values.agones.processor.logLevel | quote }}
+          value: {{ .Values.agones.allocator.processor.logLevel | quote }}
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        {{- if gt (int .Values.agones.processor.replicas) 1 }}
+        {{- if gt (int .Values.agones.allocator.processor.replicas) 1 }}
         - name: LEADER_ELECTION
           value: "true"
         - name: LEASE_DURATION
-          value: {{ .Values.agones.processor.leaderElection.leaseDuration | default "15s" | quote }}
+          value: {{ .Values.agones.allocator.processor.leaderElection.leaseDuration | default "15s" | quote }}
         - name: RENEW_DEADLINE
-          value: {{ .Values.agones.processor.leaderElection.renewDeadline | default "10s" | quote }}
+          value: {{ .Values.agones.allocator.processor.leaderElection.renewDeadline | default "10s" | quote }}
         - name: RETRY_PERIOD
-          value: {{ .Values.agones.processor.leaderElection.retryPeriod | default "2s" | quote }}
+          value: {{ .Values.agones.allocator.processor.leaderElection.retryPeriod | default "2s" | quote }}
         {{- end }}
         livenessProbe:
           httpGet:
             path: /live
             port: http
-          initialDelaySeconds: {{ .Values.agones.processor.healthCheck.initialDelaySeconds }}
-          periodSeconds: {{ .Values.agones.processor.healthCheck.periodSeconds }}
-          failureThreshold: {{ .Values.agones.processor.healthCheck.failureThreshold }}
-          timeoutSeconds: {{ .Values.agones.processor.healthCheck.timeoutSeconds }}
+          initialDelaySeconds: {{ .Values.agones.allocator.processor.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.allocator.processor.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.agones.allocator.processor.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.agones.allocator.processor.healthCheck.timeoutSeconds }}
         readinessProbe:
           httpGet:
             path: /ready
             port: http
-          initialDelaySeconds: {{ .Values.agones.processor.readiness.initialDelaySeconds }}
-          periodSeconds: {{ .Values.agones.processor.readiness.periodSeconds }}
-          failureThreshold: {{ .Values.agones.processor.readiness.failureThreshold }}
+          initialDelaySeconds: {{ .Values.agones.allocator.processor.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.allocator.processor.readiness.periodSeconds }}
+          failureThreshold: {{ .Values.agones.allocator.processor.readiness.failureThreshold }}
         ports:
         - name: http
-          containerPort: {{ .Values.agones.processor.http.port }}
+          containerPort: {{ .Values.agones.allocator.processor.http.port }}
         resources:
-{{- if .Values.agones.processor.resources }}
-{{ toYaml .Values.agones.processor.resources | indent 10 }}
+{{- if .Values.agones.allocator.processor.resources }}
+{{ toYaml .Values.agones.allocator.processor.resources | indent 10 }}
 {{- else}}
           requests:
             cpu: 10m
@@ -172,7 +172,7 @@ spec:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
   ports:
-    - port: {{ .Values.agones.processor.http.port }}
+    - port: {{ .Values.agones.allocator.processor.http.port }}
       name: http
-      targetPort: {{ .Values.agones.processor.http.port }}
+      targetPort: {{ .Values.agones.allocator.processor.http.port }}
 {{- end }}
