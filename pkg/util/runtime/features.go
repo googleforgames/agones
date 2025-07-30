@@ -57,6 +57,9 @@ const (
 	// FeatureRollingUpdateFix is a feature flag to enable/disable fleet controller fixes.
 	FeatureRollingUpdateFix Feature = "RollingUpdateFix"
 
+	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
+	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
+
 	////////////////
 	// Alpha features
 
@@ -69,9 +72,6 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
-
-	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
-	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
 
 	// FeatureSidecarContainers is a feature flag to enable/disable k8s sidecar containers for the sdkserver
 	FeatureSidecarContainers = "SidecarContainers"
@@ -104,6 +104,7 @@ var (
 	// * add it to `ALPHA_FEATURE_GATES` in build/Makefile
 	// * add the inverse to the e2e-runner config in cloudbuild.yaml
 	// * add it to site/content/en/docs/Guides/feature-stages.md
+	// * add it to test/upgrade/versionMap.yaml
 	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// To promote a feature from alpha->beta:
@@ -113,6 +114,7 @@ var (
 	// * add to `BETA_FEATURE_GATES` in build/Makefile
 	// * invert in the e2e-runner config in cloudbuild.yaml
 	// * change the value in site/content/en/docs/Guides/feature-stages.md.
+	// * add it to test/upgrade/versionMap.yaml
 	// * Ensure that the features in each file are organized categorically and alphabetically.
 	//
 	// Feature Promotion: alpha->beta for SDK Functions
@@ -154,12 +156,12 @@ var (
 		FeaturePortPolicyNone:                   true,
 		FeaturePortRanges:                       true,
 		FeatureRollingUpdateFix:                 true,
+		FeatureScheduledAutoscaler:              true,
 
 		// Alpha features
 		FeatureFleetAutoscaleRequestMetaData: false,
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
-		FeatureScheduledAutoscaler:           false,
 		FeatureSidecarContainers:             false,
 
 		// Dev features
