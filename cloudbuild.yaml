@@ -302,7 +302,7 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=europe-west1 )
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=asia-east1 )
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
