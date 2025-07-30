@@ -90,7 +90,7 @@ data:
           "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix"]
         },
         "Dev": {
-          "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "ScheduledAutoscaler", "SidecarContainers"],
+          "alphaGates": ["AllocatorBatchesUpdates", "FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "ScheduledAutoscaler", "SidecarContainers"],
           "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix"]
         }
       }
