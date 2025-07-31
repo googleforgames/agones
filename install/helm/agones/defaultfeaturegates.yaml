@@ -26,13 +26,13 @@ CountsAndLists: true
 GKEAutopilotExtendedDurationPods: true
 PortPolicyNone: true
 PortRanges: true
+ScheduledAutoscaler: true
 RollingUpdateFix: true
 
 # Alpha features
 FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
-ScheduledAutoscaler: false
 SidecarContainers: false
 
 # Dev features

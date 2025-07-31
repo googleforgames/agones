@@ -434,3 +434,38 @@ struct FCounterResponse
         JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FList
+{
+	GENERATED_BODY()
+
+	FList()
+	{
+	}
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	FString Name;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	int64 Capacity = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	TArray<FString> Values;
+
+	explicit FList(const TSharedPtr<FJsonObject> JsonObject)
+	{
+		JsonObject->TryGetStringField(TEXT("name"), Name);
+		JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
+		JsonObject->TryGetStringArrayField(TEXT("values"), Values);
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FListValue
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	FString Value;
+};

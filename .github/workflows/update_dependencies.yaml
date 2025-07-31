@@ -20,4 +20,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           filename: .github/ISSUE_TEMPLATE/golang_version_upgrade.md
-          assignees: 0xaravindh, kamaljeeti
+          assignees: 0xaravindh
