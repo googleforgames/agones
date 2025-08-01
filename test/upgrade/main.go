@@ -101,7 +101,7 @@ func main() {
 	go watchGameServers(agonesClient, len(validConfigs)*2)
 	go watchGameServerEvents(kubeClient)
 	addAgonesRepo()
-	runConfigWalker(ctx, validConfigs)
+	runConfigWalker(ctx, validConfigs, agonesClient)
 	cleanUpResources()
 }
 
@@ -297,7 +297,7 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 	return err
 }
 
-func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
+func runConfigWalker(ctx context.Context, validConfigs []*configTest, agonesClient *versioned.Clientset) {
 	cancelCtx, cancel := context.WithCancel(ctx)
 
 	for _, config := range validConfigs {
@@ -336,8 +336,47 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 		time.Sleep(1 * time.Minute)
 	}
 	cancel()
-	// TODO: Replace sleep with wait for the existing healthy Game Servers finish naturally by reaching their shutdown phase.
-	time.Sleep(30 * time.Second)
+
+	waitForGameServersToShutdown(ctx, agonesClient)
+}
+
+// waitForGameServersToShutdown waits for all existing healthy Game Servers to reach their shutdown phase
+func waitForGameServersToShutdown(ctx context.Context, agonesClient *versioned.Clientset) {
+	log.Println("Waiting for existing Game Servers to shutdown...")
+
+	err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, true, func(ctx context.Context) (done bool, err error) {
+		// Get all Game Servers with the test label
+		gameServers, err := agonesClient.AgonesV1().GameServers(PodNamespace).List(ctx, metav1.ListOptions{
+			LabelSelector: "app=sdk-client-test",
+		})
+		if err != nil {
+			log.Printf("Error listing Game Servers: %v", err)
+			return false, nil
+		}
+
+		// Count Game Servers that are still in healthy states (not shutdown/terminated)
+		healthyCount := 0
+		for _, gs := range gameServers.Items {
+			state := gs.Status.State
+			// Consider Game Servers healthy if they're in Ready, Allocated, or Reserved states
+			if state == agonesv1.GameServerStateReady ||
+				state == agonesv1.GameServerStateAllocated ||
+				state == agonesv1.GameServerStateReserved {
+				healthyCount++
+			}
+		}
+
+		log.Printf("Waiting for %d healthy Game Servers to shutdown", healthyCount)
+
+		// Return true when no healthy Game Servers remain
+		return healthyCount == 0, nil
+	})
+
+	if err != nil {
+		log.Printf("Timeout waiting for Game Servers to shutdown, proceeding with cleanup: %v", err)
+	} else {
+		log.Println("All Game Servers have shutdown")
+	}
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
