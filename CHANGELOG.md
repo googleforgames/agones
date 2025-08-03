@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.51.0](https://github.com/googleforgames/agones/tree/v1.51.0) (2025-07-29)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.50.0...v1.51.0)
+
+**Implemented enhancements:**
+- Feat: Add dev feature flag for Processor Allocator by @lacroixthomas in https://github.com/googleforgames/agones/pull/4221
+- feat: promote ScheduledAutoscaler to beta by @lacroixthomas in https://github.com/googleforgames/agones/pull/4226
+- Adds support for lists in the Unreal SDK #4029 by @keith-miller in https://github.com/googleforgames/agones/pull/4216
+
+**Fixed bugs:**
+- Controller for Pod in Succeeded state. by @markmandel in https://github.com/googleforgames/agones/pull/4201
+- Changed the sidecar requests rate limiter from exponential to a constant one by @miai10 in https://github.com/googleforgames/agones/pull/4186
+- Mocked GCE metadata to fix the Stackdriver local test failure by @0xaravindh in https://github.com/googleforgames/agones/pull/4215
+- Fix: Adding a retry mechanism in case the addMoreGameServers function call fails. by @txuna in https://github.com/googleforgames/agones/pull/4214
+- Remove former agones collaborator from github action by @igooch in https://github.com/googleforgames/agones/pull/4228
+
+**Other:**
+- Preparation for Release v1.51.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4209
+- Add tests for Prometheus metrics endpoint and validation by @0xaravindh in https://github.com/googleforgames/agones/pull/4185
+- fleetautoscaler.md references metadata incorrectly by @KAllan357 in https://github.com/googleforgames/agones/pull/4217
+- Add logs reporting to submit-upgrade-test-cloud-build for better visibility by @0xaravindh in https://github.com/googleforgames/agones/pull/4165
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.3.0 in /examples/custom-controller by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4211
+- Update region to asia-east1 for 1.33 cluster in E2E tests by @0xaravindh in https://github.com/googleforgames/agones/pull/4231
+
 ## [v1.50.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-06-17)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.49.0...v1.50.0)
