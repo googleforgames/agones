@@ -22,7 +22,7 @@ require (
 	github.com/GoogleCloudPlatform/cloud-build-notifiers v0.0.0-20250502133339-4bcece7acadd
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/golang/glog v1.2.5
-	github.com/google/go-github/v57 v57.0.0
+	github.com/google/go-github/v74 v74.0.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
 )
