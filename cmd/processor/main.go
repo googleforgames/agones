@@ -131,7 +131,6 @@ func main() {
 	signals.NewSigTermHandler(func() {
 		logger.Info("Pod shutdown has been requested, failing readiness check")
 		cancelCtx()
-		time.Sleep(1 * time.Second)
 		os.Exit(0)
 	})
 
@@ -139,6 +138,7 @@ func main() {
 		logger.Info("Starting processor work as leader")
 
 		// Simulate processor work (to ensure the leader is working)
+		// TODO: implement processor work
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
