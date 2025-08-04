@@ -99,6 +99,8 @@ func (c *Allocator) ListenAndBatchAllocate(ctx context.Context, updateWorkerCoun
 	var list []*agonesv1.GameServer
 	var sortKey uint64
 	requestCount := 0
+	gsToReorderIndex := -1
+	var gsToReorder *agonesv1.GameServer
 
 	metrics := c.newMetrics(ctx)
 	batchResponsesPerGs := make(map[string]batchResponses)
@@ -115,6 +117,8 @@ func (c *Allocator) ListenAndBatchAllocate(ctx context.Context, updateWorkerCoun
 
 		list = nil
 		requestCount = 0
+		gsToReorderIndex = -1
+		gsToReorder = nil
 	}
 
 	checkSortKey := func(gsa *allocationv1.GameServerAllocation) {
@@ -149,12 +153,20 @@ func (c *Allocator) ListenAndBatchAllocate(ctx context.Context, updateWorkerCoun
 
 		// Sort list if necessary
 		if list == nil {
+			// There could be a bug to not flush the list if the scheduling changes between gsas.
 			if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) || gsa.Spec.Scheduling == apis.Packed {
 				list = c.allocationCache.ListSortedGameServers(gsa)
 			} else {
 				// If FeatureCountsAndLists and Scheduling == Distributed, sort game servers by Priorities
 				list = c.allocationCache.ListSortedGameServersPriorities(gsa)
 			}
+		} else if gsToReorderIndex >= 0 {
+			// We can use the priorities from the new gsa because if they were different,
+			// we would have flushed the list and started a new one.
+			c.allocationCache.ReorderGameServerAfterAllocation(
+				list,                          /*where*/
+				gsToReorderIndex, gsToReorder, /*what*/
+				gsa.Spec.Priorities, gsa.Spec.Scheduling /*how*/)
 		}
 	}
 
@@ -163,38 +175,41 @@ func (c *Allocator) ListenAndBatchAllocate(ctx context.Context, updateWorkerCoun
 		case req := <-c.pendingRequests:
 			checkRefreshList(req.gsa)
 
-			gs, index, err := findGameServerForAllocation(req.gsa, list)
+			foundGs, foundGsIndex, err := findGameServerForAllocation(req.gsa, list)
 			if err != nil {
 				req.response <- response{request: req, gs: nil, err: err}
 				continue
 			}
 
-			// if the gs has not been already allocated in this batch, remove it from the cache,
+			// If the gs has not been already allocated in this batch, remove it from the cache,
 			// but keep it in the list for the next allocation
-			existingBatch, alreadyAllocated := batchResponsesPerGs[string(gs.UID)]
+			existingBatch, alreadyAllocated := batchResponsesPerGs[string(foundGs.UID)]
 			if !alreadyAllocated {
-				if removeErr := c.allocationCache.RemoveGameServer(gs); removeErr != nil {
+				if removeErr := c.allocationCache.RemoveGameServer(foundGs); removeErr != nil {
 					// this seems unlikely, but lets handle it just in case
 					removeErr = errors.Wrap(removeErr, "error removing gameserver from cache")
 					req.response <- response{request: req, gs: nil, err: removeErr}
 
 					// remove the game server because it is problematic
-					list = append(list[:index], list[index+1:]...)
+					list = append(list[:foundGsIndex], list[foundGsIndex+1:]...)
 					continue
 				}
 			}
 
-			// apply the allocation to the gs in the list (not in cache anymore)
-			applyError, counterErrors, listErrors := c.applyAllocationToLocalGameServer(req.gsa.Spec.MetaPatch, gs, req.gsa)
+			// Apply the allocation to a copy of the gs in the list (not in cache anymore).
+			// It will be added back to the list during reordering before the next gsa gets processed.
+			gsToReorder = foundGs.DeepCopy()
+			gsToReorderIndex = foundGsIndex
+			applyError, counterErrors, listErrors := c.applyAllocationToLocalGameServer(req.gsa.Spec.MetaPatch, gsToReorder, req.gsa)
 			if applyError == nil {
 				if alreadyAllocated {
-					existingBatch.responses = append(existingBatch.responses, response{request: req, gs: gs.DeepCopy(), err: nil})
+					existingBatch.responses = append(existingBatch.responses, response{request: req, gs: gsToReorder.DeepCopy(), err: nil})
 					existingBatch.counterErrors = goErrors.Join(existingBatch.counterErrors, counterErrors)
 					existingBatch.listErrors = goErrors.Join(existingBatch.listErrors, listErrors)
-					batchResponsesPerGs[string(gs.UID)] = existingBatch
+					batchResponsesPerGs[string(gsToReorder.UID)] = existingBatch
 				} else { // first time we see this gs in this batch
-					batchResponsesPerGs[string(gs.UID)] = batchResponses{
-						responses:     []response{{request: req, gs: gs.DeepCopy(), err: nil}},
+					batchResponsesPerGs[string(gsToReorder.UID)] = batchResponses{
+						responses:     []response{{request: req, gs: gsToReorder.DeepCopy(), err: nil}},
 						counterErrors: counterErrors,
 						listErrors:    listErrors,
 					}
