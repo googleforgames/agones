@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/cloud-build-notifiers/lib/notifiers"
 	"github.com/Masterminds/sprig/v3"
 	log "github.com/golang/glog"
-	"github.com/google/go-github/v57/github"
+	"github.com/google/go-github/v74/github"
 	"golang.org/x/oauth2"
 	"google.golang.org/genproto/googleapis/devtools/cloudbuild/v1"
 )
@@ -53,7 +53,7 @@ type githubNotifier struct {
 	failureTemplate *template.Template
 }
 
-func (g *githubNotifier) SetUp(ctx context.Context, config *notifiers.Config, sg notifiers.SecretGetter, resolver notifiers.BindingResolver) error {
+func (g *githubNotifier) SetUp(ctx context.Context, config *notifiers.Config, _ string, sg notifiers.SecretGetter, resolver notifiers.BindingResolver) error {
 	tokenResource, err := notifiers.FindSecretResourceName(config.Spec.Secrets, tokenSecretName)
 	if err != nil {
 		return fmt.Errorf("failed to find Secret for ref %q: %w", tokenSecretName, err)

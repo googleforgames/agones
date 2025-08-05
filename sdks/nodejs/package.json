@@ -26,5 +26,5 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "1.51.0-dev"
+    "version": "1.52.0-dev"
 }
