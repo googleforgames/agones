@@ -30,9 +30,10 @@ cd /go/src/agones.dev/agones/test/upgrade
 
 # --- Function to print failure logs ---
 print_failure_logs() {
-    local cluster_name=$1
-    echo "ERROR: Upgrade test failed on cluster: $cluster_name"
-
+    local testCluster=$1
+    local testClusterLocation=$2
+    echo "ERROR: Upgrade test failed on cluster: $testCluster"
+    gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
     job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
     if [[ -z "$job_pods" ]]; then
         echo "No pods found for job upgrade-test-runner. They might have failed to schedule or were deleted."
@@ -49,8 +50,8 @@ print_failure_logs() {
         done
     fi
 
-    echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
-}
+    echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs?hl=en&inv=1&invt=Ab4o5A&mods=logs_tg_prod&project=${PROJECT_ID}"
+    }
 # ------------------------------------------------------
 
 pids=()
@@ -149,15 +150,16 @@ do
     # Wait for the pod to become ready (or timeout)
     if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
         echo "ERROR: The pod for job 'upgrade-test-runner' did not become ready within the timeout period."
-        print_failure_logs "$testCluster"
+        print_failure_logs "$testCluster" "$testClusterLocation"
         exit 1
     fi
 
     echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-    kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "${tmpdir}"/"${testCluster}".log &
+    logPath="${tmpdir}/${testCluster}.log"
+    kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "$logPath" &
     waitPid=$!
     pids+=( "$waitPid" )
-    waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+    waitPids[$waitPid]="$logPath"
 
     done
 done
