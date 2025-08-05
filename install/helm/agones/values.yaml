@@ -44,6 +44,10 @@ agones:
     sdk:
       name: agones-sdk
       annotations: {}
+    processor:
+      name: agones-processor
+      annotations: {}
+      labels: {}
   createPriorityClass: true
   priorityClassName: agones-system
   cloudProduct: "auto"
@@ -282,9 +286,35 @@ agones:
     totalRemoteAllocationTimeout: 30s
     allocationBatchWaitTime: 500ms
     topologySpreadConstraints: []
+    processor:
+      replicas: 2
+      resources: {}
+      nodeSelector: {}
+      annotations: {}
+      labels: {}
+      tolerations:
+      - key: "agones.dev/agones-system"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+      affinity: {}
+      topologySpreadConstraints: []
+      logLevel: info
+      leaderElection: {}
+      http:
+        port: 8080
+      readiness:
+        initialDelaySeconds: 3
+        periodSeconds: 3
+        failureThreshold: 3
+      healthCheck:
+        initialDelaySeconds: 3
+        periodSeconds: 3
+        failureThreshold: 3
+        timeoutSeconds: 1
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.51.0-dev
+    tag: 1.52.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
@@ -304,7 +334,9 @@ agones:
     allocator:
       name: agones-allocator
       pullPolicy: IfNotPresent
-
+    processor:
+      name: agones-processor
+      pullPolicy: IfNotPresent
 gameservers:
   namespaces:
   - default
