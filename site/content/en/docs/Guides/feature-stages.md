@@ -27,6 +27,7 @@ be disabled.
 The current set of `alpha` and `beta` feature gates:
 
 
+
 | Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
 |----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                     | `CountsAndLists`                   | Enabled  | `Beta`   | 1.41.0 |
@@ -35,10 +36,10 @@ The current set of `alpha` and `beta` feature gates:
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386) | `GKEAutopilotExtendedDurationPods` | Enabled  | `Beta`   | 1.44.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |
-| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Disabled | `Beta`   | 1.50.0 |
+| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Enabled  | `Beta`   | 1.50.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
-| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Disabled | `Alpha`  | 1.43.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
 | [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |

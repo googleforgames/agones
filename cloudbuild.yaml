@@ -302,11 +302,11 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=europe-west1 )
+        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=asia-east1 )
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=true&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=false&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
@@ -422,7 +422,7 @@ steps:
         done
 
 substitutions:
-  _BASE_VERSION: 1.51.0
+  _BASE_VERSION: 1.52.0
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
@@ -438,6 +438,7 @@ images:
   - ${_REGISTRY}/agones-sdk
   - ${_REGISTRY}/agones-ping
   - ${_REGISTRY}/agones-allocator
+  - ${_REGISTRY}/agones-processor
 logsBucket: gs://agones-build-logs
 options:
   machineType: E2_HIGHCPU_32
