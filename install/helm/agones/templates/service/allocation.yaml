@@ -303,7 +303,15 @@ spec:
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         - name: READINESS_SHUTDOWN_DURATION
-          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
+          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}
+        - name: PROCESSOR_MAX_BATCH_SIZE
+          value: {{ .Values.agones.allocator.processor.maxBatchSize | quote }}
+        - name: PROCESSOR_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.processor.allocationTimeout | quote }}
+        - name: PROCESSOR_RECONNECT_INTERVAL
+          value: {{ .Values.agones.allocator.processor.reconnectInterval | quote }}
+        - name: PROCESSOR_GRPC_PORT
+          value: {{ .Values.agones.allocator.processor.grpc.port | quote }}
         ports:
         {{- if .Values.agones.allocator.service.http.enabled }}
         - name: {{ .Values.agones.allocator.service.http.portName }}

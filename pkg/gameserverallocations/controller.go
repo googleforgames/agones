@@ -24,6 +24,8 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -34,10 +36,12 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
+	"agones.dev/agones/pkg/allocation/converters"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
@@ -49,10 +53,11 @@ func init() {
 
 // Extensions is a GameServerAllocation controller within the Extensions service
 type Extensions struct {
-	api        *apiserver.APIServer
-	baseLogger *logrus.Entry
-	recorder   record.EventRecorder
-	allocator  *Allocator
+	api             *apiserver.APIServer
+	baseLogger      *logrus.Entry
+	recorder        record.EventRecorder
+	allocator       *Allocator
+	processorClient processor.ProcessorClient
 }
 
 // NewExtensions returns the extensions controller for a GameServerAllocation
@@ -66,6 +71,7 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	remoteAllocationTimeout time.Duration,
 	totalAllocationTimeout time.Duration,
 	allocationBatchWaitTime time.Duration,
+	processorClient processor.ProcessorClient,
 ) *Extensions {
 	c := &Extensions{
 		api: apiServer,
@@ -78,6 +84,7 @@ func NewExtensions(apiServer *apiserver.APIServer,
 			remoteAllocationTimeout,
 			totalAllocationTimeout,
 			allocationBatchWaitTime),
+		processorClient: processorClient,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
@@ -102,6 +109,10 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 		ShortNames: []string{"gsa"},
 	}
 	c.api.AddAPIResource(allocationv1.SchemeGroupVersion.String(), resource, func(w http.ResponseWriter, r *http.Request, n string) error {
+		if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+			return c.processBufferedAllocationRequest(ctx, w, r, n)
+		}
+
 		return c.processAllocationRequest(ctx, w, r, n)
 	})
 }
@@ -209,4 +220,68 @@ func (c *Extensions) serialisation(r *http.Request, w http.ResponseWriter, obj k
 
 	err = info.Serializer.Encode(obj, w)
 	return errors.Wrapf(err, "error encoding %T", obj)
+}
+
+func (c *Extensions) processBufferedAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) error {
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
+		return nil
+	}
+	gsa, err := c.allocationDeserialization(r, namespace)
+	if err != nil {
+		return err
+	}
+	in := converters.ConvertGSAToAllocationRequest(gsa)
+
+	code := http.StatusCreated
+	resp, err := c.processorClient.Allocate(ctx, in)
+	if err != nil {
+		code = grpcCodeToHTTPStatus(status.Code(err))
+	}
+
+	source := ""
+	if resp != nil {
+		source = resp.Source
+	}
+	result := converters.ConvertAllocationResponseToGSA(resp, source)
+
+	err = c.serialisation(r, w, result, code, scheme.Codecs)
+
+	return err
+}
+
+// grpcCodeToHTTPStatus converts a gRPC status code to the corresponding HTTP status code.
+func grpcCodeToHTTPStatus(code codes.Code) int {
+	switch code {
+	case codes.OK:
+		return http.StatusOK
+	case codes.Canceled:
+		return 499 // Client Closed Request (non-standard, used by Kubernetes)
+	case codes.Internal:
+		return http.StatusInternalServerError
+	case codes.InvalidArgument:
+		return http.StatusBadRequest
+	case codes.DeadlineExceeded:
+		return http.StatusGatewayTimeout
+	case codes.NotFound:
+		return http.StatusNotFound
+	case codes.AlreadyExists:
+		return http.StatusConflict
+	case codes.PermissionDenied:
+		return http.StatusForbidden
+	case codes.Unauthenticated:
+		return http.StatusUnauthorized
+	case codes.ResourceExhausted:
+		return http.StatusTooManyRequests
+	case codes.Unimplemented:
+		return http.StatusNotImplemented
+	case codes.Unavailable:
+		return http.StatusServiceUnavailable
+	default:
+		logger.WithField("grpcCode", code).Warnf("received unknown gRPC code, defaulting to 500 Internal Server Error")
+		return http.StatusInternalServerError
+	}
 }

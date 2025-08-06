@@ -119,6 +119,8 @@ spec:
           value: {{ .Values.agones.allocator.processor.leaderElection.renewDeadline | default "10s" | quote }}
         - name: RETRY_PERIOD
           value: {{ .Values.agones.allocator.processor.leaderElection.retryPeriod | default "2s" | quote }}
+        - name: PULL_INTERVAL
+          value: {{ .Values.agones.allocator.processor.pullInterval | default "200ms" | quote }}
         {{- end }}
         livenessProbe:
           httpGet:
@@ -138,6 +140,8 @@ spec:
         ports:
         - name: http
           containerPort: {{ .Values.agones.allocator.processor.http.port }}
+        - name: grpc
+          containerPort: {{ .Values.agones.allocator.processor.grpc.port }}
         resources:
 {{- if .Values.agones.allocator.processor.resources }}
 {{ toYaml .Values.agones.allocator.processor.resources | indent 10 }}
@@ -175,4 +179,7 @@ spec:
     - port: {{ .Values.agones.allocator.processor.http.port }}
       name: http
       targetPort: {{ .Values.agones.allocator.processor.http.port }}
+    - port: {{ .Values.agones.allocator.processor.grpc.port }}
+      name: grpc
+      targetPort: {{ .Values.agones.allocator.processor.grpc.port }}
 {{- end }}
