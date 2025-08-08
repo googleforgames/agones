@@ -51,11 +51,12 @@ print_failure_logs() {
     fi
 
     echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs?hl=en&inv=1&invt=Ab4o5A&mods=logs_tg_prod&project=${PROJECT_ID}"
-    }
+}
 # ------------------------------------------------------
 
 pids=()
 typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
+declare -A clusterRegionMap   # Associative array for mapping cluster name -> cluster location
 tmpdir=$(mktemp -d)
 trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
 
@@ -82,6 +83,9 @@ do
         testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
     fi
     testClusterLocation="${region}"
+
+    # Store mapping for later lookup
+    clusterRegionMap["$testCluster"]="$testClusterLocation"
 
     echo "===== Processing cluster: $testCluster in $testClusterLocation ====="
 
@@ -185,15 +189,17 @@ for pid in "${pids[@]}"; do
             continue
         else
             echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
-            print_failure_logs "$(basename "$outputLog" .log)"
+            clusterName="$(basename "$outputLog" .log)"
+            print_failure_logs "$clusterName" "${clusterRegionMap[$clusterName]}"
             exit 1
         fi
     # This block executes when the process exits and pid status!=0
     else
         status=$?
         outputLog="${waitPids[$pid]}"
+        clusterName="$(basename "$outputLog" .log)"
         echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
-        print_failure_logs "$(basename "$outputLog" .log)"
+        print_failure_logs "$clusterName" "${clusterRegionMap[$clusterName]}"
         exit $status
     fi
 done
