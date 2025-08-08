@@ -614,8 +614,6 @@ func TestAllocationCacheReorderGameServerAfterAllocation(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	//gs0 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs0", Namespace: defaultNs, UID: "0"},
-	//	Status: agonesv1.GameServerStatus{NodeName: "node0", State: agonesv1.GameServerStateReady}}
 	gs0Allocated := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs0", Namespace: defaultNs, UID: "0"},
 		Status: agonesv1.GameServerStatus{NodeName: "node0", State: agonesv1.GameServerStateAllocated}}
 	gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, UID: "1"},
@@ -871,7 +869,7 @@ func TestAllocationCacheReorderGameServerAfterAllocation(t *testing.T) {
 
 			strategy := apis.Packed
 			if testScenario.packingStrategy != "" {
-				strategy = apis.SchedulingStrategy(testScenario.packingStrategy)
+				strategy = testScenario.packingStrategy
 			}
 
 			cache.ReorderGameServerAfterAllocation(

@@ -330,7 +330,7 @@ func (c *AllocationCache) ReorderGameServerAfterAllocation(
 				newIndex += gsIndexBeforeAllocation
 			}
 		} else {
-			c.baseLogger.WithField("startegy", strategy).
+			c.baseLogger.WithField("strategy", strategy).
 				Warn("Scheduling strategy not supported! Reordering is skipped!")
 		}
 	}
@@ -350,7 +350,7 @@ func (c *AllocationCache) ReorderGameServerAfterAllocation(
 // compareGameServersAfterAllocationForDistributedStrategy compares the priority of the before and after applying an allocation to a game server.
 // The first bool returned has the meaning of greater (before has greater priority than after) and the second of equal. If equal is true, discard the value of less.
 // It does not take into account the name of the game server, so it can return an equal result.
-// Used for the distributed startegy.
+// Used for the distributed strategy.
 func compareGameServersAfterAllocationForDistributedStrategy(
 	before, after *agonesv1.GameServer,
 	priorities []agonesv1.Priority) (bool, bool) {
@@ -367,7 +367,7 @@ func compareGameServersAfterAllocationForDistributedStrategy(
 // compareGameServersAfterAllocationForPackedStrategy compares the priority of the before and after applying an allocation to a game server.
 // The first bool returned has the meaning of greater (before has greater priority than after) and the second of equal. If equal is true, discard the value of less.
 // It does not take into account the name of the game server, so it can return an equal result.
-// Used for the packed startegy.
+// Used for the packed strategy.
 func compareGameServersAfterAllocationForPackedStrategy(
 	before, after *agonesv1.GameServer,
 	priorities []agonesv1.Priority,
@@ -432,7 +432,7 @@ func compareGameServersAfterAllocationForPackedStrategy(
 // compareGameServersForPakcedStrategy compares the priority of two game servers based on the given priorities and node counts.
 // The bool returned has the meaning of greater (gs0 has greater priority than gs1 which is equivalent to the
 // less comparison as higher priority gs are positioned to the beginning of the list).
-// Used for the packed startegy.
+// Used for the packed strategy.
 func compareGameServersForPakcedStrategy(gs0, gs1 *agonesv1.GameServer, priorities []agonesv1.Priority, counts map[string]gameservers.NodeCount) bool {
 	greater, equal := compareGameServersAfterAllocationForPackedStrategy(gs0, gs1, priorities, counts)
 	if !equal {
@@ -446,7 +446,7 @@ func compareGameServersForPakcedStrategy(gs0, gs1 *agonesv1.GameServer, prioriti
 // compareGameServers compares the priority of two game servers based on the given priorities.
 // The bool returned has the meaning of greater (gs0 has greater priority than gs1 which is equivalent to the
 // less comparison as higher priority gs are positioned to the beginning of the list).
-// Used for the distributed startegy.
+// Used for the distributed strategy.
 func compareGameServersForDistributedStrategy(gs0, gs1 *agonesv1.GameServer, priorities []agonesv1.Priority) bool {
 	greater, equal := compareGameServersAfterAllocationForDistributedStrategy(gs0, gs1, priorities)
 	if !equal {
@@ -458,7 +458,7 @@ func compareGameServersForDistributedStrategy(gs0, gs1 *agonesv1.GameServer, pri
 }
 
 // findIndexAfterAllocationForPackedStrategy finds the index where the gs should be inserted to maintain the list sorted.
-// Used for the packed startegy.
+// Used for the packed strategy.
 func findIndexAfterAllocationForPackedStrategy(gsList []*agonesv1.GameServer, gs *agonesv1.GameServer, priorities []agonesv1.Priority, counts map[string]gameservers.NodeCount) int {
 	pos := sort.Search(len(gsList), func(i int) bool {
 		return compareGameServersForPakcedStrategy(gs, gsList[i], priorities, counts)
@@ -467,7 +467,7 @@ func findIndexAfterAllocationForPackedStrategy(gsList []*agonesv1.GameServer, gs
 }
 
 // findIndexAfterAllocationForDistributedStrategy finds the index where the gs should be inserted to maintain the list sorted.
-// Used for the distributed startegy.
+// Used for the distributed strategy.
 func findIndexAfterAllocationForDistributedStrategy(gsList []*agonesv1.GameServer, gs *agonesv1.GameServer, priorities []agonesv1.Priority) int {
 	pos := sort.Search(len(gsList), func(i int) bool {
 		return compareGameServersForDistributedStrategy(gs, gsList[i], priorities)

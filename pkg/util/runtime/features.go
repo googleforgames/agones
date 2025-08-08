@@ -169,7 +169,7 @@ var (
 		FeatureAllocatorBatchesUpdates:       false,
 
 		// Dev features
-		FeatureProcessorAllocator:      false,
+		FeatureProcessorAllocator: false,
 
 		// Example feature
 		FeatureExample: false,
