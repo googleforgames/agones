@@ -336,8 +336,6 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 		time.Sleep(1 * time.Minute)
 	}
 	cancel()
-	// TODO: Replace sleep with wait for the existing healthy Game Servers finish naturally by reaching their shutdown phase.
-	time.Sleep(30 * time.Second)
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
