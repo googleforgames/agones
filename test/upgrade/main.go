@@ -336,8 +336,6 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 		time.Sleep(1 * time.Minute)
 	}
 	cancel()
-	// TODO: Replace sleep with wait for the existing healthy Game Servers finish naturally by reaching their shutdown phase.
-	time.Sleep(30 * time.Second)
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
@@ -568,7 +566,7 @@ func cleanUpResources() {
 		log.Println("Could not delete game servers", err)
 	}
 
-	args = []string{"uninstall", "agones", "-n", "agones-system"}
+	args = []string{"uninstall", "agones", "-n", "agones-system", "--wait", "--timeout", "10m"}
 	_, err = runExecCommand(HelmCmd, args...)
 	if err != nil {
 		log.Println("Could not Helm uninstall Agones", err)
