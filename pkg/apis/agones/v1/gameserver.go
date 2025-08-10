@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"slices"
 	"strings"
 
 	"agones.dev/agones/pkg"
@@ -798,7 +799,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 
 		// addSidecarsAsInitContainers puts the sidecars in the initContainers list so that they can have their own independent
 		// container restart policies.
-		pod.Spec.InitContainers = append(sidecars, pod.Spec.InitContainers...)
+		pod.Spec.InitContainers = slices.Concat(sidecars, pod.Spec.InitContainers)
 
 		// default GameServer container should also be Restart: Never
 		if len(pod.Spec.RestartPolicy) == 0 {
