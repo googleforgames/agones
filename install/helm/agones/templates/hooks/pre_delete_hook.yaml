@@ -41,7 +41,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: pre-delete-delete-agones-resources
-        image: "bitnami/kubectl:1.32.4"
+        image: "{{ .Values.agones.crds.cleanupJobImage.registry }}/{{ .Values.agones.crds.cleanupJobImage.repository }}:{{ .Values.agones.crds.cleanupJobImage.tag }}"
         command:
         - "/bin/sh"
         - "/scripts/delete_agones_resources.sh"
