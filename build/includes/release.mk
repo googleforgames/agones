@@ -96,7 +96,7 @@ post-build-release:
 
 tag-deprecated-images:
 	previous_version=$(shell echo $(base_version) | awk -F. '{print $$1"."$$2-1"."$$3}'); \
-	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping"; \
+	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping agones-processor"; \
 	for image in $$images; do \
 		gcloud artifacts docker tags add ${release_registry}/$$image:$$previous_version ${release_registry}/$$image:deprecated-public-image-$$previous_version; \
 	done

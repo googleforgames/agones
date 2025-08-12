@@ -139,6 +139,8 @@ spec:
           value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
         - name: SIDECAR_RUN_AS_USER
           value: "1000"
+        - name: SIDECAR_REQUESTS_RATE_LIMIT
+          value: {{ .Values.agones.sdkServer.requestsRateLimit | quote }}
         - name: SDK_SERVICE_ACCOUNT
           value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
         - name: PROMETHEUS_EXPORTER

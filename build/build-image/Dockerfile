@@ -63,7 +63,7 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
  git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
-ENV HELM_VER 3.10.3
+ENV HELM_VER 3.18.4
 ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -89,7 +89,7 @@ RUN go install gotest.tools/gotestsum@latest
 #     \_/\_/ \___|_.__/|___/_|\__\___|
 #
 
-ENV HUGO_VER 0.146.0
+ENV HUGO_VER 0.147.0
 RUN mkdir /tmp/hugo && \
     wget -q -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
     tar -zxvf /tmp/hugo/hugo.tar.gz -C /tmp/hugo/ && \

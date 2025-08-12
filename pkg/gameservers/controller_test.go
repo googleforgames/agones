@@ -1289,12 +1289,14 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, sidecarContainer.Resources.Requests.Cpu(), &c.sidecarCPURequest)
 			assert.Equal(t, sidecarContainer.Resources.Limits.Memory(), &c.sidecarMemoryLimit)
 			assert.Equal(t, sidecarContainer.Resources.Requests.Memory(), &c.sidecarMemoryRequest)
-			assert.Len(t, sidecarContainer.Env, 4, "4 env vars")
+			assert.Len(t, sidecarContainer.Env, 5, "5 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", sidecarContainer.Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, sidecarContainer.Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", sidecarContainer.Env[1].Name)
 			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
 			assert.Equal(t, "LOG_LEVEL", sidecarContainer.Env[3].Name)
+			assert.Equal(t, "REQUESTS_RATE_LIMIT", sidecarContainer.Env[4].Name)
+			assert.Equal(t, "500ms", sidecarContainer.Env[4].Value)
 			assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), sidecarContainer.Env[3].Value)
 			assert.Equal(t, *sidecarContainer.SecurityContext.AllowPrivilegeEscalation, false)
 			assert.Equal(t, *sidecarContainer.SecurityContext.RunAsNonRoot, true)
@@ -2286,7 +2288,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 		map[string]portallocator.PortRange{agonesv1.DefaultPortRange: {MinPort: 10, MaxPort: 20}},
 		"sidecar:dev", false,
 		resource.MustParse("0.05"), resource.MustParse("0.1"),
-		resource.MustParse("50Mi"), resource.MustParse("100Mi"), sidecarRunAsUser, "sdk-service-account",
+		resource.MustParse("50Mi"), resource.MustParse("100Mi"), sidecarRunAsUser, 500*time.Millisecond, "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m

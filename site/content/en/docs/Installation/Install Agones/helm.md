@@ -198,6 +198,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.maxGameServerDeletionsPerBatch`       | Maximum number of GameServer deletion calls per batch                                                                                                                                                                               | `64`    |
 | `agones.controller.maxPodPendingCount`                   | Maximum number of pending pods per game server set                                                                                                                                                                                  | `5000`  |
 
+### SDK Server
+
+| Parameter                                                | Description                                                                                                                                                                                                                         | Default        |
+|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
+| `agones.sdkServer.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
+
 ### Ping Service
 
 

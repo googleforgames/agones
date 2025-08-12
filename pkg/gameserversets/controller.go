@@ -70,6 +70,10 @@ type Extensions struct {
 	apiHooks   agonesv1.APIHooks
 }
 
+func init() {
+	registerViews()
+}
+
 // Controller is a GameServerSet controller
 type Controller struct {
 	baseLogger                     *logrus.Entry
@@ -353,12 +357,14 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	if numServersToAdd > 0 {
 		if err := c.addMoreGameServers(ctx, gsSet, numServersToAdd); err != nil {
 			loggerForGameServerSet(c.baseLogger, gsSet).WithError(err).Warning("error adding game servers")
+			return errors.Wrap(err, "error adding game servers")
 		}
 	}
 
 	if len(toDelete) > 0 {
 		if err := c.deleteGameServers(ctx, gsSet, toDelete); err != nil {
 			loggerForGameServerSet(c.baseLogger, gsSet).WithError(err).Warning("error deleting game servers")
+			return errors.Wrap(err, "error deleting game servers")
 		}
 	}
 
