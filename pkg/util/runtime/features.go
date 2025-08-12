@@ -82,6 +82,9 @@ const (
 	// FeatureProcessorAllocator is a feature flag to enable/disable the processor allocator feature.
 	FeatureProcessorAllocator = "ProcessorAllocator"
 
+	// FeatureWasmAutoscaler is a feature flag to enable/disable the script based autoscaler.
+	FeatureWasmAutoscaler Feature = "WasmAutoscaler"
+
 	////////////////
 	// Example feature
 
@@ -163,6 +166,7 @@ var (
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
 		FeatureSidecarContainers:             false,
+		FeatureWasmAutoscaler:                false,
 
 		// Dev features
 		FeatureProcessorAllocator: false,
