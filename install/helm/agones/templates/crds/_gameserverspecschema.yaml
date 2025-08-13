@@ -191,12 +191,12 @@ properties:
               title: Max capacity of the array (can be less than or equal to value of maxItems)
               minimum: 0
               default: 1000
-              maximum: {{ .Values.agones.crds.gameserver.lists.maxItems }} # must be equal to values.maxItems
+              maximum: {{ .lists.maxItems }} # must be equal to values.maxItems
             values:
               title: set of all the items in the list
               type: array
               x-kubernetes-list-type: set # Requires items in the array to be unique
-              maxItems: {{ .Values.agones.crds.gameserver.lists.maxItems }} # max possible size of the value array (cannot be updated)
+              maxItems: {{ .lists.maxItems }} # max possible size of the value array (cannot be updated)
               items: # name of the item (player1, session1, room1, etc.)
                 type: string
               default: []

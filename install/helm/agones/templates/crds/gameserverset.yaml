@@ -113,7 +113,11 @@ spec:
                           - Ascending
                           - Descending
                 template:
-                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
+                  {{- $data := dict 
+                    "metadata" true 
+                    "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields
+                    "lists" .Values.agones.crds.gameserver.lists
+                  }}
                   {{- include "gameserver.schema" $data | indent 18 }}
             status:
               description: 'GameServerSetStatus is the status of a GameServerSet. More info:
