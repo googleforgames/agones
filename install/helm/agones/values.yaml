@@ -33,6 +33,9 @@ agones:
     install: true
     cleanupOnDelete: true
     cleanupJobTTL: 60
+    gameserver:
+      lists:
+        maxItems: 1000
   serviceaccount:
     allocator:
       name: agones-allocator

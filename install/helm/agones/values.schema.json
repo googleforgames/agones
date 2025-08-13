@@ -44,6 +44,19 @@
             "cleanupJobTTL": {
               "type": "integer",
               "minimum": 0
+            },
+            "gameserver": {
+              "type": "object",
+              "properties": {
+                "lists": {
+                  "type": "object",
+                  "properties": {
+                    "maxItems": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
             }
           },
           "if": {
