@@ -134,7 +134,11 @@ spec:
                           - Ascending
                           - Descending
                 template:
-                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
+                  {{- $data := dict 
+                    "metadata" true 
+                    "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields
+                    "lists" .Values.agones.crds.gameserver.lists
+                  }}
                   {{- include "gameserver.schema" $data | indent 17 }}
             status:
               description: 'FleetStatus is the status of a Fleet. More info:
