@@ -36,7 +36,7 @@ agones:
     cleanupJobImage:
       registry: rancher
       repository: kubectl
-      tag: 1.32.7
+      tag: v1.32.7
   serviceaccount:
     allocator:
       name: agones-allocator
