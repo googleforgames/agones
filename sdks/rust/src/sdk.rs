@@ -30,7 +30,7 @@ pub use api::{
 
 pub type WatchStream = tonic::Streaming<GameServer>;
 
-use crate::{alpha::Alpha, errors::Result};
+use crate::{alpha::Alpha, beta::Beta, errors::Result};
 
 #[inline]
 fn empty() -> api::Empty {
@@ -42,6 +42,7 @@ fn empty() -> api::Empty {
 pub struct Sdk {
     client: SdkClient<Channel>,
     alpha: Alpha,
+    beta: Beta,
 }
 
 impl Sdk {
@@ -102,7 +103,8 @@ impl Sdk {
         // will only attempt to connect on first invocation, so won't exit straight away.
         let channel = builder.connect_lazy();
         let mut client = SdkClient::new(channel.clone());
-        let alpha = Alpha::new(channel);
+        let alpha = Alpha::new(channel.clone());
+        let beta = Beta::new(channel);
 
         tokio::time::timeout(Duration::from_secs(30), async {
             let mut connect_interval = tokio::time::interval(Duration::from_millis(100));
@@ -116,13 +118,19 @@ impl Sdk {
         })
         .await?;
 
-        Ok(Self { client, alpha })
+        Ok(Self { client, alpha, beta })
     }
 
     /// Alpha returns the Alpha SDK
     #[inline]
     pub fn alpha(&self) -> &Alpha {
         &self.alpha
+    }
+
+    /// Beta returns the Beta SDK
+    #[inline]
+    pub fn beta(&self) -> &Beta {
+        &self.beta
     }
 
     /// Marks the Game Server as ready to receive connections
