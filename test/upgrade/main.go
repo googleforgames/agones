@@ -566,7 +566,7 @@ func cleanUpResources() {
 		log.Println("Could not delete game servers", err)
 	}
 
-	args = []string{"uninstall", "agones", "-n", "agones-system", "--wait", "--timeout", "10m", "--debug"}
+	args = []string{"uninstall", "agones", "-n", "agones-system", "--wait", "--timeout", "10m"}
 	_, err = runExecCommand(HelmCmd, args...)
 	if err != nil {
 		log.Println("Could not Helm uninstall Agones", err)
