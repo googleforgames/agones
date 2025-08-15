@@ -36,7 +36,7 @@ impl Beta {
         }
     }
 
-    /// GetCounterCount returns the Count for a Counter, given the Counter's key (name).
+    /// get_counter_count returns the Count for a Counter, given the Counter's key (name).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn get_counter_count(&mut self, key: &str) -> Result<i64> {
@@ -47,7 +47,7 @@ impl Beta {
             .map(|c| c.into_inner().count)?)
     }
 
-    /// IncrementCounter increases a counter by the given nonnegative integer amount.
+    /// increment_counter increases a counter by the given nonnegative integer amount.
     /// Will execute the increment operation against the current CRD value. Will max at max(int64).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     /// Returns error if the count is at the current capacity (to the latest knowledge of the SDK),
@@ -72,7 +72,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// DecrementCounter decreases the current count by the given nonnegative integer amount.
+    /// decrement_counter decreases the current count by the given nonnegative integer amount.
     /// The Counter Will not go below 0. Will execute the decrement operation against the current CRD value.
     /// Will error if the count is at 0 (to the latest knowledge of the SDK), and no decrement will occur.
     #[inline]
@@ -91,7 +91,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// SetCounterCount sets a count to the given value. Use with care, as this will overwrite any previous
+    /// set_counter_count sets a count to the given value. Use with care, as this will overwrite any previous
     /// invocations’ value. Cannot be greater than Capacity.
     #[inline]
     pub async fn set_counter_count(&mut self, key: &str, amount: i64) -> Result<()> {
@@ -109,7 +109,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// GetCounterCapacity returns the Capacity for a Counter, given the Counter's key (name).
+    /// get_counter_capacity returns the Capacity for a Counter, given the Counter's key (name).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn get_counter_capacity(&mut self, key: &str) -> Result<i64> {
@@ -120,7 +120,7 @@ impl Beta {
             .map(|c| c.into_inner().capacity)?)
     }
 
-    /// SetCounterCapacity sets the capacity for the given Counter. A capacity of 0 is no capacity.
+    /// set_counter_capacity sets the capacity for the given Counter. A capacity of 0 is no capacity.
     #[inline]
     pub async fn set_counter_capacity(&mut self, key: &str, amount: i64) -> Result<()> {
         Ok(self
@@ -137,7 +137,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// GetListCapacity returns the Capacity for a List, given the List's key (name).
+    /// get_list_capacity returns the Capacity for a List, given the List's key (name).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn get_list_capacity(&mut self, key: &str) -> Result<i64> {
@@ -148,7 +148,7 @@ impl Beta {
             .map(|l| l.into_inner().capacity)?)
     }
 
-    /// SetListCapacity sets the capacity for a given list. Capacity must be between 0 and 1000.
+    /// set_list_capacity sets the capacity for a given list. Capacity must be between 0 and 1000.
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn set_list_capacity(&mut self, key: &str, amount: i64) -> Result<()> {
@@ -166,7 +166,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// ListContains returns if a string exists in a List's values list, given the List's key (name)
+    /// list_contains returns if a string exists in a List's values list, given the List's key (name)
     /// and the string value. Search is case-sensitive.
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
@@ -178,7 +178,7 @@ impl Beta {
             .map(|l| l.into_inner().values.contains(&value.to_string()))?)
     }
 
-    /// GetListLength returns the length of the Values list for a List, given the List's key (name).
+    /// get_list_length returns the length of the Values list for a List, given the List's key (name).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn get_list_length(&mut self, key: &str) -> Result<usize> {
@@ -189,7 +189,7 @@ impl Beta {
             .map(|l| l.into_inner().values.len())?)
     }
 
-    /// GetListValues returns the Values for a List, given the List's key (name).
+    /// get_list_values returns the Values for a List, given the List's key (name).
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
     pub async fn get_list_values(&mut self, key: &str) -> Result<Vec<String>> {
@@ -200,7 +200,7 @@ impl Beta {
             .map(|l| l.into_inner().values)?)
     }
 
-    /// AppendListValue appends a string to a List's values list, given the List's key (name)
+    /// append_list_value appends a string to a List's values list, given the List's key (name)
     /// and the string value. Will error if the string already exists in the list.
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
@@ -215,7 +215,7 @@ impl Beta {
             .map(|_| ())?)
     }
 
-    /// DeleteListValue removes a string from a List's values list, given the List's key (name)
+    /// delete_list_value removes a string from a List's values list, given the List's key (name)
     /// and the string value. Will error if the string does not exist in the list.
     /// Will error if the key was not predefined in the GameServer resource on creation.
     #[inline]
