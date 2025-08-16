@@ -32,7 +32,11 @@ spec:
       heritage: {{ .Release.Service }}
   replicas: {{ .Values.agones.extensions.replicas }}
   strategy:
+{{- if .Values.agones.extensions.updateStrategy }}
+{{ toYaml .Values.agones.extensions.updateStrategy | indent 4 }}
+{{- else }}
     type: Recreate
+{{- end }}
   template:
     metadata:
       annotations:

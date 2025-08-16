@@ -1,4 +1,13 @@
 ---
+# Source: agones/templates/priority-class.yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: agones-system
+value: 1000000
+globalDefault: false
+description: "This priority class should be used for Agones service pods only."
+---
 # Source: agones/templates/controller.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -19174,15 +19183,6 @@ webhooks:
           - "v1"
         operations:
           - CREATE
----
-# Source: agones/templates/priority-class.yaml
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: agones-system
-value: 1000000
-globalDefault: false
-description: "This priority class should be used for Agones service pods only."
 ---
 # Source: agones/templates/extensions.yaml
 apiVersion: admissionregistration.k8s.io/v1
