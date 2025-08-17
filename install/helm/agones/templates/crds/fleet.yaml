@@ -137,7 +137,7 @@ spec:
                   {{- $data := dict 
                     "metadata" true 
                     "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields
-                    "lists" .Values.agones.crds.gameserver.lists
+                    "lists" .Values.gameservers.lists
                   }}
                   {{- include "gameserver.schema" $data | indent 17 }}
             status:

@@ -105,12 +105,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### Custom Resource Definitions
 
-| Parameter                               | Description                                                                                                                                                                                                                         | Default |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `agones.crds.install`                   | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart.                                                                       | `true`  |
-| `agones.crds.cleanupOnDelete`           | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion                                                                            | `true`  |
-| `agones.crds.cleanupJobTTL`             | The number of seconds for Kubernetes to delete the associated Job and Pods of the pre-delete hook after it completes, regardless if the Job is successful or not. Set to `0` to disable cleaning up the Job or the associated Pods. | `60`    |
-| `agones.crds.gameserver.lists.maxItems` | The maximum number of items that can be specified for a list.                                                                                                                                                                       | `1000`  |
+| Parameter                     | Description                                                                                                                                                                                                                         | Default |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `agones.crds.install`         | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart.                                                                       | `true`  |
+| `agones.crds.cleanupOnDelete` | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion                                                                            | `true`  |
+| `agones.crds.cleanupJobTTL`   | The number of seconds for Kubernetes to delete the associated Job and Pods of the pre-delete hook after it completes, regardless if the Job is successful or not. Set to `0` to disable cleaning up the Job or the associated Pods. | `60`    |
 
 ### Metrics
 
@@ -361,6 +360,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                  | Maximum port to use for dynamic port allocation                                                                                         | `8000`        |
 | `gameservers.additionalPortRanges`     | Port ranges from which to do named dynamic port allocation. Example: <br /> additionalPortRanges: <br />&nbsp;&nbsp;game: [9000, 10000] | `{}`          |
 | `gameservers.podPreserveUnknownFields` | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                    | `false`       |
+| `gameservers.lists.maxItems`           | The maximum number of items that can be specified for a list.                                                                           | `1000`        |
 
 ### Helm Installation
 

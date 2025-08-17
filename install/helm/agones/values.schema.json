@@ -44,19 +44,6 @@
             "cleanupJobTTL": {
               "type": "integer",
               "minimum": 0
-            },
-            "gameserver": {
-              "type": "object",
-              "properties": {
-                "lists": {
-                  "type": "object",
-                  "properties": {
-                    "maxItems": {
-                      "type": "integer"
-                    }
-                  }
-                }
-              }
             }
           },
           "if": {
@@ -1578,13 +1565,25 @@
         },
         "podPreserveUnknownFields": {
           "type": "boolean"
+        },
+        "lists": {
+          "type": "object",
+          "properties": {
+            "maxItems": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "maxItems"
+          ]
         }
       },
       "required": [
         "namespaces",
         "minPort",
         "maxPort",
-        "podPreserveUnknownFields"
+        "podPreserveUnknownFields",
+        "lists"
       ]
     },
     "helm": {
