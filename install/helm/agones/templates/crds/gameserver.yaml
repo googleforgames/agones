@@ -57,7 +57,7 @@ spec:
         openAPIV3Schema:
           {{- $data := dict 
             "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields 
-            "lists" .Values.agones.crds.gameserver.lists
+            "lists" .Values.gameservers.lists
           }}
           {{- include "gameserver.schema" $data | indent 9 }}{{- /* include the schema then status, as it's easier to align */ -}}
           {{- include "gameserver.status" $data | indent 11 }}
