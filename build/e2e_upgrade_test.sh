@@ -19,7 +19,7 @@ set -o pipefail
 
 BASE_VERSION=$1
 PROJECT_ID=$2
-logBucketName="upgrade-test-container-logs"
+BUCKET_NAME="upgrade-test-container-logs"
 
 apt-get update && apt-get install -y jq
 export SHELL="/bin/bash"
@@ -30,28 +30,33 @@ cd /go/src/agones.dev/agones/test/upgrade
 
 # --- Function to print failure logs ---
 print_failure_logs() {
-    local cluster_name=$1
-    echo "ERROR: Upgrade test failed on cluster: $cluster_name"
-
+    local testCluster=$1
+    local testClusterLocation=$2
+    echo "ERROR: Upgrade test failed on cluster: $testCluster"
+    gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
     job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
-    kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
-    for pod in $job_pods; do
-        containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
-        for container in $containers; do
-            if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
-                echo "----- Logs from pod: $pod, container: $container -----"
-                kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
-            fi
+    if [[ -z "$job_pods" ]]; then
+        echo "No pods found for job upgrade-test-runner. They might have failed to schedule or were deleted."
+    else
+        kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
+        for pod in $job_pods; do
+            containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
+            for container in $containers; do
+                if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
+                    echo "----- Logs from pod: $pod, container: $container -----"
+                    kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
+                fi
+            done
         done
-    done
+    fi
 
-    log_url="https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2Fupgrade-test-container-logs%2Fviews%2F_AllLogs;query=$(printf 'resource.labels.container_name=(\"upgrade-test-controller\" OR \"sdk-client-test\")' | jq -sRr @uri);cursorTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ);duration=PT10M?project=${PROJECT_ID}"
-    echo "Logs from log bucket: $log_url"
+    echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs?hl=en&inv=1&invt=Ab4o5A&mods=logs_tg_prod&project=${PROJECT_ID}"
 }
 # ------------------------------------------------------
 
 pids=()
 typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
+declare -A clusterRegionMap   # Associative array for mapping cluster name -> cluster location
 tmpdir=$(mktemp -d)
 trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
 
@@ -78,6 +83,9 @@ do
         testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
     fi
     testClusterLocation="${region}"
+
+    # Store mapping for later lookup
+    clusterRegionMap["$testCluster"]="$testClusterLocation"
 
     echo "===== Processing cluster: $testCluster in $testClusterLocation ====="
 
@@ -146,15 +154,16 @@ do
     # Wait for the pod to become ready (or timeout)
     if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
         echo "ERROR: The pod for job 'upgrade-test-runner' did not become ready within the timeout period."
-        print_failure_logs "$testCluster"
+        print_failure_logs "$testCluster" "$testClusterLocation"
         exit 1
     fi
 
     echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-    kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "${tmpdir}"/"${testCluster}".log &
+    logPath="${tmpdir}/${testCluster}.log"
+    kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*]}' | tee "$logPath" &
     waitPid=$!
     pids+=( "$waitPid" )
-    waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
+    waitPids[$waitPid]="$logPath"
 
     done
 done
@@ -180,15 +189,17 @@ for pid in "${pids[@]}"; do
             continue
         else
             echo "Unexpected job status: '$job_condition_type' with message: '$job_condition_message' in log $outputLog"
-            print_failure_logs "$(basename "$outputLog" .log)"
+            clusterName="$(basename "$outputLog" .log)"
+            print_failure_logs "$clusterName" "${clusterRegionMap[$clusterName]}"
             exit 1
         fi
     # This block executes when the process exits and pid status!=0
     else
         status=$?
         outputLog="${waitPids[$pid]}"
+        clusterName="$(basename "$outputLog" .log)"
         echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
-        print_failure_logs "$(basename "$outputLog" .log)"
+        print_failure_logs "$clusterName" "${clusterRegionMap[$clusterName]}"
         exit $status
     fi
 done
