@@ -655,7 +655,6 @@ func TestAutoscalerWebhookWithMetadata(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	fmt.Println("framework.Namespace", framework.Namespace)
 	// Create webhook Pod and Service
 	pod, svc := defaultAutoscalerWebhook(framework.Namespace, "true")
 	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(ctx, pod, metav1.CreateOptions{})
