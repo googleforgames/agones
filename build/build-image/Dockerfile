@@ -83,7 +83,6 @@ RUN apt-get update && \
 RUN go install gotest.tools/gotestsum@latest
 
 # install extism
-# install extism
 RUN curl -s https://get.extism.org/cli | sh -s -- -v v1.6.2 -y && \
     extism lib install
 
