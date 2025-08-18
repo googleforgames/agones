@@ -28,6 +28,7 @@ spec:
         - name: upgrade-test-controller
           image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:${DevVersion}
           imagePullPolicy: Always
+          terminationMessagePolicy: FallbackToLogsOnError
           env:
             - name: PodName
               valueFrom:

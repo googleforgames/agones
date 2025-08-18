@@ -241,6 +241,7 @@ steps:
     args: [push]
     waitFor:
       - push-images
+    timeout: 5400s  # 1.5h
 
   # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
