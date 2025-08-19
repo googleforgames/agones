@@ -449,7 +449,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
-	path := "scale"
+	path := "scale" //nolint:goconst
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
