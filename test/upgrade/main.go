@@ -31,6 +31,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"golang.org/x/sync/errgroup"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -65,6 +66,8 @@ const (
 	TestRegistry = "us-docker.pkg.dev/agones-images/ci"
 	// ContainerRegistry is the registry for upgrade test container files
 	ContainerRegistry = "us-docker.pkg.dev/agones-images/ci/sdk-client-test"
+	// Retries is the number of times to retry creating a game server.
+	Retries = 8
 )
 
 var (
@@ -81,28 +84,64 @@ var (
 )
 
 func main() {
-	ctx := context.Background()
+	if err := run(); err != nil {
+		// Write the final error to the termination log before exiting.
+		msg := err.Error()
+		if writeErr := os.WriteFile("/dev/termination-log", []byte(msg), 0644); writeErr != nil {
+			log.Printf("Error writing to termination log: %v", writeErr)
+		}
+		log.Fatal(msg)
+	}
+}
+
+func run() error {
+	ctx, cancel := context.WithCancel(context.Background())
+	// Defer the primary cancel and cleanup to ensure they always run at the very end.
+	defer cancel()
+	defer cleanUpResources()
+
+	// Creates an errgroup. gCtx will be canceled when the first goroutine returns a non-nil error.
+	g, gCtx := errgroup.WithContext(ctx)
+
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
-		log.Fatal("Could not create in cluster config", cfg)
+		return fmt.Errorf("could not create in cluster config: %w", err)
 	}
-
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		log.Fatal("Could not create the kubernetes api clientset", err)
+		return fmt.Errorf("could not create the kubernetes api clientset: %w", err)
 	}
-
 	agonesClient, err := versioned.NewForConfig(cfg)
 	if err != nil {
-		log.Fatal("Could not create the agones api clientset")
+		return fmt.Errorf("could not create the agones api clientset: %w", err)
 	}
 
-	validConfigs := configTestSetup(ctx, kubeClient)
-	go watchGameServers(agonesClient, len(validConfigs)*2)
-	go watchGameServerEvents(kubeClient)
-	addAgonesRepo()
-	runConfigWalker(ctx, validConfigs)
-	cleanUpResources()
+	validConfigs, err := configTestSetup(gCtx, kubeClient)
+	if err != nil {
+		return fmt.Errorf("could not create the configuration test setup: %w", err)
+	}
+
+	// Watch Game Servers
+	g.Go(func() error {
+		return watchGameServers(gCtx, agonesClient, len(validConfigs)*2)
+	})
+
+	// Watch Game Server Events
+	g.Go(func() error {
+		return watchGameServerEvents(gCtx, kubeClient)
+	})
+
+	// Run the main test logic
+	g.Go(func() error {
+		if err := addAgonesRepo(); err != nil {
+			return err
+		}
+		// Pass cancel here to stop other go routines when the runConfigWalker returns successfully.
+		return runConfigWalker(gCtx, g, validConfigs, cancel)
+	})
+
+	// g.Wait() blocks until all goroutines have returned or returns the first non-nil error.
+	return g.Wait()
 }
 
 type versionMappings struct {
@@ -145,16 +184,19 @@ type helmStatuses []struct {
 }
 
 // Determine test scenario to run
-func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*configTest {
+func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) ([]*configTest, error) {
 	versionMap := versionMappings{}
 
 	// Find the Kubernetes version of the node that this test is running on.
-	k8sVersion := findK8sVersion(ctx, kubeClient)
+	k8sVersion, err := findK8sVersion(ctx, kubeClient)
+	if err != nil {
+		return nil, err
+	}
 
 	// Get the mappings of valid Kubernetes, Agones, and Feature Gate versions from the configmap.
-	err := json.Unmarshal([]byte(VersionMappings), &versionMap)
+	err = json.Unmarshal([]byte(VersionMappings), &versionMap)
 	if err != nil {
-		log.Fatal("Could not Unmarshal ", err)
+		return nil, fmt.Errorf("Could not Unmarshal ", err)
 	}
 
 	// Find valid Agones versions and feature gates for the current version of Kubernetes.
@@ -163,43 +205,49 @@ func configTestSetup(ctx context.Context, kubeClient *kubernetes.Clientset) []*c
 		ct := configTest{}
 		// TODO: create different valid config based off of available feature gates.
 		// containsCountsAndLists will need to be updated to return true for when CountsAndLists=true.
-		countsAndLists := containsCountsAndLists(agonesVersion)
+		countsAndLists, err := containsCountsAndLists(agonesVersion)
+		if err != nil {
+			return nil, err
+		}
 		ct.agonesVersion = agonesVersion
 		if agonesVersion == "Dev" {
 			ct.agonesVersion = DevVersion
 			// Game server container cannot be created at DEV version due to go.mod only able to access
 			// published Agones versions. Use N-1 for DEV.
-			ct.gameServerPath = createGameServerFile(ReleaseVersion, countsAndLists)
+			ct.gameServerPath, err = createGameServerFile(ReleaseVersion, countsAndLists)
 		} else {
-			ct.gameServerPath = createGameServerFile(agonesVersion, countsAndLists)
+			ct.gameServerPath, err = createGameServerFile(agonesVersion, countsAndLists)
+		}
+		if err != nil {
+			return nil, err
 		}
 		configTests = append(configTests, &ct)
 	}
 
-	return configTests
+	return configTests, nil
 }
 
 // containsCountsAndLists returns true if the agonesVersion >= 1.41.0 when the CountsAndLists
 // feature entered Beta (on by default)
-func containsCountsAndLists(agonesVersion string) bool {
+func containsCountsAndLists(agonesVersion string) (bool, error) {
 	if agonesVersion == "Dev" {
-		return true
+		return true, nil
 	}
 	r := regexp.MustCompile(`\d+\.\d+`)
 	strVersion := r.FindString(agonesVersion)
 	floatVersion, err := strconv.ParseFloat(strVersion, 64)
 	if err != nil {
-		log.Fatalf("Could not convert agonesVersion %s to float: %s", agonesVersion, err)
+		return false, fmt.Errorf("Could not convert agonesVersion %s to float: %s", agonesVersion, err)
 	}
 	if floatVersion > 1.40 {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 // Finds the Kubernetes version of the Kubelet on the node that the current pod is running on.
 // The Kubelet version is the same version as the node.
-func findK8sVersion(ctx context.Context, kubeClient *kubernetes.Clientset) string {
+func findK8sVersion(ctx context.Context, kubeClient *kubernetes.Clientset) (string, error) {
 	// Wait to get pod and node as these may take a while to start on a new Autopilot cluster.
 	var pod *v1.Pod
 	err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 7*time.Minute, true, func(ctx context.Context) (done bool, err error) {
@@ -211,7 +259,7 @@ func findK8sVersion(ctx context.Context, kubeClient *kubernetes.Clientset) strin
 		return true, nil
 	})
 	if pod == nil || pod.Spec.NodeName == "" {
-		log.Fatalf("PollUntilContextTimeout timed out. Could not get Pod: %s", err)
+		return "", fmt.Errorf("PollUntilContextTimeout timed out. Could not get Pod: %s", err)
 	}
 
 	var node *v1.Node
@@ -224,15 +272,18 @@ func findK8sVersion(ctx context.Context, kubeClient *kubernetes.Clientset) strin
 		return true, nil
 	})
 	if node == nil || node.Status.NodeInfo.KubeletVersion == "" {
-		log.Fatalf("PollUntilContextTimeout timed out. Could not get Node: %s", err)
+		return "", fmt.Errorf("PollUntilContextTimeout timed out. Could not get Node: %s", err)
 	}
 
 	// Finds the major.min version. I.e. k8sVersion 1.30 from gkeVersion v1.30.2-gke.1587003
 	gkeVersion := node.Status.NodeInfo.KubeletVersion
 	log.Println("KubeletVersion", gkeVersion)
-	r := regexp.MustCompile(`\d+\.\d+`)
+	r, err := regexp.Compile(`\d+\.\d+`)
+	if err != nil {
+		return "", err
+	}
 
-	return r.FindString(gkeVersion)
+	return r.FindString(gkeVersion), nil
 }
 
 // runExecCommand executes the command with the given arguments.
@@ -252,16 +303,17 @@ func runExecCommand(cmd string, args ...string) ([]byte, error) {
 }
 
 // Adds public Helm Agones releases to the cluster
-func addAgonesRepo() {
+func addAgonesRepo() error {
 	installArgs := [][]string{{"repo", "add", "agones", "https://agones.dev/chart/stable"},
 		{"repo", "update"}}
 
 	for _, args := range installArgs {
 		_, err := runExecCommand(HelmCmd, args...)
 		if err != nil {
-			log.Fatalf("Could not add Agones helm repo: %s", err)
+			return fmt.Errorf("Could not add Agones helm repo: %s", err)
 		}
 	}
+	return nil
 }
 
 func installAgonesRelease(version, registry, featureGates, imagePullPolicy, sidecarPullPolicy,
@@ -297,9 +349,7 @@ func installAgonesRelease(version, registry, featureGates, imagePullPolicy, side
 	return err
 }
 
-func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
-	cancelCtx, cancel := context.WithCancel(ctx)
-
+func runConfigWalker(ctx context.Context, g *errgroup.Group, validConfigs []*configTest, cancel context.CancelFunc) error {
 	for _, config := range validConfigs {
 		registry := AgonesRegistry
 		chart := HelmChart
@@ -307,49 +357,68 @@ func runConfigWalker(ctx context.Context, validConfigs []*configTest) {
 			registry = TestRegistry
 			chart = TestChart
 		}
+		// Install the specified version of Agones.
 		err := installAgonesRelease(config.agonesVersion, registry, config.featureGates, ImagePullPolicy,
 			SidecarPullPolicy, LogLevel, chart)
 		if err != nil {
-			log.Fatalf("installAgonesRelease err: %s", err)
+			return fmt.Errorf("installAgonesRelease err: %w", err)
 		}
 
-		// Wait for the helm release to install. Waits the same amount of time as the Helm timeout.
+		// Wait for the Helm release to become fully deployed.
 		var helmStatus string
 		err = wait.PollUntilContextTimeout(ctx, 10*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
-			helmStatus = checkHelmStatus(config.agonesVersion)
+			helmStatus, err = checkHelmStatus(config.agonesVersion)
+			if err != nil {
+				return true, err
+			}
 			if helmStatus == "deployed" {
 				return true, nil
 			}
 			return false, nil
 		})
 		if err != nil || helmStatus != "deployed" {
-			log.Fatalf("PollUntilContextTimeout timed out while attempting upgrade to Agones version %s. Helm Status %s",
+			return fmt.Errorf("timed out while attempting upgrade to Agones version %s. Helm Status: %s",
 				config.agonesVersion, helmStatus)
 		}
 
+		// Launch a new goroutine that is managed by the errgroup to continuously create game servers
+		// for this version. If this function returns an error, the errgroup will catch it.
 		gsReady := make(chan bool)
-		go createGameServers(cancelCtx, config.gameServerPath, gsReady)
-		// Wait for the first game server pod created to become ready
-		<-gsReady
+		g.Go(func() error {
+			return createGameServers(ctx, config.gameServerPath, gsReady)
+		})
+
+		// Wait for the first game server to be ready before proceeding to the next step.
+		select {
+		case <-gsReady:
+			log.Printf("First game server for Agones version %s is ready.", config.agonesVersion)
+		case <-ctx.Done():
+			return nil
+		}
 		close(gsReady)
-		// Allow some soak time at the Agones version before next upgrade
+
+		// Allow some soak time at this version before upgrading to the next.
+		log.Printf("Soaking at version %s for 1 minute.", config.agonesVersion)
 		time.Sleep(1 * time.Minute)
 	}
+
+	log.Println("All upgrade steps successfully completed.")
 	cancel()
+	return nil
 }
 
 // checkHelmStatus returns the status of the Helm release at a specified agonesVersion if it exists.
-func checkHelmStatus(agonesVersion string) string {
+func checkHelmStatus(agonesVersion string) (string, error) {
 	helmStatus := helmStatuses{}
 	checkStatus := []string{"list", "-a", "-nagones-system", "-ojson"}
 	out, err := runExecCommand(HelmCmd, checkStatus...)
 	if err != nil {
-		log.Fatalf("Could not run command %s %s, err: %s", KubectlCmd, checkStatus, err)
+		return "", fmt.Errorf("Could not run command %s %s, err: %s", KubectlCmd, checkStatus, err)
 	}
 
 	err = json.Unmarshal(out, &helmStatus)
 	if err != nil {
-		log.Fatal("Could not Unmarshal", err)
+		return "", fmt.Errorf("Could not Unmarshal", err)
 	}
 
 	// Remove the commit sha from the DevVersion i.e. from 1.46.0-dev-7168dd3 to 1.46.0-dev or 1.46.0
@@ -364,21 +433,21 @@ func checkHelmStatus(agonesVersion string) string {
 
 	for _, status := range helmStatus {
 		if (status.AppVersion == agonesVersion) || (status.AppVersion == agonesRelease) {
-			return status.Status
+			return status.Status, nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // Creates a gameserver yaml file from the mounted gameserver.yaml template. The name of the new
 // gameserver yaml is based on the Agones version, i.e. gs1440.yaml for Agones version 1.44.0
 // Note: This does not validate the created file.
-func createGameServerFile(agonesVersion string, countsAndLists bool) string {
+func createGameServerFile(agonesVersion string, countsAndLists bool) (string, error) {
 	gsTmpl := gameServerTemplate{Registry: ContainerRegistry, AgonesVersion: agonesVersion, CountsAndLists: countsAndLists}
 
 	gsTemplate, err := template.ParseFiles("gameserver.yaml")
 	if err != nil {
-		log.Fatal("Could not ParseFiles template gameserver.yaml", err)
+		return "", fmt.Errorf("Could not ParseFiles template gameserver.yaml", err)
 	}
 
 	// Must use /tmp since the container is a non-root user.
@@ -386,11 +455,11 @@ func createGameServerFile(agonesVersion string, countsAndLists bool) string {
 	gsPath += ".yaml"
 	// Check if the file already exists
 	if _, err := os.Stat(gsPath); err == nil {
-		return gsPath
+		return gsPath, nil
 	}
 	gsFile, err := os.Create(gsPath)
 	if err != nil {
-		log.Fatal("Could not create file ", err)
+		return "", fmt.Errorf("Could not create file ", err)
 	}
 
 	err = gsTemplate.Execute(gsFile, gsTmpl)
@@ -398,41 +467,43 @@ func createGameServerFile(agonesVersion string, countsAndLists bool) string {
 		if fErr := gsFile.Close(); fErr != nil {
 			log.Printf("Could not close game server file %s, err: %s", gsPath, fErr)
 		}
-		log.Fatal("Could not Execute template gameserver.yaml ", err)
+		return "", fmt.Errorf("Could not Execute template gameserver.yaml ", err)
 	}
 	if err = gsFile.Close(); err != nil {
 		log.Printf("Could not close game server file %s, err: %s", gsPath, err)
 	}
 
-	return gsPath
+	return gsPath, nil
 }
 
 // Create a game server every five seconds until the context is cancelled. The game server container
 // is the same binary version as the game server file. The SDK version is always the same as the
 // version of the Agones controller that created it. The Game Server shuts itself down after the
 // tests have run as part of the `sdk-client-test` logic.
-func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
+func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) error {
 	args := []string{"create", "-f", gsPath}
-	checkFirstGameServerReady(ctx, gsReady, args...)
+	err := checkFirstGameServerReady(ctx, gsReady, args...)
+	if err != nil {
+		return err
+	}
 
 	ticker := time.NewTicker(5 * time.Second)
-	retries := 8
 	retry := 0
 
 	for {
 		select {
 		case <-ctx.Done():
 			ticker.Stop()
-			return
+			return nil
 		case <-ticker.C:
 			_, err := runExecCommand(KubectlCmd, args...)
 			// Ignore failures for ~45s at at time to account for the brief (~30s) during which the
 			// controller service is unavailable during upgrade.
 			if err != nil {
-				if retry > retries {
-					log.Fatalf("Could not create Gameserver %s: %s. Too many successive errors.", gsPath, err)
+				if retry > Retries {
+					return fmt.Errorf("Could not create Gameserver %s: %s. Too many successive errors.", gsPath, err)
 				}
-				log.Printf("Could not create Gameserver %s: %s. Retries left: %d.", gsPath, err, retries-retry)
+				log.Printf("Could not create Gameserver %s: %s. Retries left: %d.", gsPath, err, Retries-retry)
 				retry++
 			} else {
 				retry = 0
@@ -443,11 +514,11 @@ func createGameServers(ctx context.Context, gsPath string, gsReady chan bool) {
 
 // checkFirstGameServerReady waits for the Game Server Pod to be running. This may take several
 // minutes in Autopilot.
-func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...string) {
+func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...string) error {
 	// Sample output: gameserver.agones.dev/sdk-client-test-5zjdn created
 	output, err := runExecCommand(KubectlCmd, args...)
 	if err != nil {
-		log.Fatalf("Could not create Gameserver: %s", err)
+		return fmt.Errorf("Could not create Gameserver: %s", err)
 	}
 	r := regexp.MustCompile(`sdk-client-test-\S+`)
 	gsName := r.FindString(string(output))
@@ -456,14 +527,14 @@ func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...s
 	getPodStatus := []string{"get", "pod", gsName, "-o=custom-columns=:.status.phase,:.metadata.name", "--no-headers"}
 
 	// Pod is created after Game Server, wait briefly before erroring out on unable to get pod.
-	retries := 0
+	retry := 0
 	err = wait.PollUntilContextTimeout(ctx, 2*time.Second, Timeout, true, func(_ context.Context) (done bool, err error) {
 		out, err := runExecCommand(KubectlCmd, getPodStatus...)
-		if err != nil && retries > 2 {
-			log.Fatalf("Could not get Gameserver %s state: %s", gsName, err)
+		if err != nil && retry > Retries {
+			return true, fmt.Errorf("Could not get Gameserver %s state: %s", gsName, err)
 		}
 		if err != nil {
-			retries++
+			retry++
 			return false, nil
 		}
 		// Sample output: Running   sdk-client-test-bbvx9
@@ -475,14 +546,14 @@ func checkFirstGameServerReady(ctx context.Context, gsReady chan bool, args ...s
 		return false, nil
 	})
 	if err != nil {
-		log.Fatalf("PollUntilContextTimeout timed out while wait for first gameserver %s to be Ready", gsName)
+		return fmt.Errorf("PollUntilContextTimeout timed out while wait for first gameserver %s to be Ready", gsName)
 	}
+	return nil
 }
 
-// watchGameServers watches all game servers for errors. Errors if the number of failed game servers
-// exceeds the number of acceptedFailures.
-func watchGameServers(agonesClient *versioned.Clientset, acceptedFailures int) {
-	stopCh := make(chan struct{})
+// watchGameServers watches for failed GameServers and returns an error if the threshold is exceeded.
+func watchGameServers(ctx context.Context, agonesClient *versioned.Clientset, acceptedFailures int) error {
+	errCh := make(chan error, 1)
 	failedGs := make(map[string]gsLog)
 
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 5*time.Second)
@@ -501,34 +572,46 @@ func watchGameServers(agonesClient *versioned.Clientset, acceptedFailures int) {
 				failedGs[newGs.Name] = gsLog{GameServerVersion: gsVersion, SdkVersion: sdkVersion,
 					GameServerState: string(newGs.Status.State)}
 				if len(failedGs) > acceptedFailures {
-					log.Fatalf("Too many Game Servers in Error or Unhealthy states: %v", failedGs)
+					select {
+					case errCh <- fmt.Errorf("Too many Game Servers in Error or Unhealthy states: %v", failedGs):
+					default:
+					}
 				}
 			}
 		},
 	})
 	if err != nil {
-		log.Fatal("Not able to create AddEventHandler", err)
+		return fmt.Errorf("not able to create AddEventHandler: %w", err)
 	}
 
-	go gsInformer.Run(stopCh)
-	if !cache.WaitForCacheSync(stopCh, gsInformer.HasSynced) {
-		log.Fatal("Timed out waiting for game server informer cache to sync")
+	go gsInformer.Run(ctx.Done())
+	if !cache.WaitForCacheSync(ctx.Done(), gsInformer.HasSynced) {
+		return fmt.Errorf("Timed out waiting for game server informer cache to sync")
+	}
+
+	select {
+	case err := <-errCh:
+		return err // A fatal error occurred.
+	case <-ctx.Done():
+		return nil // Context was canceled, normal shutdown.
 	}
 }
 
-// watchGameServerEvents watches all events on `sdk-client-test` containers for BackOff errors. The
-// purpose is to catch ImagePullBackOff errors.
-func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
-	stopCh := make(chan struct{})
+// watchGameServerEvents watches all events on `sdk-client-test` containers for BackOff errors.
+// The purpose is to catch ImagePullBackOff errors. It returns an error if a "Failed" event is detected.
+func watchGameServerEvents(ctx context.Context, kubeClient *kubernetes.Clientset) error {
+	// Use a buffered channel to prevent the event handler from blocking.
+	errCh := make(chan error, 1)
 
-	// Filter by Game Server `sdk-client-test` containers
-	containerName := "sdk-client-test"
+	// Filter by Game Server `sdk-client-test` containers.
 	containerPath := "spec.containers{sdk-client-test}"
 	fieldSelector := fields.OneTermEqualSelector("involvedObject.fieldPath", containerPath).String()
+
 	// First delete previous `sdk-client-test` events, otherwise there will be events from previous runs.
 	_, err := runExecCommand(KubectlCmd, []string{"delete", "events", "--field-selector", fieldSelector}...)
 	if err != nil {
-		log.Fatal("Could not delete `sdk-client-test` events", err)
+		// This is not a fatal error, as it might just mean no events existed.
+		log.Println("Could not delete `sdk-client-test` events, which may be expected:", err)
 	}
 
 	eventOptions := informers.WithTweakListOptions(func(opts *metav1.ListOptions) {
@@ -543,24 +626,42 @@ func watchGameServerEvents(kubeClient *kubernetes.Clientset) {
 			newEvent := obj.(*v1.Event)
 			gsPodName := newEvent.InvolvedObject.Name
 			if newEvent.Reason == "Failed" {
-				log.Fatalf("%s on %s %s has failed. Latest event: message %s", containerName, newEvent.Kind,
-					gsPodName, newEvent.Message)
+				err := fmt.Errorf("%s on %s %s has failed. Latest event: message %s",
+					"sdk-client-test", newEvent.Kind, gsPodName, newEvent.Message)
+				// Send the error to the channel without blocking.
+				select {
+				case errCh <- err:
+				default:
+				}
 			}
 		},
 	})
 	if err != nil {
-		log.Fatal("Not able to create AddEventHandler", err)
+		return fmt.Errorf("not able to create AddEventHandler: %w", err)
 	}
 
-	go eventInformer.Run(stopCh)
-	if !cache.WaitForCacheSync(stopCh, eventInformer.HasSynced) {
-		log.Fatal("Timed out waiting for eventInformer cache to sync")
+	// Run the informer in a separate goroutine. It will stop when the context is canceled.
+	go eventInformer.Run(ctx.Done())
+
+	// Wait for the informer's cache to sync with the cluster.
+	if !cache.WaitForCacheSync(ctx.Done(), eventInformer.HasSynced) {
+		return fmt.Errorf("timed out waiting for eventInformer cache to sync")
+	}
+
+	// Block until an error is received or the context is canceled.
+	select {
+	case err := <-errCh:
+		// A fatal error was detected in the event handler.
+		return err
+	case <-ctx.Done():
+		// The context was canceled, indicating a normal shutdown or a failure in another goroutine.
+		return nil
 	}
 }
 
 // Deletes any remaining Game Servers, Uninstalls Agones, and Deletes agones-system namespace.
 func cleanUpResources() {
-	args := []string{"delete", "gs", "-l", "app=sdk-client-test"}
+	args := []string{"delete", "gs", "-l", "app=sdk-client-test", "--timeout", "10m"}
 	_, err := runExecCommand(KubectlCmd, args...)
 	if err != nil {
 		log.Println("Could not delete game servers", err)
@@ -576,13 +677,13 @@ func cleanUpResources() {
 	// does not always get cleaned up on Helm uninstall, and needs to be deleted (if it exists) before
 	// the agones-system namespace can be removed.
 	// Ignore the error, because an "error" means Helm already uninstalled the apiservice.
-	args = []string{"delete", "apiservice", "v1.allocation.agones.dev"}
+	args = []string{"delete", "apiservice", "v1.allocation.agones.dev", "--timeout", "1m"}
 	out, err := runExecCommand(KubectlCmd, args...)
 	if err == nil {
 		fmt.Println(string(out))
 	}
 
-	args = []string{"delete", "ns", "agones-system"}
+	args = []string{"delete", "ns", "agones-system", "--timeout", "10m"}
 	_, err = runExecCommand(KubectlCmd, args...)
 	if err != nil {
 		log.Println("Could not delete agones-system namespace", err)

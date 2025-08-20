@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	agones.dev/agones v1.49.0
+	golang.org/x/sync v0.15.0
 	k8s.io/api v0.33.1
 	k8s.io/apimachinery v0.33.1
 	k8s.io/client-go v0.33.1
