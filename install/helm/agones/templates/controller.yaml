@@ -36,7 +36,11 @@ spec:
       heritage: {{ .Release.Service }}
   replicas: {{ $replicas }}
   strategy:
+{{- if .Values.agones.controller.updateStrategy }}
+{{ toYaml .Values.agones.controller.updateStrategy | indent 4 }}
+{{- else }}
     type: Recreate
+{{- end }}
   template:
     metadata:
       annotations:
