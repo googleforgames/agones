@@ -15,6 +15,7 @@
 //! the Rust game server SDK
 
 pub mod alpha;
+pub mod beta;
 pub mod errors;
 mod sdk;
 
