@@ -79,4 +79,4 @@ spec:
             - name: SCALE_FACTOR
               value: '2'
             - name: FIXED_REPLICAS
-              value: "true"
+              value: "false"
