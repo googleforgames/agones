@@ -30,10 +30,11 @@ import (
 
 // Parameters which define thresholds to trigger scalling up and scale factor
 var (
-	replicaUpperThreshold = 0.7
-	replicaLowerThreshold = 0.3
-	scaleFactor           = 2.
-	minReplicasCount      = int32(2)
+	replicaUpperThreshold        = 0.7
+	replicaLowerThreshold        = 0.3
+	scaleFactor                  = 2.
+	minReplicasCount             = int32(2)
+	fixedReplicasOverrideEnabled bool
 )
 
 // Variables for the logger
@@ -80,6 +81,17 @@ func getEnvVariables() {
 			minReplicasCount = int32(minReplicas)
 		}
 	}
+
+	if ep := os.Getenv("FIXED_REPLICAS"); ep != "" {
+		if ep == "true" {
+			fixedReplicasOverrideEnabled = true
+			logger.Info("FIXED_REPLICAS override is enabled")
+		} else {
+			fixedReplicasOverrideEnabled = false
+			logger.Info("FIXED_REPLICAS override is disabled")
+		}
+	}
+
 	// Extra check: In order not to fall into infinite loop
 	// we change down scale trigger, so that after we scale up
 	// fleet does not immediately scales down and vice versa
@@ -151,7 +163,27 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 		UID:      faReq.Request.UID,
 	}
 
-	if faReq.Request.Status.Replicas != 0 {
+	if fixedReplicasOverrideEnabled {
+		if faReq.Request.Annotations != nil {
+			if value, ok := faReq.Request.Annotations["fixedReplicas"]; ok {
+				replicas, err := strconv.Atoi(value)
+				if err != nil {
+					logger.WithError(err).Error("Invalid fixedReplicas value in annotations")
+					http.Error(w, "Invalid fixedReplicas value. Must be an integer.", http.StatusBadRequest)
+					return
+				}
+
+				if replicas < 0 {
+					logger.Error("fixedReplicas value cannot be negative")
+					http.Error(w, "Invalid fixedReplicas value. Must be >= 0.", http.StatusBadRequest)
+					return
+				}
+
+				faResp.Scale = true
+				faResp.Replicas = int32(replicas)
+			}
+		}
+	} else if faReq.Request.Status.Replicas != 0 {
 		allocatedPercent := float64(faReq.Request.Status.AllocatedReplicas) / float64(faReq.Request.Status.Replicas)
 		if allocatedPercent > replicaUpperThreshold {
 			// After scaling we would have percentage of 0.7/2 = 0.35 > replicaLowerThreshold
