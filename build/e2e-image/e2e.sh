@@ -18,21 +18,13 @@ FEATURES=$1
 CLOUD_PRODUCT=$2
 REGISTRY=$3
 
-K8S_MINOR=$(kubectl version -o json | jq -r '.serverVersion.minor' | sed 's/+//')
-
 echo $FEATURES
 echo $REGISTRY
-echo $K8S_MINOR
 set -e
 
-# Ensure we cleanup the finalizers from k8s 1.33 until they patch it
-if [ "$K8S_MINOR" = "33" ]; then
-    echo "GKE 1.33 detected: cleaning up stuck service finalizers"
-
-    kubectl get svc -n agones-system -o json \
-    | jq -r '.items[] | select(.metadata.finalizers | length > 0) | .metadata.name' \
-    | xargs -r -I {} kubectl patch svc {} -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
-fi
+kubectl get svc -n agones-system -o json \
+| jq -r '.items[] | select(.metadata.finalizers | length > 0) | .metadata.name' \
+| xargs -r -I {} kubectl patch svc {} -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
 
 echo "installing current release"
 DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"' REGISTRY='"'$REGISTRY'"' 
