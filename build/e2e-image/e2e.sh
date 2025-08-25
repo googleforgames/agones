@@ -30,7 +30,8 @@ if [ "$K8S_MINOR" = "33" ]; then
     echo "GKE 1.33 detected: cleaning up stuck service finalizers"
 
     kubectl get svc -n agones-system -o json \
-    | jq -r '.items[] | select(.metadata.finalizers != null) | .metadata.name' \
+    | jq -r '.items[] | select(.metadata.finalizers | length > 0) | .metadata.name' \
+    | awk 'NF' \
     | xargs -r -I {} kubectl patch svc -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
 fi
 
