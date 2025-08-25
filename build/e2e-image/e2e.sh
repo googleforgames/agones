@@ -31,8 +31,7 @@ if [ "$K8S_MINOR" = "33" ]; then
 
     kubectl get svc -n agones-system -o json \
     | jq -r '.items[] | select(.metadata.finalizers | length > 0) | .metadata.name' \
-    | awk 'NF' \
-    | xargs -r -I {} kubectl patch svc -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
+    | xargs -r -I {} kubectl patch svc {} -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
 fi
 
 echo "installing current release"
