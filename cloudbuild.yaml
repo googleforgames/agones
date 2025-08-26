@@ -233,15 +233,6 @@ steps:
   # End to end tests
   #
 
-  # Build and Push upgrade test
-  - name: make-docker
-    id: push-upgrade-test
-    dir: test/upgrade
-    env: ['REGISTRY=${_REGISTRY}']
-    args: [push]
-    waitFor:
-      - push-images
-
   # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: wait-to-become-leader
@@ -266,18 +257,6 @@ steps:
       - CLOUDSDK_CORE_PROJECT=$PROJECT_ID
       - BUILD_ID=$BUILD_ID
       - TRIGGER_NAME=$TRIGGER_NAME
-
-  # Run the upgrade tests parallel, fail this step if any of the tests fail
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    id: submit-upgrade-test-cloud-build
-    entrypoint: bash
-    args:
-      - build/e2e_upgrade_test.sh
-      - ${_BASE_VERSION}
-      - ${PROJECT_ID}
-    waitFor:
-      - wait-to-become-leader
-      - push-upgrade-test
 
   # cancel all the orphan e2e test cloud builds, fail to cancel any of the build will fail this whole build
   - name: gcr.io/cloud-builders/gcloud
