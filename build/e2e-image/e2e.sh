@@ -21,6 +21,11 @@ REGISTRY=$3
 echo $FEATURES
 echo $REGISTRY
 set -e
+
+kubectl get svc -n agones-system -o json \
+| jq -r '.items[] | select(.metadata.finalizers | length > 0) | .metadata.name' \
+| xargs -r -I {} kubectl patch svc {} -n agones-system -p '{"metadata":{"finalizers":null}}' --type=merge
+
 echo "installing current release"
 DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"' REGISTRY='"'$REGISTRY'"' 
 echo "starting e2e test"
