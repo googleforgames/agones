@@ -348,6 +348,8 @@ gameservers:
     # requires feature gate PortRanges to be enabled
     # game: [9000, 10000]
   podPreserveUnknownFields: false
+  lists:
+    maxItems: 1000
 
 helm:
   installTests: false

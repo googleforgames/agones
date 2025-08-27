@@ -106,12 +106,12 @@ status:
             type: integer
             minimum: 0
             default: 1000
-            maximum: 1000 # must be equal to values.maxItems
+            maximum: {{ .lists.maxItems }} # must be equal to values.maxItems
           values:
             title: Set of all the items in the list
             type: array
             x-kubernetes-list-type: set # Requires items in the array to be unique
-            maxItems: 1000 # max possible size of the value array (cannot be updated)
+            maxItems: {{ .lists.maxItems }} # max possible size of the value array (cannot be updated)
             items: # name of the item (player1, session1, room1, etc.)
               type: string
             default: []
