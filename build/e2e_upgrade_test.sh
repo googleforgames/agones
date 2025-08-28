@@ -34,23 +34,37 @@ print_failure_logs() {
     local testClusterLocation=$2
     echo "ERROR: Upgrade test failed on cluster: $testCluster"
     gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
-    job_pods=$(kubectl get pods -l job-name=upgrade-test-runner -o jsonpath="{.items[*].metadata.name}")
-    if [[ -z "$job_pods" ]]; then
-        echo "No pods found for job upgrade-test-runner. They might have failed to schedule or were deleted."
+
+    # Get all pods for the job
+    job_pods_json=$(kubectl get pods -l job-name=upgrade-test-runner -o json)
+
+    # Check if any pods were found
+    if [[ $(echo "$job_pods_json" | jq '.items | length') -eq 0 ]]; then
+      echo "No pods found for job upgrade-test-runner. They might have failed to schedule or were deleted."
     else
-        kubectl logs --tail=20 "$job_pods" || echo "Unable to retrieve logs for pod: $job_pods"
-        for pod in $job_pods; do
-            containers=$(kubectl get pod "$pod" -o jsonpath='{.spec.containers[*].name}')
-            for container in $containers; do
-                if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
-                    echo "----- Logs from pod: $pod, container: $container -----"
-                    kubectl logs "$pod" -c "$container" || echo "Failed to retrieve logs from $pod/$container"
-                fi
-            done
+      # Get the name of the first (and only) pod
+      job_pod=$(echo "$job_pods_json" | jq -r '.items[0].metadata.name')
+      pod_status=$(kubectl get pod "$job_pod" -o jsonpath='{.status.phase}')
+
+      echo "--- Pod $job_pod status $pod_status. Retrieving termination message. ---"
+      # A non-restarting pod will have its termination message in 'state.terminated'.
+      termination_message=$(kubectl get pod "$job_pod" -o go-template='{{range .status.containerStatuses}}{{if eq .name "upgrade-test-controller"}}{{.state.terminated.message}}{{end}}{{end}}')
+
+      if [ -n "$termination_message" ]; then
+        echo "Fatal Error: $termination_message"
+      else
+        echo "No termination message found for pod $job_pod. Dumping logs:"
+        containers=$(kubectl get pod "$job_pod" -o jsonpath='{.spec.containers[*].name}')
+        for container in $containers; do
+          if [[ "$container" == "sdk-client-test" || "$container" == "upgrade-test-controller" ]]; then
+            echo "----- Logs from pod: $job_pod, container: $container -----"
+            kubectl logs "$job_pod" -c "$container" --tail=50 || echo "Failed to retrieve logs from $job_pod/$container"
+          fi
         done
+      fi
     fi
 
-    echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs?hl=en&inv=1&invt=Ab4o5A&mods=logs_tg_prod&project=${PROJECT_ID}"
+  echo "Logs from log bucket: https://console.cloud.google.com/logs/query;storageScope=storage,projects%2F${PROJECT_ID}%2Flocations%2Fglobal%2Fbuckets%2F${BUCKET_NAME}%2Fviews%2F_AllLogs?hl=en&inv=1&invt=Ab4o5A&mods=logs_tg_prod&project=${PROJECT_ID}"
 }
 # ------------------------------------------------------
 
@@ -100,7 +114,7 @@ do
     echo Checking if resources from a previous build of upgrade-test-runner exist and need to be cleaned up on cluster "${testCluster}".
     if kubectl get jobs | grep upgrade-test-runner ; then
         echo Deleting job from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl delete job upgrade-test-runner
+        kubectl delete job upgrade-test-runner --ignore-not-found=true
         kubectl wait --for=delete pod -l job-name=upgrade-test-runner --timeout=5m
     fi
 
@@ -110,30 +124,30 @@ do
         kubectl get gs -o=custom-columns=:.metadata.name --no-headers | xargs kubectl patch gs -p '{"metadata":{"finalizers":[]}}' --type=merge
         sleep 5
         echo Deleting game servers from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl delete gs -l app=sdk-client-test
+        kubectl delete gs -l app=sdk-client-test --ignore-not-found=true
     fi
 
     if kubectl get po -l app=sdk-client-test | grep ".*"; then
         echo Deleting pods from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl delete po -l app=sdk-client-test
+        kubectl delete po -l app=sdk-client-test --ignore-not-found=true
         kubectl wait --for=delete pod -l app=sdk-client-test --timeout=5m
     fi
 
     # The v1.allocation.agones.dev apiservice does not get removed automatically and will prevent the namespace from terminating.
     if kubectl get apiservice | grep v1.allocation.agones.dev ; then
         echo Deleting v1.allocation.agones.dev from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl delete apiservice v1.allocation.agones.dev
+        kubectl delete apiservice v1.allocation.agones.dev --ignore-not-found=true
     fi
 
     if kubectl get namespace | grep agones-system ; then
         echo Deleting agones-system namespace from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl delete namespace agones-system
+        kubectl delete namespace agones-system --ignore-not-found=true
         kubectl wait --for=delete ns agones-system --timeout=5m
     fi
 
     if kubectl get crds | grep agones ; then
         echo Deleting crds from previous run of upgrade-test-runner on cluster "${testCluster}".
-        kubectl get crds -o=custom-columns=:.metadata.name | grep agones | xargs kubectl delete crd
+        kubectl get crds -o=custom-columns=:.metadata.name | grep agones | xargs kubectl delete crd --ignore-not-found=true
     fi
 
     echo kubectl apply -f permissions.yaml on cluster "${testCluster}"
@@ -147,9 +161,7 @@ do
     kubectl apply -f "${tmpdir}"/upgradeTest.yaml
 
     # We need to wait for job pod to be created and ready before we can wait on the job itself.
-    # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
-    # kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
-    sleep 10s
+    kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
 
     # Wait for the pod to become ready (or timeout)
     if ! kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m; then
@@ -170,7 +182,7 @@ done
 
 for pid in "${pids[@]}"; do
     # This block executes when the process exits and pid status==0
-    if wait $pid; then
+    if wait "$pid"; then
         outputLog="${waitPids[$pid]}"
         # wait for output to finish writing to file
         until [ -s "$outputLog" ]; do sleep 1; done

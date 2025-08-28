@@ -21,13 +21,14 @@ metadata:
     app: upgrade-test-runner
 spec:
   backoffLimit: 0
-  ttlSecondsAfterFinished: 100
+  ttlSecondsAfterFinished: 240
   template:
     spec:
       containers:
         - name: upgrade-test-controller
           image: us-docker.pkg.dev/agones-images/ci/upgrade-test-controller:${DevVersion}
           imagePullPolicy: Always
+          terminationMessagePolicy: FallbackToLogsOnError
           env:
             - name: PodName
               valueFrom:
