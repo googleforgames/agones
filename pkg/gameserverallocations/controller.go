@@ -57,7 +57,7 @@ type Extensions struct {
 	baseLogger      *logrus.Entry
 	recorder        record.EventRecorder
 	allocator       *Allocator
-	processorClient processor.ProcessorClient
+	processorClient processor.Client
 }
 
 // NewExtensions returns the extensions controller for a GameServerAllocation
@@ -71,7 +71,7 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	remoteAllocationTimeout time.Duration,
 	totalAllocationTimeout time.Duration,
 	allocationBatchWaitTime time.Duration,
-	processorClient processor.ProcessorClient,
+	processorClient processor.Client,
 ) *Extensions {
 	c := &Extensions{
 		api: apiServer,
@@ -224,7 +224,7 @@ func (c *Extensions) serialisation(r *http.Request, w http.ResponseWriter, obj k
 
 func (c *Extensions) processBufferedAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) error {
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)

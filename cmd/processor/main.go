@@ -206,7 +206,7 @@ func main() {
 		os.Exit(0)
 	})
 
-	whenLeader(ctx, cancelCtx, logger, conf, kubeClient, func(ctx context.Context) {
+	whenLeader(ctx, cancelCtx, logger, conf, kubeClient, func(_ context.Context) {
 		logger.Info("Starting processor work as leader")
 		grpcHealth.SetServingStatus("processor", grpc_health_v1.HealthCheckResponse_SERVING)
 		processorService.startPullRequestTicker()

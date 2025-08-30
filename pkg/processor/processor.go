@@ -1,3 +1,17 @@
+// Copyright 2025 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package processor
 
 import (
@@ -15,9 +29,9 @@ import (
 	allocationpb "agones.dev/agones/pkg/allocation/go"
 )
 
-// ProcessorClient interface for allocation operations
+// Client interface for allocation operations
 // Provides methods to run the processor client and perform allocation requests
-type ProcessorClient interface {
+type Client interface {
 	// Run starts the processor client
 	Run(ctx context.Context) error
 
@@ -26,28 +40,27 @@ type ProcessorClient interface {
 }
 
 // processorClient implements ProcessorClient interface
+//
+//nolint:govet // fieldalignment: struct alignment is not critical for our use case
 type processorClient struct {
-	config Config
-	logger logrus.FieldLogger
-
-	// requestIDMapping is a map to correlate request IDs to pendingRequest objects for response handling
-	requestIDMapping sync.Map
-
 	// hotBatch holds the current batch of allocation requests that have been converted to protobuf format
 	// It accumulates requests until a pull request is received to be directly sent to the processor
 	// After sending, hotBatch is reset and starts collecting new requests for the next batch
 	hotBatch *allocationpb.BatchRequest
-
 	// pendingRequests holds the list of allocation requests currently in the batch
 	// Each pendingRequest tracks the original request, its unique ID, and channels for response and error
 	// This slice is used to correlate responses from the processor back to the original caller
 	pendingRequests []*pendingRequest
+	logger          logrus.FieldLogger
+	config          Config
 
 	batchMutex sync.RWMutex
+	// requestIDMapping is a map to correlate request IDs to pendingRequest objects for response handling
+	requestIDMapping sync.Map
 }
 
 // NewProcessorClient creates a new processor client
-func NewProcessorClient(config Config, logger logrus.FieldLogger) ProcessorClient {
+func NewProcessorClient(config Config, logger logrus.FieldLogger) Client {
 	if len(config.ClientID) == 0 {
 		config.ClientID = uuid.New().String()
 	}

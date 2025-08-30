@@ -703,7 +703,7 @@ type serviceHandler struct {
 
 	grpcUnallocatedStatusCode codes.Code
 
-	processorClient processor.ProcessorClient
+	processorClient processor.Client
 }
 
 // Allocate implements the Allocate gRPC method definition

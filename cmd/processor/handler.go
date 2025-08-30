@@ -125,11 +125,10 @@ func (h *processorHandler) StreamBatches(stream allocationpb.Processor_StreamBat
 			continue
 		}
 
-		switch payload := payload.(type) {
-		case *allocationpb.ProcessorMessage_BatchRequest:
+		if batchPayload, ok := payload.(*allocationpb.ProcessorMessage_BatchRequest); ok {
 			batchStart := time.Now()
 
-			batchRequest := payload.BatchRequest
+			batchRequest := batchPayload.BatchRequest
 			batchID := batchRequest.GetBatchId()
 			requestWrappers := batchRequest.GetRequests()
 
@@ -145,7 +144,7 @@ func (h *processorHandler) StreamBatches(stream allocationpb.Processor_StreamBat
 				requestIDs[i] = wrapper.GetRequestId()
 			}
 
-			response, err := h.submitBatch(clientID, batchID, requestWrappers)
+			response := h.submitBatch(batchID, requestWrappers)
 
 			processingTime := time.Since(batchStart)
 			avgPerRequest := time.Duration(0)
@@ -160,14 +159,6 @@ func (h *processorHandler) StreamBatches(stream allocationpb.Processor_StreamBat
 				"processingTime": processingTime,
 				"avgPerRequest":  avgPerRequest,
 			}).Info("Batch processing completed")
-
-			if err != nil {
-				logger.WithFields(logrus.Fields{
-					"clientID": clientID,
-					"batchID":  batchID,
-				}).WithError(err).Error("Failed to process batch")
-				return err
-			}
 
 			// Count successful and failed responses for logging
 			successCount := 0
@@ -234,7 +225,7 @@ func (h *processorHandler) startPullRequestTicker() {
 	}()
 }
 
-func (s *processorHandler) processAllocationsConcurrently(requestWrappers []*allocationpb.RequestWrapper) []allocationResult {
+func (h *processorHandler) processAllocationsConcurrently(requestWrappers []*allocationpb.RequestWrapper) []allocationResult {
 	results := make([]allocationResult, len(requestWrappers))
 	var wg sync.WaitGroup
 
@@ -242,7 +233,7 @@ func (s *processorHandler) processAllocationsConcurrently(requestWrappers []*all
 		wg.Add(1)
 		go func(index int, requestWrapper *allocationpb.RequestWrapper) {
 			defer wg.Done()
-			results[index] = s.processAllocation(requestWrapper.Request, requestWrapper.RequestId, index+1)
+			results[index] = h.processAllocation(requestWrapper.Request)
 		}(i, reqWrapper)
 	}
 
@@ -251,11 +242,11 @@ func (s *processorHandler) processAllocationsConcurrently(requestWrappers []*all
 	return results
 }
 
-func (s *processorHandler) processAllocation(req *allocationpb.AllocationRequest, requestID string, requestNum int) allocationResult {
+func (h *processorHandler) processAllocation(req *allocationpb.AllocationRequest) allocationResult {
 	gsa := converters.ConvertAllocationRequestToGSA(req)
 	gsa.ApplyDefaults()
 
-	resultObj, err := s.allocator.Allocate(s.ctx, gsa)
+	resultObj, err := h.allocator.Allocate(h.ctx, gsa)
 	if err != nil {
 		return allocationResult{
 			error: &rpcstatus.Status{
@@ -285,10 +276,10 @@ func (s *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 		}
 	}
 
-	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, s.grpcUnallocatedStatusCode)
+	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, h.grpcUnallocatedStatusCode)
 	if err != nil {
 		grpcStatus, ok := status.FromError(err)
-		code := s.grpcUnallocatedStatusCode
+		code := h.grpcUnallocatedStatusCode
 		msg := err.Error()
 		if ok {
 			code = grpcStatus.Code()
@@ -304,8 +295,8 @@ func (s *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 	return allocationResult{response: response}
 }
 
-func (s *processorHandler) submitBatch(clientID string, batchID string, requestWrappers []*allocationpb.RequestWrapper) (*allocationpb.BatchResponse, error) {
-	results := s.processAllocationsConcurrently(requestWrappers)
+func (h *processorHandler) submitBatch(batchID string, requestWrappers []*allocationpb.RequestWrapper) *allocationpb.BatchResponse {
+	results := h.processAllocationsConcurrently(requestWrappers)
 	responseWrappers := make([]*allocationpb.ResponseWrapper, len(requestWrappers))
 
 	for i, result := range results {
@@ -328,7 +319,7 @@ func (s *processorHandler) submitBatch(clientID string, batchID string, requestW
 	return &allocationpb.BatchResponse{
 		BatchId:   batchID,
 		Responses: responseWrappers,
-	}, nil
+	}
 }
 
 // getGRPCServerOptions returns a list of GRPC server options to use when

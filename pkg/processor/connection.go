@@ -1,3 +1,17 @@
+// Copyright 2025 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package processor
 
 import (
@@ -6,6 +20,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
 	allocationpb "agones.dev/agones/pkg/allocation/go"
@@ -25,7 +40,7 @@ func (p *processorClient) connectAndRun(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Create a new processor client from the connection
 	client := allocationpb.NewProcessorClient(conn)
@@ -60,12 +75,8 @@ func (p *processorClient) connectWithRetry(ctx context.Context) (*grpc.ClientCon
 
 		p.logger.WithField("attempt", attempt).Debug("attempting connection")
 
-		// Dial the processor with a timeout
-		dialCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		conn, err := grpc.DialContext(dialCtx, p.config.ProcessorAddress,
-			grpc.WithInsecure(),
-			grpc.WithBlock())
-		cancel()
+		conn, err := grpc.NewClient(p.config.ProcessorAddress,
+			grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 		if err != nil {
 			p.logger.WithError(err).Warnf("connection attempt %d failed", attempt)
@@ -83,7 +94,8 @@ func (p *processorClient) connectWithRetry(ctx context.Context) (*grpc.ClientCon
 		// Perform a health check on the connection
 		if err := p.healthCheck(ctx, conn); err != nil {
 			p.logger.WithError(err).Warnf("health check failed on attempt %d", attempt)
-			conn.Close()
+			_ = conn.Close()
+
 			// Wait before retrying, unless this was the last attempt
 			if attempt < maxConnectionAttempts {
 				select {

@@ -376,7 +376,6 @@ type config struct {
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
 
-	processorBufferSize        int32
 	processorMaxBatchSize      int32
 	processorAllocationTimeout time.Duration
 	processorReconnectInterval time.Duration

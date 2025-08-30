@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC All Rights Reserved.
+// Copyright 2022 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package processor provides utilities for managing game server client processes
 package processor
-
-import (
-	allocationpb "agones.dev/agones/pkg/allocation/go"
-)
-
-// pendingRequest represents a request waiting for processing.
-type pendingRequest struct {
-	// request is the original allocation request data
-	request *allocationpb.AllocationRequest
-
-	// response is the channel to receive the allocation response
-	response chan *allocationpb.AllocationResponse
-
-	// error is the channel to receive an error if processing fails
-	error chan error
-
-	// id is the unique identifier for this request
-	id string
-}
