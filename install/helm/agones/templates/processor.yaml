@@ -147,11 +147,11 @@ spec:
 {{ toYaml .Values.agones.allocator.processor.resources | indent 10 }}
 {{- else}}
           requests:
-            cpu: 10m
-            memory: 32Mi
+            cpu: 300m
+            memory: 256Mi
           limits:
             cpu: 500m
-            memory: 256Mi
+            memory: 512Mi
 {{- end }}
 {{- if .Values.agones.image.processor.pullSecret }}
       imagePullSecrets:

@@ -19026,7 +19026,6 @@ spec:
           value: "500ms"
         - name: READINESS_SHUTDOWN_DURATION
           value: 18s
-
         - name: PROCESSOR_MAX_BATCH_SIZE
           value: "100"
         - name: PROCESSOR_ALLOCATION_TIMEOUT

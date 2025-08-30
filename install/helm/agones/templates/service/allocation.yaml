@@ -303,7 +303,7 @@ spec:
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         - name: READINESS_SHUTDOWN_DURATION
-          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}
+          value: {{ mul .Values.agones.allocator.readiness.periodSeconds .Values.agones.extensions.readiness.failureThreshold 2 }}s
         - name: PROCESSOR_MAX_BATCH_SIZE
           value: {{ .Values.agones.allocator.processor.maxBatchSize | quote }}
         - name: PROCESSOR_ALLOCATION_TIMEOUT

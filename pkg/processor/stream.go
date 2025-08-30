@@ -41,7 +41,6 @@ func (p *processorClient) handleStream(ctx context.Context, stream allocationpb.
 			switch payload := msg.GetPayload().(type) {
 			case *allocationpb.ProcessorMessage_Pull:
 				// Pull request: queue for async handling
-				p.logger.Info("Received pull request from processor - queuing for async handling")
 				select {
 				case pullRequestChan <- struct{}{}:
 					p.logger.Debug("Pull request queued successfully")
@@ -193,7 +192,7 @@ func (p *processorClient) handleBatchResponse(batchResp *allocationpb.BatchRespo
 					}).Error("Request failed with error from processor")
 
 					select {
-					case req.error <- status.Errorf(code, msg):
+					case req.error <- status.Error(code, msg):
 						p.logger.WithField("requestID", requestID).Debug("Error sent successfully")
 					default:
 						p.logger.WithField("requestID", requestID).Warn("Failed to send error - channel full")
