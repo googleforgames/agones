@@ -37,6 +37,7 @@ SidecarContainers: false
 
 # Dev features
 ProcessorAllocator: false
+WasmAutoscaler: false
 
 # Example feature
 Example: false
