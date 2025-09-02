@@ -54,7 +54,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "supertuxkart",
-							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.18",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.19",
 							Env: []corev1.EnvVar{
 								{
 									Name:  "ENABLE_PLAYER_TRACKING",
@@ -222,7 +222,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.4",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.5",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("700Mi"),
