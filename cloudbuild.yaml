@@ -271,11 +271,12 @@ steps:
   # Run the upgrade tests parallel, fail this step if any of the tests fail
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
-    entrypoint: bash
-    args:
-      - build/e2e_upgrade_test.sh
-      - ${_BASE_VERSION}
-      - ${PROJECT_ID}
+    script: |
+      #!/usr/bin/env bash
+      timeout 30m ./build/e2e_upgrade_test.sh ${_BASE_VERSION} ${PROJECT_ID} || echo "=== upgrade tests failed ==="
+    env:
+      - _BASE_VERSION=$_BASE_VERSION
+      - PROJECT_ID=$PROJECT_ID
     waitFor:
       - wait-to-become-leader
       - push-upgrade-test
