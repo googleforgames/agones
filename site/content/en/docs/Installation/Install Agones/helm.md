@@ -353,6 +353,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### GameServers
 
+{{% feature publishVersion="1.52.0" %}}
 | Parameter                              | Description                                                                                                                             | Default       |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `gameservers.namespaces`               | a list of namespaces you are planning to use to deploy game servers                                                                     | `["default"]` |
@@ -360,6 +361,18 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                  | Maximum port to use for dynamic port allocation                                                                                         | `8000`        |
 | `gameservers.additionalPortRanges`     | Port ranges from which to do named dynamic port allocation. Example: <br /> additionalPortRanges: <br />&nbsp;&nbsp;game: [9000, 10000] | `{}`          |
 | `gameservers.podPreserveUnknownFields` | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                    | `false`       |
+| `gameservers.lists.maxItems`           | The maximum number of items that can be specified for a list.                                                                           | `1000`        |
+{{% /feature %}}
+
+{{% feature expiryVersion="1.52.0" %}}
+| Parameter                              | Description                                                                                                                             | Default       |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `gameservers.namespaces`               | a list of namespaces you are planning to use to deploy game servers                                                                     | `["default"]` |
+| `gameservers.minPort`                  | Minimum port to use for dynamic port allocation                                                                                         | `7000`        |
+| `gameservers.maxPort`                  | Maximum port to use for dynamic port allocation                                                                                         | `8000`        |
+| `gameservers.additionalPortRanges`     | Port ranges from which to do named dynamic port allocation. Example: <br /> additionalPortRanges: <br />&nbsp;&nbsp;game: [9000, 10000] | `{}`          |
+| `gameservers.podPreserveUnknownFields` | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                    | `false`       |
+{{% /feature %}}
 
 ### Helm Installation
 
