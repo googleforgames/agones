@@ -484,6 +484,9 @@
             "tlsKey": {
               "type": "string"
             },
+            "updateStrategy": {
+              "type": "object"
+            },
             "pdb": {
               "type": "object",
               "properties": {
@@ -1257,6 +1260,9 @@
             },
             "allocationBatchWaitTime": {
               "type": "string"
+            },
+            "updateStrategy": {
+              "type": "object"
             },
             "pdb": {
               "type": "object",
