@@ -48,16 +48,13 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
-// TODO: tlacroix
-
 const (
-	logLevelFlag       = "log-level"
-	leaderElectionFlag = "leader-election"
-	podNamespace       = "pod-namespace"
-	leaseDurationFlag  = "lease-duration"
-	renewDeadlineFlag  = "renew-deadline"
-	retryPeriodFlag    = "retry-period"
-
+	logLevelFlag                     = "log-level"
+	leaderElectionFlag               = "leader-election"
+	podNamespace                     = "pod-namespace"
+	leaseDurationFlag                = "lease-duration"
+	renewDeadlineFlag                = "renew-deadline"
+	retryPeriodFlag                  = "retry-period"
 	grpcPortFlag                     = "grpc-port"
 	apiServerBurstQPSFlag            = "api-server-qps-burst"
 	apiServerSustainedQPSFlag        = "api-server-qps"
@@ -72,7 +69,6 @@ var (
 	logger = runtime.NewLoggerWithSource("main")
 )
 
-// TODO: tlacroix Add new config to deployments etc.
 type processorConfig struct {
 	LogLevel                     string
 	PodNamespace                 string
@@ -222,6 +218,8 @@ func whenLeader(ctx context.Context, cancel context.CancelFunc, logger *logrus.E
 
 	if !conf.LeaderElection {
 		start(ctx)
+		<-ctx.Done()
+
 		return
 	}
 

@@ -121,6 +121,20 @@ spec:
           value: {{ .Values.agones.allocator.processor.leaderElection.retryPeriod | default "2s" | quote }}
         - name: PULL_INTERVAL
           value: {{ .Values.agones.allocator.processor.pullInterval | default "200ms" | quote }}
+        - name: GRPC_PORT
+          value: {{ .Values.agones.allocator.processor.grpc.port | quote }}
+        - name: HTTP_UNALLOCATED_STATUS_CODE
+          value: {{ .Values.agones.allocator.service.http.unallocatedStatusCode | quote }}
+        - name: API_SERVER_QPS
+          value: {{ .Values.agones.allocator.apiServerQPS | quote }}
+        - name: API_SERVER_QPS_BURST
+          value: {{ .Values.agones.allocator.apiServerQPSBurst | quote }}
+        - name: REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.remoteAllocationTimeout | quote }}
+        - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.totalRemoteAllocationTimeout | quote }}
+        - name: ALLOCATION_BATCH_WAIT_TIME
+          value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
         {{- end }}
         livenessProbe:
           httpGet:
