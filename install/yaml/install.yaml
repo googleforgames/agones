@@ -19026,6 +19026,14 @@ spec:
           value: "500ms"
         - name: READINESS_SHUTDOWN_DURATION
           value: 18s
+        - name: PROCESSOR_MAX_BATCH_SIZE
+          value: "100"
+        - name: PROCESSOR_ALLOCATION_TIMEOUT
+          value: "30s"
+        - name: PROCESSOR_RECONNECT_INTERVAL
+          value: "5s"
+        - name: PROCESSOR_GRPC_PORT
+          value: "9090"
         ports:
         - name: https
           containerPort: 8443

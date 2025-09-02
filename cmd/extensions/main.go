@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -33,12 +34,14 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/google/uuid"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -68,6 +71,11 @@ const (
 	readinessShutdownDuration    = "readiness-shutdown-duration"
 	httpPort                     = "http-port"
 	webhookPort                  = "webhook-port"
+
+	processorMaxBatchSize      = "processor-max-batch-size"
+	processorAllocationTimeout = "processor-allocation-timeout"
+	processorReconnectInterval = "processor-reconnect-interval"
+	processorGRPCPort          = "processor-grpc-port"
 )
 
 var (
@@ -193,8 +201,25 @@ func main() {
 
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
+	processorConfig := processor.Config{
+		ProcessorAddress:  fmt.Sprintf("agones-processor:%d", ctlConf.processorGRPCPort),
+		ClientID:          fmt.Sprintf("extensions-%s", uuid.New().String()),
+		MaxBatchSize:      int(ctlConf.processorMaxBatchSize),
+		AllocationTimeout: ctlConf.processorAllocationTimeout,
+		ReconnectInterval: ctlConf.processorReconnectInterval,
+	}
+	processorClient := processor.NewProcessorClient(processorConfig, logger.WithField("component", "processor-client"))
+
+	// Start processor client
+	go func() {
+		logger.Info("starting processor client")
+		if err := processorClient.Run(ctx); err != nil && err != context.Canceled {
+			logger.WithError(err).Fatal("processor client failed")
+		}
+	}()
+
 	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
-		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
+		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime, processorClient)
 
 	gameservers.NewExtensions(controllerHooks, wh)
 	gameserversets.NewExtensions(controllerHooks, wh)
@@ -241,6 +266,11 @@ func parseEnvFlags() config {
 	viper.SetDefault(httpPort, "8080")
 	viper.SetDefault(webhookPort, "8081")
 
+	viper.SetDefault(processorMaxBatchSize, 100)
+	viper.SetDefault(processorAllocationTimeout, 30*time.Second)
+	viper.SetDefault(processorReconnectInterval, 5*time.Second)
+	viper.SetDefault(processorGRPCPort, 9090)
+
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
@@ -260,6 +290,12 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM handler to sleep for.")
+
+	pflag.Int32(processorMaxBatchSize, viper.GetInt32(processorMaxBatchSize), "The max number of allocation requests to batch together.")
+	pflag.Int32(processorGRPCPort, viper.GetInt32(processorGRPCPort), "The gRPC port for the processor service.")
+	pflag.Duration(processorAllocationTimeout, viper.GetDuration(processorAllocationTimeout), "The timeout for each allocation request to the Agones API server.")
+	pflag.Duration(processorReconnectInterval, viper.GetDuration(processorReconnectInterval), "The time to wait before attempting to reconnect to the processor service.")
+
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -310,6 +346,11 @@ func parseEnvFlags() config {
 		WebhookPort:               viper.GetString(webhookPort),
 		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
+
+		processorMaxBatchSize:      viper.GetInt32(processorMaxBatchSize),
+		processorAllocationTimeout: viper.GetDuration(processorAllocationTimeout),
+		processorReconnectInterval: viper.GetDuration(processorReconnectInterval),
+		processorGRPCPort:          int(viper.GetInt32(processorGRPCPort)),
 	}
 }
 
@@ -334,6 +375,11 @@ type config struct {
 	WebhookPort               string
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
+
+	processorMaxBatchSize      int32
+	processorAllocationTimeout time.Duration
+	processorReconnectInterval time.Duration
+	processorGRPCPort          int
 }
 
 type runner interface {
