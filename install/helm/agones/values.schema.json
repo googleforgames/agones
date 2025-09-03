@@ -1565,13 +1565,25 @@
         },
         "podPreserveUnknownFields": {
           "type": "boolean"
+        },
+        "lists": {
+          "type": "object",
+          "properties": {
+            "maxItems": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "maxItems"
+          ]
         }
       },
       "required": [
         "namespaces",
         "minPort",
         "maxPort",
-        "podPreserveUnknownFields"
+        "podPreserveUnknownFields",
+        "lists"
       ]
     },
     "helm": {
