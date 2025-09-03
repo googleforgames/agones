@@ -2,6 +2,7 @@ package genopenapi
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -517,6 +518,25 @@ func renderMessageAsDefinition(msg *descriptor.Message, reg *descriptor.Registry
 			Type: "object",
 		},
 	}
+
+	if reg.GetGenerateXGoType() && msg.File.GoPkg.Path != "" {
+		if schema.extensions == nil {
+			schema.extensions = []extension{}
+		}
+		goTypeName := msg.GetName()
+
+		goTypeName = casing.JSONCamelCase(goTypeName)
+		schema.extensions = append(schema.extensions, extension{
+			key: "x-go-type",
+			value: json.RawMessage(`{
+                "import": {
+                    "package": "` + msg.File.GoPkg.Path + `"
+                },
+                "type": "` + goTypeName + `"
+            }`),
+		})
+	}
+
 	msgComments := protoComments(reg, msg.File, msg.Outers, "MessageType", int32(msg.Index))
 	if err := updateOpenAPIDataFromComments(reg, &schema, msg, msgComments, false); err != nil {
 		return openapiSchemaObject{}, err
@@ -751,8 +771,8 @@ func filterOutExcludedFields(fields []string, excluded []descriptor.Parameter) [
 	return filtered
 }
 
-// schemaOfField returns a OpenAPI Schema Object for a protobuf field.
-func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) openapiSchemaObject {
+// schemaOfFieldBase returns a base Schema Object for a protobuf field.
+func schemaOfFieldBase(f *descriptor.Field, reg *descriptor.Registry, refs refMap) openapiSchemaObject {
 	const (
 		singular = 0
 		array    = 1
@@ -808,7 +828,7 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 		}
 	}
 
-	ret := openapiSchemaObject{}
+	var ret openapiSchemaObject
 
 	switch aggregate {
 	case array:
@@ -834,6 +854,12 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 			Properties: props,
 		}
 	}
+	return ret
+}
+
+// schemaOfField returns a OpenAPI Schema Object for a protobuf field.
+func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) openapiSchemaObject {
+	ret := schemaOfFieldBase(f, reg, refs)
 
 	if j, err := getFieldOpenAPIOption(reg, f); err == nil {
 		updateswaggerObjectFromJSONSchema(&ret, j, reg, f)
@@ -848,6 +874,9 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 			ret.Required[i] = reg.FieldName(f)
 		}
 	}
+
+	slices.Sort(ret.Required)
+	ret.Required = slices.Compact(ret.Required)
 
 	if reg.GetProto3OptionalNullable() && f.GetProto3Optional() {
 		ret.XNullable = true
@@ -1036,7 +1065,6 @@ func templateToParts(path string, reg *descriptor.Registry, fields []*descriptor
 	var parts []string
 	depth := 0
 	buffer := ""
-pathLoop:
 	for i, char := range path {
 		switch char {
 		case '{':
@@ -1067,11 +1095,18 @@ pathLoop:
 			buffer += string(char)
 		case ':':
 			if depth == 0 {
-				// As soon as we find a ":" outside a variable,
-				// everything following is a verb
-				parts = append(parts, buffer)
-				buffer = path[i:]
-				break pathLoop
+				// Only treat this as a verb if we're at the end of the path or
+				// if there are no more path segments (only more literals after the colon)
+				remainingPath := path[i:]
+				if !strings.Contains(remainingPath, "/") {
+					parts = append(parts, buffer)
+					verbSegment := remainingPath
+					if reg.GetUseJSONNamesForFields() {
+						verbSegment = processParametersInSegment(verbSegment, fields, msgs)
+					}
+					parts = append(parts, verbSegment)
+					return parts
+				}
 			}
 			buffer += string(char)
 		default:
@@ -1083,6 +1118,40 @@ pathLoop:
 	parts = append(parts, buffer)
 
 	return parts
+}
+
+// processParametersInSegment processes a path segment (like ":verb/{param}") to convert
+// parameter names to camelCase while preserving the overall structure
+func processParametersInSegment(segment string, fields []*descriptor.Field, msgs []*descriptor.Message) string {
+	result := segment
+	depth := 0
+	var paramStart int
+	for i, char := range segment {
+		switch char {
+		case '{':
+			if depth == 0 {
+				paramStart = i
+			}
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				paramContent := segment[paramStart+1 : i]
+				paramNameProto := strings.SplitN(paramContent, "=", 2)[0]
+				paramNameCamelCase := lowerCamelCase(paramNameProto, fields, msgs)
+
+				oldParam := "{" + paramContent + "}"
+				newParam := "{" + paramNameCamelCase
+				if strings.Contains(paramContent, "=") {
+					newParam += paramContent[len(paramNameProto):]
+				}
+				newParam += "}"
+
+				result = strings.Replace(result, oldParam, newParam, 1)
+			}
+		}
+	}
+	return result
 }
 
 // partsToOpenAPIPath converts each path part of the form /path/{string_value=strprefix/*} which is defined in
@@ -1471,10 +1540,17 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 						}
 						// Align pathParams with body field path.
 						pathParams := subPathParams(bodyField.Name, b.PathParams)
-						var err error
-						schema, err = renderFieldAsDefinition(bodyField.Target, reg, customRefs, pathParams)
-						if err != nil {
-							return err
+
+						if len(pathParams) == 0 {
+							// When there are no path parameters, we only need the base schema of the field.
+							// https://github.com/grpc-ecosystem/grpc-gateway/issues/3058
+							schema = schemaOfFieldBase(bodyField.Target, reg, customRefs)
+						} else {
+							var err error
+							schema, err = renderFieldAsDefinition(bodyField.Target, reg, customRefs, pathParams)
+							if err != nil {
+								return err
+							}
 						}
 						if schema.Title != "" {
 							desc = mergeDescription(schema)
@@ -1697,6 +1773,11 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 					return err
 				}
 
+				// Set Tag with the user-defined service name
+				if svcOpts.GetName() != "" {
+					operationObject.Tags = []string{svcOpts.GetName()}
+				}
+
 				opts, err := getMethodOpenAPIOption(reg, meth)
 				if opts != nil {
 					if err != nil {
@@ -1717,8 +1798,6 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 					if len(opts.Tags) > 0 {
 						operationObject.Tags = make([]string, len(opts.Tags))
 						copy(operationObject.Tags, opts.Tags)
-					} else if svcOpts.GetName() != "" {
-						operationObject.Tags = []string{svcOpts.GetName()}
 					}
 					if opts.OperationId != "" {
 						operationObject.OperationID = opts.OperationId
@@ -3156,21 +3235,29 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 }
 
 func updateSwaggerObjectFromFieldBehavior(s *openapiSchemaObject, j []annotations.FieldBehavior, reg *descriptor.Registry, field *descriptor.Field) {
+	required := false
+	if reg.GetUseProto3FieldSemantics() {
+		required = !field.GetProto3Optional()
+	}
 	for _, fb := range j {
 		switch fb {
 		case annotations.FieldBehavior_REQUIRED:
-			if reg.GetUseJSONNamesForFields() {
-				s.Required = append(s.Required, *field.JsonName)
-			} else {
-				s.Required = append(s.Required, *field.Name)
-			}
+			required = true
 		case annotations.FieldBehavior_OUTPUT_ONLY:
 			s.ReadOnly = true
 		case annotations.FieldBehavior_FIELD_BEHAVIOR_UNSPECIFIED:
 		case annotations.FieldBehavior_OPTIONAL:
+			required = false
 		case annotations.FieldBehavior_INPUT_ONLY:
 			// OpenAPI v3 supports a writeOnly property, but this is not supported in Open API v2
 		case annotations.FieldBehavior_IMMUTABLE:
+		}
+	}
+	if required {
+		if reg.GetUseJSONNamesForFields() {
+			s.Required = append(s.Required, *field.JsonName)
+		} else {
+			s.Required = append(s.Required, *field.Name)
 		}
 	}
 }
