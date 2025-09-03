@@ -184,6 +184,9 @@ fn run_sync() -> Result<(), String> {
     if feature_gates.contains("PlayerTracking=true") {
         run_player_tracking_features(sdk.alpha().clone())?;
     }
+    if feature_gates.contains("CountsAndLists=true") {
+        run_counts_and_lists_features(sdk.beta().clone())?;
+    }
 
     for i in 0..1 {
         let time = i * 5;
@@ -289,6 +292,113 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
 
     Ok(())
 }
+
+fn run_counts_and_lists_features(mut beta: agones::beta::Beta) -> Result<(), String> {
+    use tokio::runtime::Handle;
+
+    // Counter tests
+    let counter = "rooms";
+    println!("rust: Getting Counter count...");
+    let count = Handle::current().block_on(async {
+        beta.get_counter_count(counter)
+            .await
+            .map_err(|e| format!("Could not run GetCounterCount(): {}. Exiting!", e))
+    })?;
+    if count != 1 {
+        return Err(format!("Counter count should be 1, but is {}", count));
+    }
+
+    println!("rust: Incrementing Counter...");
+    Handle::current().block_on(async {
+        beta.increment_counter(counter, 9)
+            .await
+            .map_err(|e| format!("Could not run IncrementCounter(): {}. Exiting!", e))
+    })?;
+
+    println!("rust: Decrementing Counter...");
+    Handle::current().block_on(async {
+        beta.decrement_counter(counter, 10)
+            .await
+            .map_err(|e| format!("Could not run DecrementCounter(): {}. Exiting!", e))
+    })?;
+
+    println!("rust: Setting Counter count...");
+    Handle::current().block_on(async {
+        beta.set_counter_count(counter, 10)
+            .await
+            .map_err(|e| format!("Could not run SetCounterCount(): {}. Exiting!", e))
+    })?;
+
+    println!("rust: Getting Counter capacity...");
+    let capacity = Handle::current().block_on(async {
+        beta.get_counter_capacity(counter)
+            .await
+            .map_err(|e| format!("Could not run GetCounterCapacity(): {}. Exiting!", e))
+    })?;
+    if capacity != 10 {
+        return Err(format!("Counter capacity should be 10, but is {}", capacity));
+    }
+
+    println!("rust: Setting Counter capacity...");
+    Handle::current().block_on(async {
+        beta.set_counter_capacity(counter, 1)
+            .await
+            .map_err(|e| format!("Could not run SetCounterCapacity(): {}. Exiting!", e))
+    })?;
+
+    // List tests
+    let list = "players";
+    let vals = vec!["test0".to_string(), "test1".to_string(), "test2".to_string()];
+
+    println!("rust: Checking if List contains 'test1'...");
+    let contains = Handle::current().block_on(async {
+        beta.list_contains(list, "test1")
+            .await
+            .map_err(|e| format!("Could not run ListContains(): {}. Exiting!", e))
+    })?;
+    if !contains {
+        return Err("List should contain value \"test1\"".to_string());
+    }
+
+    println!("rust: Getting List length...");
+    let length = Handle::current().block_on(async {
+        beta.get_list_length(list)
+            .await
+            .map_err(|e| format!("Could not run GetListLength(): {}. Exiting!", e))
+    })?;
+    if length != 3 {
+        return Err(format!("List length should be 3, but is {}", length));
+    }
+
+    println!("rust: Getting List values...");
+    let values = Handle::current().block_on(async {
+        beta.get_list_values(list)
+            .await
+            .map_err(|e| format!("Could not run GetListValues(): {}. Exiting!", e))
+    })?;
+    if values != vals {
+        return Err(format!("List values should be {:?}, but is {:?}", vals, values));
+    }
+
+    println!("rust: Appending value 'test3' to List...");
+    Handle::current().block_on(async {
+        beta.append_list_value(list, "test3")
+            .await
+            .map_err(|e| format!("Could not run AppendListValue(): {}. Exiting!", e))
+    })?;
+
+    println!("rust: Deleting value 'test2' from List...");
+    Handle::current().block_on(async {
+        beta.delete_list_value(list, "test2")
+            .await
+            .map_err(|e| format!("Could not run DeleteListValue(): {}. Exiting!", e))
+    })?;
+
+    println!("rust: Getting List capacity...");
+
+    Ok(())
+}
+
 
 async fn run_async() -> Result<(), String> {
     let mut sdk = match tokio::time::timeout(
@@ -422,6 +532,9 @@ async fn run_async() -> Result<(), String> {
     if feature_gates.contains("PlayerTracking=true") {
         run_player_tracking_features_async(sdk.alpha().clone()).await?;
     }
+    if feature_gates.contains("CountsAndLists=true") {
+        run_counts_and_lists_features_async(sdk.beta().clone()).await?;
+    }
 
     for i in 0..1 {
         let time = i * 5;
@@ -503,6 +616,99 @@ async fn run_player_tracking_features_async(mut alpha: agones::alpha::Alpha) -> 
         .await
         .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))?;
     println!("rust_async: Current player count: {}", player_count);
+
+    Ok(())
+}
+
+async fn run_counts_and_lists_features_async(mut beta: agones::beta::Beta) -> Result<(), String> {
+    // Counter tests
+    let counter = "rooms";
+    println!("rust_async: Getting Counter count...");
+    let count = beta.get_counter_count(counter)
+        .await
+        .map_err(|e| format!("Could not run GetCounterCount(): {}. Exiting!", e))?;
+    if count != 1 {
+        return Err(format!("Counter count should be 1, but is {}", count));
+    }
+
+    println!("rust_async: Incrementing Counter...");
+    beta.increment_counter(counter, 9)
+        .await
+        .map_err(|e| format!("Could not run IncrementCounter(): {}. Exiting!", e))?;
+
+    println!("rust_async: Decrementing Counter...");
+    beta.decrement_counter(counter, 10)
+        .await
+        .map_err(|e| format!("Could not run DecrementCounter(): {}. Exiting!", e))?;
+
+    println!("rust_async: Setting Counter count...");
+    beta.set_counter_count(counter, 10)
+        .await
+        .map_err(|e| format!("Could not run SetCounterCount(): {}. Exiting!", e))?;
+
+    println!("rust_async: Getting Counter capacity...");
+    let capacity = beta.get_counter_capacity(counter)
+        .await
+        .map_err(|e| format!("Could not run GetCounterCapacity(): {}. Exiting!", e))?;
+    if capacity != 10 {
+        return Err(format!("Counter capacity should be 10, but is {}", capacity));
+    }
+
+    println!("rust_async: Setting Counter capacity...");
+    beta.set_counter_capacity(counter, 1)
+        .await
+        .map_err(|e| format!("Could not run SetCounterCapacity(): {}. Exiting!", e))?;
+
+    // List tests
+    let list = "players";
+    let vals = vec!["test0".to_string(), "test1".to_string(), "test2".to_string()];
+
+    println!("rust_async: Checking if List contains 'test1'...");
+    let contains = beta.list_contains(list, "test1")
+        .await
+        .map_err(|e| format!("Could not run ListContains(): {}. Exiting!", e))?;
+    if !contains {
+        return Err("List should contain value \"test1\"".to_string());
+    }
+
+    println!("rust_async: Getting List length...");
+    let length = beta.get_list_length(list)
+        .await
+        .map_err(|e| format!("Could not run GetListLength(): {}. Exiting!", e))?;
+    if length != 3 {
+        return Err(format!("List length should be 3, but is {}", length));
+    }
+
+    println!("rust_async: Getting List values...");
+    let values = beta.get_list_values(list)
+        .await
+        .map_err(|e| format!("Could not run GetListValues(): {}. Exiting!", e))?;
+    if values != vals {
+        return Err(format!("List values should be {:?}, but is {:?}", vals, values));
+    }
+
+    println!("rust_async: Appending value 'test3' to List...");
+    beta.append_list_value(list, "test3")
+        .await
+        .map_err(|e| format!("Could not run AppendListValue(): {}. Exiting!", e))?;
+
+    println!("rust_async: Deleting value 'test2' from List...");
+    beta.delete_list_value(list, "test2")
+        .await
+        .map_err(|e| format!("Could not run DeleteListValue(): {}. Exiting!", e))?;
+
+    println!("rust_async: Getting List capacity...");
+    let list_capacity = beta.get_list_capacity(list)
+        .await
+        .map_err(|e| format!("Could not run GetListCapacity(): {}. Exiting!", e))?;
+    if list_capacity != 100 {
+        return Err(format!("List capacity should be 100, but is {}", list_capacity));
+    }
+
+    println!("rust_async: Setting List capacity to 2...");
+    beta.set_list_capacity(list, 2)
+        .await
+        .map_err(|e| format!("Could not run SetListCapacity(): {}. Exiting!", e))?;
 
     Ok(())
 }
