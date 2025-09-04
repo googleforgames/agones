@@ -234,7 +234,6 @@ func main() {
 		logger.Info("Pod shutdown has been requested, failing readiness check")
 		grpcHealth.Shutdown()
 		cancelCtx()
-		os.Exit(0)
 	})
 
 	whenLeader(ctx, cancelCtx, logger, conf, kubeClient, func(_ context.Context) {
