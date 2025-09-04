@@ -17,6 +17,7 @@ syntax = "proto3";
 package allocation;
 option go_package = "./allocation";
 
+import "google/rpc/status.proto";
 import "proto/allocation/allocation.proto";
 
 // [Stage: Dev]
@@ -49,17 +50,45 @@ message PullRequest {
   string message = 1;
 }
 
-// A Batch is used to send a batch of allocation requests.
+// BatchRequest to encapsulate multiple allocation requests
+// This is used to send a batch of requests in a single gRPC call.
 message BatchRequest {
-  // The requests is a repeated field of AllocationRequest messages.
-  repeated allocation.AllocationRequest requests = 1;
+  // Unique batch ID for tracking
+  string batch_id = 1;
+  
+  // List of allocation requests
+  repeated RequestWrapper requests = 2;
 }
 
-// A BatchResponse is used to send a response to a batch of allocation requests.
-message BatchResponse {
-  // The responses is a repeated field of AllocationResponse messages.
-  repeated allocation.AllocationResponse responses = 1;
+// RequestWrapper to encapsulate individual allocation requests
+message RequestWrapper {
+  // Unique request ID for tracking
+  string request_id = 1;
+  
+  // The actual allocation request
+  allocation.AllocationRequest request = 2;
+}
 
-  // The errors is a repeated field of error messages.
-  repeated string errors = 2;
+// BatchResponse to encapsulate multiple allocation responses
+message BatchResponse {
+  // Unique batch ID for tracking
+  string batch_id = 1;
+  
+  // List of responses for each request in the batch
+  repeated ResponseWrapper responses = 2;
+}
+
+// ResponseWrapper to encapsulate individual allocation responses
+message ResponseWrapper {
+  // Unique request ID for tracking
+  string request_id = 1;
+  
+  // The actual allocation response
+  oneof result {
+    // Successful response
+    allocation.AllocationResponse response = 2;
+    
+    // Error response
+    google.rpc.Status error = 3;
+  }
 }
