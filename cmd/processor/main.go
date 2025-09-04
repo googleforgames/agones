@@ -28,6 +28,7 @@ import (
 	"agones.dev/agones/pkg"
 	allocationpb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/httpserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
@@ -49,20 +50,24 @@ import (
 )
 
 const (
-	logLevelFlag                     = "log-level"
-	leaderElectionFlag               = "leader-election"
-	podNamespace                     = "pod-namespace"
-	leaseDurationFlag                = "lease-duration"
-	renewDeadlineFlag                = "renew-deadline"
-	retryPeriodFlag                  = "retry-period"
-	grpcPortFlag                     = "grpc-port"
+	allocationBatchWaitTime          = "allocation-batch-wait-time"
 	apiServerBurstQPSFlag            = "api-server-qps-burst"
 	apiServerSustainedQPSFlag        = "api-server-qps"
-	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
-	remoteAllocationTimeoutFlag      = "remote-allocation-timeout"
-	allocationBatchWaitTime          = "allocation-batch-wait-time"
+	enablePrometheusMetricsFlag      = "prometheus-exporter"
+	enableStackdriverMetricsFlag     = "stackdriver-exporter"
+	grpcPortFlag                     = "grpc-port"
 	httpUnallocatedStatusCode        = "http-unallocated-status-code"
+	leaderElectionFlag               = "leader-election"
+	leaseDurationFlag                = "lease-duration"
+	logLevelFlag                     = "log-level"
+	podNamespace                     = "pod-namespace"
+	projectIDFlag                    = "gcp-project-id"
 	pullIntervalFlag                 = "pull-interval"
+	remoteAllocationTimeoutFlag      = "remote-allocation-timeout"
+	renewDeadlineFlag                = "renew-deadline"
+	retryPeriodFlag                  = "retry-period"
+	stackdriverLabels                = "stackdriver-labels"
+	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
 )
 
 var (
@@ -70,87 +75,108 @@ var (
 )
 
 type processorConfig struct {
+	GCPProjectID                 string
 	LogLevel                     string
 	PodNamespace                 string
-	LeaderElection               bool
-	GRPCPort                     int
+	StackdriverLabels            string
 	APIServerBurstQPS            int
 	APIServerSustainedQPS        int
+	GRPCPort                     int
+	HTTPUnallocatedStatusCode    int
+	LeaderElection               bool
+	PrometheusMetrics            bool
+	Stackdriver                  bool
+	AllocationBatchWaitTime      time.Duration
 	LeaseDuration                time.Duration
+	PullInterval                 time.Duration
 	RenewDeadline                time.Duration
+	RemoteAllocationTimeout      time.Duration
 	RetryPeriod                  time.Duration
 	TotalRemoteAllocationTimeout time.Duration
-	RemoteAllocationTimeout      time.Duration
-	AllocationBatchWaitTime      time.Duration
-	PullInterval                 time.Duration
-	HTTPUnallocatedStatusCode    int
 }
 
 func parseEnvFlags() processorConfig {
-	viper.SetDefault(logLevelFlag, "Info")
-	viper.SetDefault(grpcPortFlag, 9090)
-	viper.SetDefault(apiServerSustainedQPSFlag, 400)
-	viper.SetDefault(apiServerBurstQPSFlag, 500)
-	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
-	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(allocationBatchWaitTime, 50*time.Millisecond)
+	viper.SetDefault(apiServerBurstQPSFlag, 500)
+	viper.SetDefault(apiServerSustainedQPSFlag, 400)
+	viper.SetDefault(enablePrometheusMetricsFlag, true)
+	viper.SetDefault(enableStackdriverMetricsFlag, false)
+	viper.SetDefault(grpcPortFlag, 9090)
+	viper.SetDefault(httpUnallocatedStatusCode, http.StatusTooManyRequests)
 	viper.SetDefault(leaderElectionFlag, false)
-	viper.SetDefault(podNamespace, "")
 	viper.SetDefault(leaseDurationFlag, 15*time.Second)
+	viper.SetDefault(logLevelFlag, "Info")
+	viper.SetDefault(podNamespace, "")
+	viper.SetDefault(projectIDFlag, "")
+	viper.SetDefault(pullIntervalFlag, 200*time.Millisecond)
+	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
 	viper.SetDefault(renewDeadlineFlag, 10*time.Second)
 	viper.SetDefault(retryPeriodFlag, 2*time.Second)
-	viper.SetDefault(httpUnallocatedStatusCode, http.StatusTooManyRequests)
-	viper.SetDefault(pullIntervalFlag, 200*time.Millisecond)
+	viper.SetDefault(stackdriverLabels, "")
+	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 
-	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Log level")
-	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
-	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
-	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
-	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Enable leader election")
-	pflag.String(podNamespace, viper.GetString(podNamespace), "Pod namespace")
-	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
-	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
-	pflag.Duration(leaseDurationFlag, viper.GetDuration(leaseDurationFlag), "Leader election lease duration")
-	pflag.Duration(renewDeadlineFlag, viper.GetDuration(renewDeadlineFlag), "Leader election renew deadline")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
-	pflag.Duration(retryPeriodFlag, viper.GetDuration(retryPeriodFlag), "Leader election retry period")
+	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
+	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
+	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
+	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
+	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
 	pflag.Int32(httpUnallocatedStatusCode, viper.GetInt32(httpUnallocatedStatusCode), "HTTP status code to return when no GameServer is available")
+	pflag.Bool(leaderElectionFlag, viper.GetBool(leaderElectionFlag), "Enable leader election")
+	pflag.Duration(leaseDurationFlag, viper.GetDuration(leaseDurationFlag), "Leader election lease duration")
+	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Log level")
+	pflag.String(podNamespace, viper.GetString(podNamespace), "Pod namespace")
+	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.Duration(pullIntervalFlag, viper.GetDuration(pullIntervalFlag), "Interval between pull requests sent to processor clients")
+	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
+	pflag.Duration(renewDeadlineFlag, viper.GetDuration(renewDeadlineFlag), "Leader election renew deadline")
+	pflag.Duration(retryPeriodFlag, viper.GetDuration(retryPeriodFlag), "Leader election retry period")
+	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
+	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
+	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
+	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
+	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
+	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
 	runtime.Must(viper.BindEnv(grpcPortFlag))
+	runtime.Must(viper.BindEnv(httpUnallocatedStatusCode))
 	runtime.Must(viper.BindEnv(leaderElectionFlag))
-	runtime.Must(viper.BindEnv(podNamespace))
 	runtime.Must(viper.BindEnv(leaseDurationFlag))
+	runtime.Must(viper.BindEnv(logLevelFlag))
+	runtime.Must(viper.BindEnv(podNamespace))
+	runtime.Must(viper.BindEnv(projectIDFlag))
+	runtime.Must(viper.BindEnv(pullIntervalFlag))
+	runtime.Must(viper.BindEnv(remoteAllocationTimeoutFlag))
 	runtime.Must(viper.BindEnv(renewDeadlineFlag))
 	runtime.Must(viper.BindEnv(retryPeriodFlag))
-	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
-	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
-	runtime.Must(viper.BindEnv(remoteAllocationTimeoutFlag))
+	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(totalRemoteAllocationTimeoutFlag))
-	runtime.Must(viper.BindEnv(logLevelFlag))
-	runtime.Must(viper.BindEnv(allocationBatchWaitTime))
-	runtime.Must(viper.BindEnv(httpUnallocatedStatusCode))
 	runtime.Must(runtime.FeaturesBindEnv())
 
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return processorConfig{
-		LogLevel:                     viper.GetString(logLevelFlag),
-		LeaderElection:               viper.GetBool(leaderElectionFlag),
-		PodNamespace:                 viper.GetString(podNamespace),
-		LeaseDuration:                viper.GetDuration(leaseDurationFlag),
-		RenewDeadline:                viper.GetDuration(renewDeadlineFlag),
-		RetryPeriod:                  viper.GetDuration(retryPeriodFlag),
-		GRPCPort:                     int(viper.GetInt32(grpcPortFlag)),
-		APIServerSustainedQPS:        int(viper.GetInt32(apiServerSustainedQPSFlag)),
-		APIServerBurstQPS:            int(viper.GetInt32(apiServerBurstQPSFlag)),
-		RemoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
-		TotalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 		AllocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
+		APIServerBurstQPS:            int(viper.GetInt32(apiServerBurstQPSFlag)),
+		APIServerSustainedQPS:        int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		GCPProjectID:                 viper.GetString(projectIDFlag),
+		GRPCPort:                     int(viper.GetInt32(grpcPortFlag)),
 		HTTPUnallocatedStatusCode:    int(viper.GetInt32(httpUnallocatedStatusCode)),
+		LeaderElection:               viper.GetBool(leaderElectionFlag),
+		LeaseDuration:                viper.GetDuration(leaseDurationFlag),
+		LogLevel:                     viper.GetString(logLevelFlag),
+		PodNamespace:                 viper.GetString(podNamespace),
+		PrometheusMetrics:            viper.GetBool(enablePrometheusMetricsFlag),
 		PullInterval:                 viper.GetDuration(pullIntervalFlag),
+		RenewDeadline:                viper.GetDuration(renewDeadlineFlag),
+		RemoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
+		RetryPeriod:                  viper.GetDuration(retryPeriodFlag),
+		Stackdriver:                  viper.GetBool(enableStackdriverMetricsFlag),
+		StackdriverLabels:            viper.GetString(stackdriverLabels),
+		TotalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 	}
 }
 
@@ -174,7 +200,18 @@ func main() {
 	}
 
 	healthserver := &httpserver.Server{Logger: logger}
-	health := healthcheck.NewHandler()
+	var health healthcheck.Handler
+
+	metricsConf := metrics.Config{
+		Stackdriver:       conf.Stackdriver,
+		PrometheusMetrics: conf.PrometheusMetrics,
+		GCPProjectID:      conf.GCPProjectID,
+		StackdriverLabels: conf.StackdriverLabels,
+	}
+	health, closer := metrics.SetupMetrics(metricsConf, healthserver)
+	defer closer()
+
+	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
 
 	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
@@ -190,7 +227,7 @@ func main() {
 
 	go func() {
 		healthserver.Handle("/", health)
-		_ = healthserver.Run(context.Background(), 0)
+		_ = healthserver.Run(ctx, 0)
 	}()
 
 	signals.NewSigTermHandler(func() {
