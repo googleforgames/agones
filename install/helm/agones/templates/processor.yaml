@@ -113,6 +113,7 @@ spec:
         {{- if gt (int .Values.agones.allocator.processor.replicas) 1 }}
         - name: LEADER_ELECTION
           value: "true"
+        {{- end }}
         - name: LEASE_DURATION
           value: {{ .Values.agones.allocator.processor.leaderElection.leaseDuration | default "15s" | quote }}
         - name: RENEW_DEADLINE
@@ -129,13 +130,20 @@ spec:
           value: {{ .Values.agones.allocator.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
           value: {{ .Values.agones.allocator.apiServerQPSBurst | quote }}
+        - name: PROMETHEUS_EXPORTER
+          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
+        - name: STACKDRIVER_EXPORTER
+          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: GCP_PROJECT_ID
+          value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
+        - name: STACKDRIVER_LABELS
+          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: REMOTE_ALLOCATION_TIMEOUT
           value: {{ .Values.agones.allocator.remoteAllocationTimeout | quote }}
         - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
           value: {{ .Values.agones.allocator.totalRemoteAllocationTimeout | quote }}
         - name: ALLOCATION_BATCH_WAIT_TIME
           value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
-        {{- end }}
         livenessProbe:
           httpGet:
             path: /live
