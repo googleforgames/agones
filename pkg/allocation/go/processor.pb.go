@@ -51,12 +51,16 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// The ProcessorMessage is used to send and receive messages between the client and server.
 type ProcessorMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The client ID is used to identify the client that is sending the message.
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	// The payload is a oneof field that can contain either a PullRequest, Batch, or BatchResponse.
+	//
 	// Types that are assignable to Payload:
 	//
 	//	*ProcessorMessage_Pull
@@ -137,14 +141,17 @@ type isProcessorMessage_Payload interface {
 }
 
 type ProcessorMessage_Pull struct {
+	// A PullRequest is used to request a batch of allocation requests.
 	Pull *PullRequest `protobuf:"bytes,2,opt,name=pull,proto3,oneof"`
 }
 
 type ProcessorMessage_BatchRequest struct {
+	// A BatchRequest is used to send a batch of allocation requests.
 	BatchRequest *BatchRequest `protobuf:"bytes,3,opt,name=batch_request,json=batchRequest,proto3,oneof"`
 }
 
 type ProcessorMessage_BatchResponse struct {
+	// A BatchResponse is used to send a response to a batch of allocation requests.
 	BatchResponse *BatchResponse `protobuf:"bytes,4,opt,name=batch_response,json=batchResponse,proto3,oneof"`
 }
 
@@ -154,6 +161,7 @@ func (*ProcessorMessage_BatchRequest) isProcessorMessage_Payload() {}
 
 func (*ProcessorMessage_BatchResponse) isProcessorMessage_Payload() {}
 
+// A PullRequest is used to request a batch of allocation requests.
 type PullRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
