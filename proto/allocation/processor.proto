@@ -17,7 +17,6 @@ syntax = "proto3";
 package allocation;
 option go_package = "./allocation";
 
-import "google/rpc/status.proto";
 import "proto/allocation/allocation.proto";
 
 // [Stage: Dev]
@@ -29,59 +28,38 @@ service Processor {
   rpc StreamBatches(stream ProcessorMessage) returns (stream ProcessorMessage);
 }
 
+// The ProcessorMessage is used to send and receive messages between the client and server.
 message ProcessorMessage {
+  // The client ID is used to identify the client that is sending the message.
   string client_id = 1;
 
+  // The payload is a oneof field that can contain either a PullRequest, Batch, or BatchResponse.
   oneof payload {
+    // A PullRequest is used to request a batch of allocation requests.
     PullRequest pull = 2;
+    // A BatchRequest is used to send a batch of allocation requests.
     BatchRequest batch_request = 3;
+    // A BatchResponse is used to send a response to a batch of allocation requests.
     BatchResponse batch_response = 4;
   }
 }
 
+// A PullRequest is used to request a batch of allocation requests.
 message PullRequest {
   string message = 1;
 }
 
-// BatchRequest to encapsulate multiple allocation requests
-// This is used to send a batch of requests in a single gRPC call.
+// A Batch is used to send a batch of allocation requests.
 message BatchRequest {
-  // Unique batch ID for tracking
-  string batch_id = 1;
-  
-  // List of allocation requests
-  repeated RequestWrapper requests = 2;
+  // The requests is a repeated field of AllocationRequest messages.
+  repeated allocation.AllocationRequest requests = 1;
 }
 
-// RequestWrapper to encapsulate individual allocation requests
-message RequestWrapper {
-  // Unique request ID for tracking
-  string request_id = 1;
-  
-  // The actual allocation request
-  allocation.AllocationRequest request = 2;
-}
-
-// BatchResponse to encapsulate multiple allocation responses
+// A BatchResponse is used to send a response to a batch of allocation requests.
 message BatchResponse {
-  // Unique batch ID for tracking
-  string batch_id = 1;
-  
-  // List of responses for each request in the batch
-  repeated ResponseWrapper responses = 2;
-}
+  // The responses is a repeated field of AllocationResponse messages.
+  repeated allocation.AllocationResponse responses = 1;
 
-// ResponseWrapper to encapsulate individual allocation responses
-message ResponseWrapper {
-  // Unique request ID for tracking
-  string request_id = 1;
-  
-  // The actual allocation response
-  oneof result {
-    // Successful response
-    allocation.AllocationResponse response = 2;
-    
-    // Error response
-    google.rpc.Status error = 3;
-  }
+  // The errors is a repeated field of error messages.
+  repeated string errors = 2;
 }
