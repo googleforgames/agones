@@ -29,16 +29,23 @@ service Processor {
   rpc StreamBatches(stream ProcessorMessage) returns (stream ProcessorMessage);
 }
 
+// The ProcessorMessage is used to send and receive messages between the client and server.
 message ProcessorMessage {
+  // The client ID is used to identify the client that is sending the message.
   string client_id = 1;
 
+  // The payload is a oneof field that can contain either a PullRequest, Batch, or BatchResponse.
   oneof payload {
+    // A PullRequest is used to request a batch of allocation requests.
     PullRequest pull = 2;
+    // A BatchRequest is used to send a batch of allocation requests.
     BatchRequest batch_request = 3;
+    // A BatchResponse is used to send a response to a batch of allocation requests.
     BatchResponse batch_response = 4;
   }
 }
 
+// A PullRequest is used to request a batch of allocation requests.
 message PullRequest {
   string message = 1;
 }
