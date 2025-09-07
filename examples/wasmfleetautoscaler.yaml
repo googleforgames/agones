@@ -1,5 +1,5 @@
 ---
-# Copyright 2018 Google LLC All Rights Reserved.
+# Copyright 2025 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ spec:
       function: 'scale'
       # Config values to pass to the wasm program on startup
       config:
-        scale_buffer: 10
+        buffer_size: 10
       from:
         url:
           # use a service, or direct URL

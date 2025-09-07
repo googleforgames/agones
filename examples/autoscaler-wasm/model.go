@@ -14,10 +14,6 @@
 
 package main
 
-import (
-	"time"
-)
-
 /*
 A copy of the FleetAutoscaleReview to avoid pulling in the entire Agones codebase into this example
 (which won't compile to Wasm anyway).
@@ -74,32 +70,6 @@ type FleetStatus struct {
 // FleetAutoscalerPolicyType is the policy for autoscaling
 // for a given Fleet
 type FleetAutoscalerPolicyType string
-
-// FleetAutoscalerStatus defines the current status of a FleetAutoscaler
-type FleetAutoscalerStatus struct {
-	// CurrentReplicas is the current number of gameserver replicas
-	// of the fleet managed by this autoscaler, as last seen by the autoscaler
-	CurrentReplicas int32 `json:"currentReplicas"`
-
-	// DesiredReplicas is the desired number of gameserver replicas
-	// of the fleet managed by this autoscaler, as last calculated by the autoscaler
-	DesiredReplicas int32 `json:"desiredReplicas"`
-
-	// lastScaleTime is the last time the FleetAutoscaler scaled the attached fleet,
-	// +optional
-	LastScaleTime *time.Time `json:"lastScaleTime"`
-
-	// AbleToScale indicates that we can access the target fleet
-	AbleToScale bool `json:"ableToScale"`
-
-	// ScalingLimited indicates that the calculated scale would be above or below the range
-	// defined by MinReplicas and MaxReplicas, and has thus been capped.
-	ScalingLimited bool `json:"scalingLimited"`
-
-	// LastAppliedPolicy is the ID of the last applied policy in the ChainPolicy.
-	// Used to track policy transitions for logging purposes.
-	LastAppliedPolicy FleetAutoscalerPolicyType `json:"lastAppliedPolicy"`
-}
 
 // FleetAutoscaleRequest defines the request to webhook autoscaler endpoint
 type FleetAutoscaleRequest struct {
