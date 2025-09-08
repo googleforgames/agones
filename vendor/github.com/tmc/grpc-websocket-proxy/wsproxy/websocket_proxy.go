@@ -2,6 +2,7 @@ package wsproxy
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -183,8 +184,8 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
 
-	requestBodyR, requestBodyW := io.Pipe()
-	request, err := http.NewRequestWithContext(r.Context(), r.Method, r.URL.String(), requestBodyR)
+	_, requestBodyW := io.Pipe()
+	request, err := http.NewRequestWithContext(r.Context(), r.Method, r.URL.String(), bytes.NewBuffer([]byte("")))
 	if err != nil {
 		p.logger.Warnln("error preparing request:", err)
 		return
