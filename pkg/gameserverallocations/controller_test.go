@@ -35,6 +35,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -106,26 +107,26 @@ func TestControllerAllocator(t *testing.T) {
 		test := func(gsa *allocationv1.GameServerAllocation, expectedState allocationv1.GameServerAllocationState) {
 			buf := bytes.NewBuffer(nil)
 			err := json.NewEncoder(buf).Encode(gsa)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			r, err := http.NewRequest(http.MethodPost, "/", buf)
 			r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			rec := httptest.NewRecorder()
 			err = c.processAllocationRequest(ctx, rec, r, "default")
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusCreated, rec.Code)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusCreated, rec.Code)
 			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if len(gsa.Spec.Selectors) != 0 {
-				assert.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
+				require.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 			} else {
 				// nolint:staticcheck
-				assert.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Selectors[0].LabelSelector)
+				require.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 			}
 
-			assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
+			require.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
 		}
 
 		test(gsaSelectors.DeepCopy(), allocationv1.GameServerAllocationAllocated)
