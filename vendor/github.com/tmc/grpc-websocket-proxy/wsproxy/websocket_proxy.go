@@ -185,6 +185,13 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	defer cancelFn()
 
 	_, requestBodyW := io.Pipe()
+	// github.com/grpc-ecosystem/grpc-gateway/v2 introduced a change in v2.26.2 that caused the server
+	// stream methods with no body defined to drain the req.Body.
+	// To work around this, we send a non-nil empty body so that it can be drained and the call can proceed
+	// as normal.
+	// Warning; this may have unintended consequences if the server is expecting a body.
+	// However this is the least bad option available at the moment considering that the
+	// sdk server only ever exposes the websocket to watch for gameserver changes.
 	request, err := http.NewRequestWithContext(r.Context(), r.Method, r.URL.String(), bytes.NewBuffer([]byte("")))
 	if err != nil {
 		p.logger.Warnln("error preparing request:", err)
