@@ -2,7 +2,6 @@ package wsproxy
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -187,12 +186,10 @@ func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	_, requestBodyW := io.Pipe()
 	// github.com/grpc-ecosystem/grpc-gateway/v2 introduced a change in v2.26.2 that caused the server
 	// stream methods with no body defined to drain the req.Body.
-	// To work around this, we send a non-nil empty body so that it can be drained and the call can proceed
-	// as normal.
-	// Warning; this may have unintended consequences if the server is expecting a body.
-	// However this is the least bad option available at the moment considering that the
-	// sdk server only ever exposes the websocket to watch for gameserver changes.
-	request, err := http.NewRequestWithContext(r.Context(), r.Method, r.URL.String(), bytes.NewBuffer([]byte("")))
+	// To work around this, we send at least a non-nil empty body so that it can be drained and the call can proceed as normal.
+	// Since the initial call to connect a websocket is determined by the request method and body
+	// we only need to pass the request's body together with the method to complete the call.
+	request, err := http.NewRequestWithContext(r.Context(), r.Method, r.URL.String(), r.Body)
 	if err != nil {
 		p.logger.Warnln("error preparing request:", err)
 		return
