@@ -18,11 +18,13 @@ OutputDir: /go/src/agones.dev/agones/site/tmp
 OutputLogFile: .htmltest.log
 CheckExternal: true
 ExternalTimeout: 60
+HTTPConcurrencyLimit: 5
 IgnoreURLs:
   - http://localhost
   - https://twitter.com/agonesdev
   - https://www.youtube.com/playlist
   - https://docs.unrealengine.com
   - https://github.com/googleforgames/agones/blob/main/docs/proposals
+  - https://www.terraform.io/
 HTTPHeaders:
   User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
