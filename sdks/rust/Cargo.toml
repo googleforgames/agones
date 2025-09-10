@@ -14,7 +14,7 @@
 
 [package]
 name = "agones"
-version = "1.52.0"
+version = "1.53.0-dev"
 edition = "2021"
 description = "The Rust SDK for Agones."
 license = "Apache-2.0"
