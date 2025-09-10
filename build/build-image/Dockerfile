@@ -121,7 +121,7 @@ RUN mkdir -p /go/src/github.com/ahmetb && \
 
 # html checker
 RUN mkdir /tmp/htmltest && \
-    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.17.0/htmltest_0.17.0_linux_amd64.tar.gz && \
     tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
     mv /tmp/htmltest/htmltest /usr/local/bin && \
     rm -r /tmp/htmltest
