@@ -43,6 +43,7 @@ func (c *Allocator) batchAllocationUpdateWorkers(ctx context.Context, workerCoun
 						requestStartTime := time.Now()
 
 						// Try to update with the latest gs state
+						var propagatedErr error
 						updatedGs, updateErr := c.gameServerGetter.GameServers(lastGsState.ObjectMeta.Namespace).Update(ctx, lastGsState, metav1.UpdateOptions{})
 						if updateErr != nil {
 							metrics.recordAllocationUpdateFailure(ctx, time.Since(requestStartTime))
@@ -53,7 +54,7 @@ func (c *Allocator) batchAllocationUpdateWorkers(ctx context.Context, workerCoun
 								// we should wait for it to get updated with fresh info.
 								c.allocationCache.AddGameServer(updatedGs)
 							}
-							updateErr = errors.Wrap(updateErr, "error updating allocated gameserver")
+							propagatedErr = goErrors.Join(ErrGameServerUpdateConflict, updateErr)
 						} else {
 							metrics.recordAllocationUpdateSuccess(ctx, time.Since(requestStartTime))
 
@@ -72,7 +73,7 @@ func (c *Allocator) batchAllocationUpdateWorkers(ctx context.Context, workerCoun
 
 						// Forward all responses with their appropriate gs state and update error
 						for _, res := range batchRes.responses {
-							res.err = updateErr
+							res.err = propagatedErr
 							res.request.response <- res
 						}
 					}
