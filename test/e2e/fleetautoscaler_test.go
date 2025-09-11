@@ -423,7 +423,7 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.
 func TestAutoscalerWebhook(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	pod, svc := defaultAutoscalerWebhook(framework.Namespace)
+	pod, svc := defaultAutoscalerWebhook(framework.Namespace, "false")
 	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 	require.NoError(t, err)
 	defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -449,7 +449,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
-	path := "scale"
+	path := "scale" //nolint:goconst
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
@@ -555,7 +555,7 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 		defer secrets.Delete(ctx, secr.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	}
 
-	pod, svc := defaultAutoscalerWebhook(defaultNS)
+	pod, svc := defaultAutoscalerWebhook(defaultNS, "false")
 	pod.Spec.Volumes = make([]corev1.Volume, 1)
 	pod.Spec.Volumes[0] = corev1.Volume{
 		Name: "secret-volume",
@@ -648,11 +648,85 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	})
 }
 
-func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
+func TestAutoscalerWebhookWithMetadata(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureFleetAutoscaleRequestMetaData) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	// Create webhook Pod and Service
+	pod, svc := defaultAutoscalerWebhook(framework.Namespace, "true")
+	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	svc.ObjectMeta.Name = ""
+	svc.ObjectMeta.GenerateName = "test-service-"
+
+	svc, err = framework.KubeClient.CoreV1().Services(framework.Namespace).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(ctx, svc.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	// Create Fleet with metadata annotation
+	alpha1 := framework.AgonesClient.AgonesV1()
+	flt := defaultFleet(framework.Namespace)
+	initialReplicasCount := int32(1)
+	fixedReplicas := int32(11)
+	flt.Spec.Replicas = initialReplicasCount
+	flt.ObjectMeta.Annotations = map[string]string{
+		"fixedReplicas": fmt.Sprintf("%d", fixedReplicas),
+	}
+	flt, err = alpha1.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer alpha1.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(initialReplicasCount))
+
+	// Create FleetAutoscaler with webhook policy
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+	fas := defaultFleetAutoscaler(flt, framework.Namespace)
+	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
+	fas.Spec.Policy.Buffer = nil
+	path := "scale"
+	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
+		Service: &admregv1.ServiceReference{
+			Name:      svc.ObjectMeta.Name,
+			Namespace: framework.Namespace,
+			Path:      &path,
+		},
+	}
+	fas, err = fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	// Trigger allocation to cause autoscaler logic to kick in
+	framework.CreateAndApplyAllocation(t, flt)
+
+	// Wait until replicas match the fixedReplicas value
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithFields(logrus.Fields{
+			"fleetStatus":         fmt.Sprintf("%+v", fleet.Status),
+			"expectedReplicas":    fixedReplicas,
+			"fleet":               fleet.ObjectMeta.Name,
+			"fleetAllocatedCount": fleet.Status.AllocatedReplicas,
+		}).Info("Waiting for fleet.Status.Replicas == fixedReplicas")
+		return fleet.Status.Replicas == fixedReplicas
+	})
+
+	// Wait for LastAppliedPolicy to be set correctly
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
+		log.WithField("LastAppliedPolicy", fas.Status.LastAppliedPolicy).
+			Info("Waiting for LastAppliedPolicy to be set to WebhookPolicyType")
+		return fas.Status.LastAppliedPolicy == autoscalingv1.WebhookPolicyType
+	})
+}
+
+func defaultAutoscalerWebhook(namespace string, fixedReplicasEnabled string) (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
 	appName := fmt.Sprintf("autoscaler-webhook-%v", time.Now().UnixNano())
 	l["app"] = appName
 	l[e2e.AutoCleanupLabelKey] = e2e.AutoCleanupLabelValue
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "auto-webhook-",
@@ -660,14 +734,23 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 			Labels:       l,
 		},
 		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.18",
-				ImagePullPolicy: corev1.PullAlways,
-				Ports: []corev1.ContainerPort{{
-					ContainerPort: 8000,
-					Name:          "autoscaler",
-				}},
-			}},
+			Containers: []corev1.Container{
+				{
+					Name:            "webhook",
+					Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.20",
+					ImagePullPolicy: corev1.PullAlways,
+					Ports: []corev1.ContainerPort{{
+						ContainerPort: 8000,
+						Name:          "autoscaler",
+					}},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "FIXED_REPLICAS",
+							Value: fixedReplicasEnabled,
+						},
+					},
+				},
+			},
 		},
 	}
 	m := make(map[string]string)
