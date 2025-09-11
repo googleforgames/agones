@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -43,11 +44,34 @@ import (
 )
 
 func TestAllocatorAllocate(t *testing.T) {
+	testScenarios := map[string]struct {
+		features string
+	}{
+		"Allocator batches updates": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAllocatorBatchesUpdates),
+		},
+		"Allocator does not batches updates": {
+			features: fmt.Sprintf("%s=false", runtime.FeatureAllocatorBatchesUpdates),
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testAllocatorAllocateImpl(t, testScenario.features)
+		})
+	}
+
+}
+
+func testAllocatorAllocateImpl(t *testing.T, features string) {
 	t.Parallel()
 
 	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
+	if features != "" {
+		require.NoError(t, runtime.ParseFeatures(features))
+	}
 
 	f, gsList := defaultFixtures(4)
 	a, m := newFakeAllocator()
@@ -130,11 +154,34 @@ func TestAllocatorAllocate(t *testing.T) {
 }
 
 func TestAllocatorAllocatePriority(t *testing.T) {
+	testScenarios := map[string]struct {
+		features string
+	}{
+		"Allocator batches updates": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAllocatorBatchesUpdates),
+		},
+		"Allocator does not batches updates": {
+			features: fmt.Sprintf("%s=false", runtime.FeatureAllocatorBatchesUpdates),
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testAllocatorAllocatePriorityImpl(t, testScenario.features)
+		})
+	}
+
+}
+
+func testAllocatorAllocatePriorityImpl(t *testing.T, features string) {
 	t.Parallel()
 
 	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
+	if features != "" {
+		require.NoError(t, runtime.ParseFeatures(features))
+	}
 
 	run := func(t *testing.T, name string, test func(t *testing.T, a *Allocator, gas *allocationv1.GameServerAllocation)) {
 		f, gsList := defaultFixtures(4)
@@ -496,7 +543,8 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	_, err := a.allocate(ctx, gsa.DeepCopy())
 	log.WithError(err).Info("allocate (private): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
-	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.True(t, errors.Is(err, ErrGameServerUpdateConflict))
+	require.EqualError(t, err, "Could not update the selected GameServer\nfailed to update")
 
 	// make sure we aren't in the same batch!
 	time.Sleep(2 * a.batchWaitTime)
@@ -511,15 +559,38 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	log.WithField("result", result).WithError(err).Info("Allocate (public): failed allocation")
 	require.Nil(t, result)
 	require.NotEqual(t, ErrNoGameServer, err)
-	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.True(t, errors.Is(err, ErrGameServerUpdateConflict))
+	require.EqualError(t, err, "Could not update the selected GameServer\nfailed to update")
 }
 
 func TestAllocatorRunLocalAllocations(t *testing.T) {
+	testScenarios := map[string]struct {
+		features string
+	}{
+		"Allocator batches updates": {
+			features: fmt.Sprintf("%s=true", runtime.FeatureAllocatorBatchesUpdates),
+		},
+		"Allocator does not batches updates": {
+			features: fmt.Sprintf("%s=false", runtime.FeatureAllocatorBatchesUpdates),
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testAllocatorRunLocalAllocationsImpl(t, testScenario.features)
+		})
+	}
+}
+
+func testAllocatorRunLocalAllocationsImpl(t *testing.T, features string) {
 	t.Parallel()
 
 	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
+	if features != "" {
+		require.NoError(t, runtime.ParseFeatures(features))
+	}
 
 	t.Run("no problems", func(t *testing.T) {
 		f, gsList := defaultFixtures(5)
@@ -568,7 +639,11 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		j3 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
 		a.pendingRequests <- j3
 
-		go a.ListenAndAllocate(ctx, 3)
+		if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+			go a.ListenAndBatchAllocate(ctx, 3)
+		} else {
+			go a.ListenAndAllocate(ctx, 3)
+		}
 
 		res1 := <-j1.response
 		assert.NoError(t, res1.err)
@@ -591,7 +666,12 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		assert.NotEqual(t, res1.gs.ObjectMeta.Name, res3.gs.ObjectMeta.Name)
 		assert.NotEqual(t, res2.gs.ObjectMeta.Name, res3.gs.ObjectMeta.Name)
 
-		assert.Equal(t, 3, updateCount)
+		if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+			// updates are batched into one
+			assert.Equal(t, 1, updateCount)
+		} else {
+			assert.Equal(t, 3, updateCount)
+		}
 	})
 
 	t.Run("no gameservers", func(t *testing.T) {
@@ -620,7 +700,11 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
 		a.pendingRequests <- j1
 
-		go a.ListenAndAllocate(ctx, 3)
+		if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+			go a.ListenAndBatchAllocate(ctx, 3)
+		} else {
+			go a.ListenAndAllocate(ctx, 3)
+		}
 
 		res1 := <-j1.response
 		assert.Nil(t, res1.gs)
@@ -630,11 +714,30 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 }
 
 func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
+	testScenarios := map[string]struct {
+		features string
+	}{
+		"Allocator batches updates": {
+			features: fmt.Sprintf("%s=true&%s=true", runtime.FeatureAllocatorBatchesUpdates, runtime.FeatureCountsAndLists),
+		},
+		"Allocator does not batches updates": {
+			features: fmt.Sprintf("%s=false&%s=true", runtime.FeatureAllocatorBatchesUpdates, runtime.FeatureCountsAndLists),
+		},
+	}
+
+	for test, testScenario := range testScenarios {
+		t.Run(test, func(t *testing.T) {
+			testAllocatorRunLocalAllocationsCountsAndLists(t, testScenario.features)
+		})
+	}
+}
+
+func testAllocatorRunLocalAllocationsCountsAndLists(t *testing.T, features string) {
 	t.Parallel()
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	assert.NoError(t, runtime.ParseFeatures(features))
 
 	a, m := newFakeAllocator()
 
@@ -797,7 +900,11 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 	j6 := request{gsa: gsaListDistributed.DeepCopy(), response: make(chan response)}
 	a.pendingRequests <- j6
 
-	go a.ListenAndAllocate(ctx, 5)
+	if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+		go a.ListenAndBatchAllocate(ctx, 5)
+	} else {
+		go a.ListenAndAllocate(ctx, 5)
+	}
 
 	res1 := <-j1.response
 	assert.NoError(t, res1.err)
@@ -966,7 +1073,8 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		r = <-r.request.response
 
 		assert.True(t, updated)
-		assert.EqualError(t, r.err, "error updating allocated gameserver: something went wrong")
+		assert.True(t, errors.Is(r.err, ErrGameServerUpdateConflict))
+		assert.EqualError(t, r.err, "Could not update the selected GameServer\nsomething went wrong")
 		assert.Equal(t, gs1, r.gs)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 
@@ -1099,4 +1207,113 @@ func newFakeAllocator() (*Allocator, agtesting.Mocks) {
 	a.recorder = m.FakeRecorder
 
 	return a, m
+}
+
+// newFakeAllocatorWithCustomBatchWaitTime returns a fake allocator with a batchWaitTime
+func newFakeAllocatorWithCustomBatchWaitTime(batchWaitTime time.Duration) (*Allocator, agtesting.Mocks) {
+	m := agtesting.NewMocks()
+
+	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	a := NewAllocator(
+		m.AgonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+		m.KubeInformerFactory.Core().V1().Secrets(),
+		m.AgonesClient.AgonesV1(),
+		m.KubeClient,
+		NewAllocationCache(m.AgonesInformerFactory.Agones().V1().GameServers(), counter, healthcheck.NewHandler()),
+		time.Second,
+		5*time.Second,
+		batchWaitTime)
+	a.recorder = m.FakeRecorder
+
+	return a, m
+}
+
+// 1 gs and 2 gsa in the same batch: one gets the gs,
+// the other needs to retry to get the gs
+func TestAllocatorAllocateNoQuickNoGameServerError(t *testing.T) {
+	t.Parallel()
+
+	// TODO: remove when `CountsAndLists` feature flag is moved to stable.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(
+		fmt.Sprintf("%s=false&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
+
+	a, m := newFakeAllocatorWithCustomBatchWaitTime(2 * time.Second)
+
+	// 1 gs, 2 gsa
+	gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, UID: "1"},
+		Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated,
+			Counters: map[string]agonesv1.CounterStatus{
+				"capacity": { // Available Capacity == 999
+					Count:    1,
+					Capacity: 1000,
+				}}}}
+	gsList := []agonesv1.GameServer{gs1}
+	gsLen := len(gsList)
+	m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: gsList}, nil
+	})
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+
+		return true, gs, nil
+	})
+
+	ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
+	defer cancel()
+
+	require.NoError(t, a.Run(ctx))
+	// wait for all the gameservers to be in the cache
+	require.Eventuallyf(t, func() bool {
+		return a.allocationCache.cache.Len() == gsLen
+	}, 10*time.Second, time.Second, fmt.Sprintf("should be %d items in the cache", gsLen))
+
+	ALLOCATED := agonesv1.GameServerStateAllocated
+
+	gsa := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
+			Scheduling: apis.Packed,
+			Selectors: []allocationv1.GameServerSelector{{
+				GameServerState: &ALLOCATED,
+				Counters: map[string]allocationv1.CounterSelector{
+					"capacity": {
+						MinAvailable: 1,
+					}}},
+			}},
+	}
+
+	var waitTest sync.WaitGroup
+
+	waitTest.Add(1)
+	go func() {
+		defer waitTest.Done()
+
+		// First allocation succeeds
+		result1, err1 := a.Allocate(ctx, gsa.DeepCopy())
+		require.NoError(t, err1)
+		require.NotNil(t, result1)
+		outGsa := result1.(*allocationv1.GameServerAllocation)
+		require.NotNil(t, outGsa)
+		require.Equal(t, allocationv1.GameServerAllocationAllocated, outGsa.Status.State)
+		require.Equal(t, gs1.ObjectMeta.Name, outGsa.Status.GameServerName)
+	}()
+
+	waitTest.Add(1)
+	go func() {
+		defer waitTest.Done()
+
+		// Second allocation in the same batch
+		result2, err2 := a.Allocate(ctx, gsa.DeepCopy())
+		require.NoError(t, err2)
+		require.NotNil(t, result2)
+		outGsa := result2.(*allocationv1.GameServerAllocation)
+		require.NotNil(t, outGsa)
+		require.Equal(t, allocationv1.GameServerAllocationAllocated, outGsa.Status.State)
+		require.Equal(t, gs1.ObjectMeta.Name, outGsa.Status.GameServerName)
+	}()
+
+	waitTest.Wait()
 }
