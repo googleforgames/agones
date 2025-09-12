@@ -26,17 +26,12 @@ import (
 	allocationpb "agones.dev/agones/pkg/allocation/go"
 )
 
-const (
-	// maxConnectionAttempts defines the maximum number of connection attempts before giving up
-	maxConnectionAttempts = 10
-)
-
 // connectAndRun handles the full connection lifecycle to the processor service
 // It establishes a connection, creates a stream, registers the client, and then
 // delegates to handleStream to process messages until an error or cancellation
 func (p *processorClient) connectAndRun(ctx context.Context) error {
-	// Connect to the processor with retry logic
-	conn, err := p.connectWithRetry(ctx)
+	// Connect to the processor
+	conn, err := p.connect(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to connect: %w", err)
 	}
@@ -62,56 +57,28 @@ func (p *processorClient) connectAndRun(ctx context.Context) error {
 	return p.handleStream(ctx, stream)
 }
 
-// connectWithRetry attempts to connect to the processor service with health checks and retry logic
-// It will retry up to maxConnectionAttempts, waiting ReconnectInterval between attempts
-// Returns a healthy gRPC connection or an error if all attempts failed
-func (p *processorClient) connectWithRetry(ctx context.Context) (*grpc.ClientConn, error) {
-	for attempt := 1; attempt <= maxConnectionAttempts; attempt++ {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
+// connect attempts to connect to the processor service with health checks
+// Returns a healthy gRPC connection or an error
+func (p *processorClient) connect(ctx context.Context) (*grpc.ClientConn, error) {
+	p.logger.Info("attempting connection")
 
-		p.logger.WithField("attempt", attempt).Debug("attempting connection")
+	conn, err := grpc.NewClient(p.config.ProcessorAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-		conn, err := grpc.NewClient(p.config.ProcessorAddress,
-			grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-		if err != nil {
-			p.logger.WithError(err).Warnf("connection attempt %d failed", attempt)
-			// Wait before retrying, unless this was the last attempt
-			if attempt < maxConnectionAttempts {
-				select {
-				case <-ctx.Done():
-					return nil, ctx.Err()
-				case <-time.After(p.config.ReconnectInterval):
-				}
-			}
-			continue
-		}
-
-		// Perform a health check on the connection
-		if err := p.healthCheck(ctx, conn); err != nil {
-			p.logger.WithError(err).Warnf("health check failed on attempt %d", attempt)
-			_ = conn.Close()
-
-			// Wait before retrying, unless this was the last attempt
-			if attempt < maxConnectionAttempts {
-				select {
-				case <-ctx.Done():
-					return nil, ctx.Err()
-				case <-time.After(p.config.ReconnectInterval):
-				}
-			}
-			continue
-		}
-
-		p.logger.Info("successfully connected to processor")
-		return conn, nil
+	if err != nil {
+		p.logger.WithError(err).Error("connection failed")
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("failed to connect after %d attempts", maxConnectionAttempts)
+	// Perform a health check on the connection
+	if err := p.healthCheck(ctx, conn); err != nil {
+		p.logger.WithError(err).Error("health check failed")
+		_ = conn.Close()
+		return nil, err
+	}
+
+	p.logger.Info("successfully connected to processor")
+	return conn, nil
 }
 
 // healthCheck verifies that the processor service is healthy and serving requests

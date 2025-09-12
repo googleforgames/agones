@@ -82,7 +82,7 @@ func (p *processorClient) pullRequestHandler(ctx context.Context, stream allocat
 	for {
 		select {
 		case <-ctx.Done():
-			p.logger.Debug("Pull request handler stopping")
+			p.logger.Info("Pull request handler stopping")
 			return
 
 		case <-pullRequestChan:
@@ -159,7 +159,7 @@ func (p *processorClient) handleBatchResponse(batchResp *allocationpb.BatchRespo
 		"component":     "processor-client",
 		"batchID":       batchResp.BatchId,
 		"responseCount": len(batchResp.Responses),
-	}).Info("Processing batch response")
+	}).Debug("Processing batch response")
 
 	successCount := 0
 	errorCount := 0
@@ -269,5 +269,5 @@ func (p *processorClient) handleBatchResponse(batchResp *allocationpb.BatchRespo
 		"errorCount":    errorCount,
 		"notFoundCount": notFoundCount,
 		"totalCount":    len(batchResp.Responses),
-	}).Info("Batch response processing completed")
+	}).Debug("Batch response processing completed")
 }
