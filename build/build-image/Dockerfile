@@ -28,7 +28,7 @@ RUN gem install fpm && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.24.4
+ENV GO_VERSION=1.24.6
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -121,7 +121,7 @@ RUN mkdir -p /go/src/github.com/ahmetb && \
 
 # html checker
 RUN mkdir /tmp/htmltest && \
-    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.17.0/htmltest_0.17.0_linux_amd64.tar.gz && \
     tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
     mv /tmp/htmltest/htmltest /usr/local/bin && \
     rm -r /tmp/htmltest

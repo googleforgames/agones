@@ -1,0 +1,51 @@
+---
+# Copyright 2025 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Full example of a FleetAutoscaler that is using wasm for it's custom
+# aautomation logic - this is used to scale a Fleet.
+#
+
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
+#
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: webhook-fleet-autoscaler
+spec:
+  fleetName: simple-game-server
+  policy:
+    # type of the policy - this example is Webhook
+    type: Wasm
+    # parameters for the wasm policy
+    wasm:
+      # The exported function to call in the wasm module, defaults to 'scale'
+      function: 'scale'
+      # Config values to pass to the wasm program on startup
+      config:
+        buffer_size: 10
+      from:
+        url:
+          # use a service, or direct URL
+          service:
+            name: fileserver
+            namespace: default
+            path: /wasm/plugin.wasm
+            # optionally can define a full URL if not hosted on cluster (or you just want to).
+            # url: "https://my-bucket-storage.cloud/wasm/plugin.wasm"
+            # caBundle:  optional, used for HTTPS paths with custom certs
+      # optional hex encoded sha256 hash to match against wasm file (it's optional, but recommended)
+      hash: "df7199d01a25bf34b3d650c7e6f685736b2c794e6a526d86b2e55bf074df3f36"
