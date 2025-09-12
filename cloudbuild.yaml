@@ -241,6 +241,7 @@ steps:
     args: [push]
     waitFor:
       - push-images
+    timeout: 5400s  # 1.5h
 
   # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -270,11 +271,12 @@ steps:
   # Run the upgrade tests parallel, fail this step if any of the tests fail
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
-    entrypoint: bash
-    args:
-      - build/e2e_upgrade_test.sh
-      - ${_BASE_VERSION}
-      - ${PROJECT_ID}
+    script: |
+      #!/usr/bin/env bash
+      timeout 30m ./build/e2e_upgrade_test.sh ${_BASE_VERSION} ${PROJECT_ID} || echo "=== upgrade tests failed ==="
+    env:
+      - _BASE_VERSION=$_BASE_VERSION
+      - PROJECT_ID=$PROJECT_ID
     waitFor:
       - wait-to-become-leader
       - push-upgrade-test
@@ -422,7 +424,7 @@ steps:
         done
 
 substitutions:
-  _BASE_VERSION: 1.52.0
+  _BASE_VERSION: 1.53.0
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build

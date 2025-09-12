@@ -102,6 +102,7 @@ agones:
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
     replicas: 2
+    updateStrategy: {}
     pdb:
         minAvailable: 1
     topologySpreadConstraints: []
@@ -157,6 +158,7 @@ agones:
       failureThreshold: 3
       timeoutSeconds: 1
     allocationBatchWaitTime: 500ms
+    updateStrategy: {}
     pdb:
         minAvailable: 1
     replicas: 2
@@ -314,7 +316,7 @@ agones:
         timeoutSeconds: 1
   image:
     registry: us-docker.pkg.dev/agones-images/release
-    tag: 1.52.0-dev
+    tag: 1.53.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
@@ -346,6 +348,8 @@ gameservers:
     # requires feature gate PortRanges to be enabled
     # game: [9000, 10000]
   podPreserveUnknownFields: false
+  lists:
+    maxItems: 1000
 
 helm:
   installTests: false
