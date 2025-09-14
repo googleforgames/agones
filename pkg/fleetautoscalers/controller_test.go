@@ -1086,7 +1086,7 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 	c.fasThreadMutex.Unlock()
 
 	// update with the same values
-	c.updateFasThread(fas)
+	c.updateFasThread(ctx, fas)
 	c.fasThreadMutex.Lock()
 	require.Len(t, c.fasThreads, 1)
 	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
@@ -1096,7 +1096,7 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 	fas.Spec.Sync.FixedInterval.Seconds = 3
 	fas.ObjectMeta.Generation++
 
-	c.updateFasThread(fas)
+	c.updateFasThread(ctx, fas)
 	c.fasThreadMutex.Lock()
 	require.Len(t, c.fasThreads, 1)
 	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
@@ -1108,7 +1108,7 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 	fas2.ObjectMeta.Generation = 5
 	fas2.ObjectMeta.UID = "4321"
 
-	c.updateFasThread(fas2)
+	c.updateFasThread(ctx, fas2)
 	c.fasThreadMutex.Lock()
 	require.Len(t, c.fasThreads, 2)
 	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
@@ -1116,13 +1116,13 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 	c.fasThreadMutex.Unlock()
 
 	// delete the current fas.
-	c.deleteFasThread(fas, true)
+	c.deleteFasThread(ctx, fas, true)
 	c.fasThreadMutex.Lock()
 	require.Len(t, c.fasThreads, 1)
 	require.Equal(t, fas2.ObjectMeta.Generation, c.fasThreads[fas2.ObjectMeta.UID].generation)
 	c.fasThreadMutex.Unlock()
 
-	c.deleteFasThread(fas2, true)
+	c.deleteFasThread(ctx, fas2, true)
 	c.fasThreadMutex.Lock()
 	require.Len(t, c.fasThreads, 0)
 	c.fasThreadMutex.Unlock()
@@ -1154,15 +1154,15 @@ func TestControllerCleanFasThreads(t *testing.T) {
 
 	c.fasThreadMutex.Lock()
 	c.fasThreads = map[types.UID]fasThread{
-		"1":                {1, func() {}},
-		"2":                {2, func() {}},
-		fas.ObjectMeta.UID: {3, func() {}},
+		"1":                {func() {}, map[string]any{}, 1},
+		"2":                {func() {}, map[string]any{}, 2},
+		fas.ObjectMeta.UID: {func() {}, map[string]any{}, 3},
 	}
 	c.fasThreadMutex.Unlock()
 
 	key, err := cache.MetaNamespaceKeyFunc(fas)
 	require.NoError(t, err)
-	require.NoError(t, c.cleanFasThreads(key))
+	require.NoError(t, c.cleanFasThreads(context.Background(), key))
 
 	require.Len(t, c.fasThreads, 1)
 	require.Equal(t, int64(3), c.fasThreads[fas.ObjectMeta.UID].generation)
