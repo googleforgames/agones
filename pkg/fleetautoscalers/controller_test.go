@@ -315,6 +315,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -366,6 +367,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -425,6 +427,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -473,6 +476,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -525,6 +529,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -569,6 +574,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -603,6 +609,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, fas.ObjectMeta.Name)
 		assert.Nil(t, err)
@@ -632,6 +639,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
@@ -659,6 +667,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
@@ -688,6 +697,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
@@ -721,6 +731,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
@@ -748,6 +759,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
+		fleetAutoscalerThreadEventually(t, c, fas)
 
 		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
@@ -771,6 +783,18 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		require.NoError(t, c.syncFleetAutoscaler(ctx, "default/fas-1"))
 	})
+}
+
+// fleetAutoscalerThreadEventually waits to see if a thread is started for the given fleet autoscaler
+// this is a sign that the informer has been started and the fleet autoscaler has been processed
+// by the informer.
+func fleetAutoscalerThreadEventually(t *testing.T, c *Controller, fas *autoscalingv1.FleetAutoscaler) {
+	require.Eventually(t, func() bool {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+		_, ok := c.fasThreads[fas.ObjectMeta.UID]
+		return ok
+	}, 5*time.Second, 100*time.Millisecond, "fleet autoscaler controller didn't start the sync thread")
 }
 
 func TestControllerScaleFleet(t *testing.T) {
