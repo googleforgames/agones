@@ -59,6 +59,21 @@ type processorClient struct {
 	requestIDMapping sync.Map
 }
 
+// pendingRequest represents a request waiting for processing
+type pendingRequest struct {
+	// request is the original allocation request data
+	request *allocationpb.AllocationRequest
+
+	// response is the channel to receive the allocation response
+	response chan *allocationpb.AllocationResponse
+
+	// error is the channel to receive an error if processing fails
+	error chan error
+
+	// id is the unique identifier for this request
+	id string
+}
+
 // NewProcessorClient creates a new processor client
 func NewProcessorClient(config Config, logger logrus.FieldLogger) Client {
 	if len(config.ClientID) == 0 {
