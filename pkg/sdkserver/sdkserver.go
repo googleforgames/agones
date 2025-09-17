@@ -1204,7 +1204,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 	if in == nil {
 		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
 	}
-	s.logger.WithField("name", in.Name).Debug("Remove List Value")
+	s.logger.WithField("name", in.Name).WithField("value", in.Value).Debug("Remove List Value")
 
 	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.Name})
 	if err != nil {
@@ -1214,24 +1214,34 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
-	// Verify value exists in the list
-	for i, val := range list.Values {
-		if in.Value != val {
-			continue
+	// Remove the first matching value directly from the in-memory list
+	found := false
+	newValues := make([]string, 0, len(list.Values))
+	for _, v := range list.Values {
+		if !found && v == in.Value {
+			found = true
+			continue // skip this value once
 		}
-		// Add value to remove to gsListUpdates map.
-		batchList := s.gsListUpdates[in.Name]
-		if batchList.valuesToDelete == nil {
-			batchList.valuesToDelete = map[string]bool{}
-		}
-		batchList.valuesToDelete[in.Value] = true
-		s.gsListUpdates[in.Name] = batchList
-		list.Values = append(list.Values[:i], list.Values[i+1:]...)
-		// Queue up the Update for later batch processing by updateLists.
-		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return list, nil
+		newValues = append(newValues, v)
 	}
-	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
+
+	if !found {
+		return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
+	}
+	list.Values = newValues
+
+	// Track this removal for batch persistence to K8s
+	batchList := s.gsListUpdates[in.Name]
+	if batchList.valuesToDelete == nil {
+		batchList.valuesToDelete = map[string]bool{}
+	}
+	batchList.valuesToDelete[in.Value] = true
+	s.gsListUpdates[in.Name] = batchList
+
+	// Queue up the Update for later batch processing by updateLists.
+	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+
+	return list, nil
 }
 
 // updateList updates the Lists in the GameServer's Status with the batched update list requests.
