@@ -1180,13 +1180,16 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *beta.AddListValueReque
 			return nil, errors.Errorf("already exists. Value: %s already in List: %s", in.Value, in.Name)
 		}
 	}
+	if in.Value == "" {
+		return nil, errors.Errorf("cannot add empty value to list: %s", in.Name)
+	}
 	list.Values = append(list.Values, in.Value)
 	batchList := s.gsListUpdates[in.Name]
 	batchList.valuesToAppend = list.Values
 	s.gsListUpdates[in.Name] = batchList
 	// Queue up the Update for later batch processing by updateLists.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-	return &beta.List{}, nil
+	return list, nil
 }
 
 // RemoveListValue collapses all remove a value from a List requests into a single UpdateList request.
@@ -1212,7 +1215,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 	defer s.gsUpdateMutex.Unlock()
 
 	// Verify value exists in the list
-	for _, val := range list.Values {
+	for i, val := range list.Values {
 		if in.Value != val {
 			continue
 		}
@@ -1223,9 +1226,10 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 		}
 		batchList.valuesToDelete[in.Value] = true
 		s.gsListUpdates[in.Name] = batchList
+		list.Values = append(list.Values[:i], list.Values[i+1:]...)
 		// Queue up the Update for later batch processing by updateLists.
 		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return &beta.List{}, nil
+		return list, nil
 	}
 	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
 }
