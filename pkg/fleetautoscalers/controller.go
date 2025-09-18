@@ -60,11 +60,15 @@ import (
 )
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
-//
-//nolint:govet // ignore fieldalignment, one per fleet autoscaler
 type fasThread struct {
-	generation int64
 	cancel     context.CancelFunc
+	state      map[string]any
+	generation int64
+}
+
+// close cancels the context and cleans up any resources
+func (ft *fasThread) close(_ context.Context) {
+	ft.cancel()
 }
 
 // Extensions struct contains what is needed to bind webhook handlers
@@ -130,19 +134,20 @@ func NewController(
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, autoscaling.GroupName+".FleetAutoscalerController", workerqueue.FastRateLimiter(3*time.Second))
-	health.AddLivenessCheck("fleetautoscaler-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
+	health.AddLivenessCheck("fleetautoscaler-workerqueue", c.workerqueue.Healthy)
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
+	ctx := context.Background()
 	_, _ = autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
 		},
 		UpdateFunc: func(_, newObj interface{}) {
-			c.updateFasThread(newObj.(*autoscalingv1.FleetAutoscaler))
+			c.updateFasThread(ctx, newObj.(*autoscalingv1.FleetAutoscaler))
 		},
 		DeleteFunc: func(obj interface{}) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
@@ -150,7 +155,7 @@ func NewController(
 			if !ok {
 				return
 			}
-			c.deleteFasThread(fas, true)
+			c.deleteFasThread(ctx, fas, true)
 		},
 	})
 
@@ -192,7 +197,7 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 		c.fasThreadMutex.Lock()
 		defer c.fasThreadMutex.Unlock()
 		for _, thread := range c.fasThreads {
-			thread.cancel()
+			thread.close(ctx)
 		}
 	}()
 
@@ -292,7 +297,17 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	if fas == nil {
-		return c.cleanFasThreads(key)
+		return c.cleanFasThreads(ctx, key)
+	}
+
+	// The state is protected by the workerqueue ensuring that we don't process the same queue item concurrently,
+	// and we're only going to get here if the fasThread for this FleetAutoscaler exists,
+	// so we can safely read the state without a lock over the whole function.
+	c.fasThreadMutex.Lock()
+	thread, ok := c.fasThreads[fas.ObjectMeta.UID]
+	c.fasThreadMutex.Unlock()
+	if !ok {
+		return errors.New("There should be a fasThread for the FleetAutoscaler, but it was not found")
 	}
 
 	// Retrieve the fleet by spec name
@@ -329,7 +344,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 
 	currentReplicas := fleet.Status.Replicas
 	gameServerNamespacedLister := c.gameServerLister.GameServers(fleet.ObjectMeta.Namespace)
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts(), &fasLog)
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(ctx, thread.state, fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts(), &fasLog)
 
 	// If the err is not nil and not an inactive schedule error (ignorable in this case), then record the event
 	if err != nil {
@@ -467,6 +482,7 @@ func (c *Controller) addFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool)
 	thread := fasThread{
 		cancel:     cancel,
 		generation: fas.Generation,
+		state:      map[string]any{},
 	}
 
 	if lock {
@@ -494,7 +510,7 @@ func (c *Controller) addFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool)
 }
 
 // updateFasThread will replace the queueing thread if the generation has changes on the FleetAutoscaler.
-func (c *Controller) updateFasThread(fas *autoscalingv1.FleetAutoscaler) {
+func (c *Controller) updateFasThread(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) {
 	c.fasThreadMutex.Lock()
 	defer c.fasThreadMutex.Unlock()
 
@@ -509,7 +525,7 @@ func (c *Controller) updateFasThread(fas *autoscalingv1.FleetAutoscaler) {
 	if fas.Generation != thread.generation {
 		c.loggerForFleetAutoscaler(fas).WithField("generation", thread.generation).
 			Debug("Fleet autoscaler generation updated, recreating thread")
-		c.deleteFasThread(fas, false)
+		c.deleteFasThread(ctx, fas, false)
 		c.addFasThread(fas, false)
 	}
 }
@@ -517,7 +533,7 @@ func (c *Controller) updateFasThread(fas *autoscalingv1.FleetAutoscaler) {
 // deleteFasThread removes a FleetAutoScaler sync routine.
 // If `lock` is set to true, the function will do appropriate locking for this operation. If set to `false`
 // make sure to lock the operation with the c.fasThreadMutex for the execution of this command.
-func (c *Controller) deleteFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool) {
+func (c *Controller) deleteFasThread(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, lock bool) {
 	c.loggerForFleetAutoscaler(fas).Debug("Thread for Autoscaler removed")
 
 	if lock {
@@ -526,14 +542,14 @@ func (c *Controller) deleteFasThread(fas *autoscalingv1.FleetAutoscaler, lock bo
 	}
 
 	if thread, ok := c.fasThreads[fas.ObjectMeta.UID]; ok {
-		thread.cancel()
+		thread.close(ctx)
 		delete(c.fasThreads, fas.ObjectMeta.UID)
 	}
 }
 
 // cleanFasThreads will delete any fasThread that no longer
 // can be tied to a FleetAutoscaler instance.
-func (c *Controller) cleanFasThreads(key string) error {
+func (c *Controller) cleanFasThreads(ctx context.Context, key string) error {
 	c.baseLogger.WithField("key", key).Debug("Doing full autoscaler thread cleanup")
 	namespace, _, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -559,7 +575,8 @@ func (c *Controller) cleanFasThreads(key string) error {
 
 	// any key that doesn't match to an existing UID, stop it.
 	for k := range keys {
-		c.fasThreads[k].cancel()
+		thread := c.fasThreads[k]
+		thread.close(ctx)
 		delete(c.fasThreads, k)
 	}
 

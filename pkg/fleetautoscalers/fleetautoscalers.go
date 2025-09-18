@@ -17,6 +17,7 @@
 package fleetautoscalers
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -61,7 +62,7 @@ func (InactiveScheduleError) Error() string {
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
+func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
 	gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 
 	var (
@@ -80,9 +81,9 @@ func computeDesiredFleetSize(pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv
 	case autoscalingv1.ListPolicyType:
 		replicas, limited, err = applyCounterOrListPolicyWrapper(nil, pol.List, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	case autoscalingv1.SchedulePolicyType:
-		replicas, limited, err = applySchedulePolicy(pol.Schedule, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
+		replicas, limited, err = applySchedulePolicy(ctx, state, pol.Schedule, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	case autoscalingv1.ChainPolicyType:
-		replicas, limited, err = applyChainPolicy(pol.Chain, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
+		replicas, limited, err = applyChainPolicy(ctx, state, pol.Chain, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	default:
 		err = errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List, Schedule, Chain")
 	}
@@ -432,14 +433,14 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	return 0, false, errors.Errorf("unable to apply ListPolicy %v", l)
 }
 
-func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applySchedulePolicy(ctx context.Context, state map[string]any, s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
 	}
 
 	if isScheduleActive(s, currentTime) {
-		return computeDesiredFleetSize(s.Policy, f, gameServerNamespacedLister, nodeCounts, fasLog)
+		return computeDesiredFleetSize(ctx, state, s.Policy, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	}
 
 	loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
@@ -449,7 +450,7 @@ func applySchedulePolicy(s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gam
 	return f.Status.Replicas, false, &InactiveScheduleError{}
 }
 
-func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applyChainPolicy(ctx context.Context, state map[string]any, c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply ChainPolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
@@ -464,7 +465,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 	for _, entry := range c {
 		switch entry.Type {
 		case autoscalingv1.SchedulePolicyType:
-			replicas, limited, err = applySchedulePolicy(entry.Schedule, f, gameServerNamespacedLister, nodeCounts, currentTime, fasLog)
+			replicas, limited, err = applySchedulePolicy(ctx, state, entry.Schedule, f, gameServerNamespacedLister, nodeCounts, currentTime, fasLog)
 
 			if err != nil {
 				loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
@@ -479,7 +480,7 @@ func applyChainPolicy(c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServer
 			}
 		default:
 			// Every other policy type we just want to compute the desired fleet and return it
-			replicas, limited, err = computeDesiredFleetSize(entry.FleetAutoscalerPolicy, f, gameServerNamespacedLister, nodeCounts, fasLog)
+			replicas, limited, err = computeDesiredFleetSize(ctx, state, entry.FleetAutoscalerPolicy, f, gameServerNamespacedLister, nodeCounts, fasLog)
 
 			if err != nil && !errors.Is(err, InactiveScheduleError{}) {
 				loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
