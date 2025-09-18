@@ -85,6 +85,11 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 		pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(context.Background(), readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 		framework.LogEvents(t, log, pod.ObjectMeta.Namespace, pod)
+
+		// Get container logs
+		log.Info("Game Server Container Logs:")
+		err = framework.LogPodContainers(t, pod)
+		require.NoError(t, err)
 	}
 	require.NoError(t, err)
 

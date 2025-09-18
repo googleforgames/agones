@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/user"
@@ -837,6 +838,46 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
 	}
+}
+
+// LogPodContainers takes a Pod as an argument and outputs the previous logs from each container in that Pod.
+// It uses the framework's KubeClient to retrieve the logs and outputs them using the provided logger.
+func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) error {
+	log := TestLogger(t)
+	log.Infof("Logs for Pod %s in namespace %s:", pod.Name, pod.Namespace)
+
+	// sub-function so defer will fire on each loop, rather than at the end.
+	loop := func(container corev1.Container) error {
+		logOptions := &corev1.PodLogOptions{
+			Container: container.Name,
+			Follow:    false,
+			Previous:  true,
+		}
+
+		req := f.KubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOptions)
+		podLogs, err := req.Stream(context.Background())
+		defer podLogs.Close() // nolint:errcheck,staticcheck
+		if err != nil {
+			return errors.Wrapf(err, "Error opening log stream for container %s", container.Name)
+		}
+
+		logBytes, err := io.ReadAll(podLogs)
+		if err != nil {
+			return errors.Wrapf(err, "Error reading logs for container %s", container.Name)
+		}
+
+		log.Infof("Logs for container %s:", container.Name)
+		log.Info(string(logBytes))
+		log.Info("---End of container logs---")
+		return nil
+	}
+
+	for _, container := range pod.Spec.Containers {
+		if err := loop(container); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // SkipOnCloudProduct skips the test if the e2e was invoked with --cloud-product=<product>.
