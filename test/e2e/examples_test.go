@@ -57,7 +57,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.19",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
-									corev1.ResourceMemory: resource.MustParse("700Mi"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
 									corev1.ResourceCPU:    resource.MustParse("200m"),
 								},
 							},
