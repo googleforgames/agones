@@ -17,6 +17,7 @@
 package fleetautoscalers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -185,6 +186,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
+			ctx := context.Background()
 			fas.Spec.Policy = tc.policy
 			f.Spec.Replicas = tc.specReplicas
 			f.Status.Replicas = tc.statusReplicas
@@ -207,7 +209,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
+			replicas, limited, err := computeDesiredFleetSize(ctx, map[string]any{}, fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -2507,6 +2509,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
+			ctx := context.Background()
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
@@ -2515,7 +2518,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applySchedulePolicy(ctx, map[string]any{}, tc.sp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2698,6 +2701,7 @@ func TestApplyChainPolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
+			ctx := context.Background()
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
@@ -2706,7 +2710,7 @@ func TestApplyChainPolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applyChainPolicy(ctx, map[string]any{}, *tc.cp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
