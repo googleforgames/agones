@@ -840,14 +840,14 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 	}
 }
 
-// LogPodContainers takes a Pod as an argument and outputs the previous logs from each container in that Pod.
-// It uses the framework's KubeClient to retrieve the logs and outputs them using the provided logger.
-func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) error {
+// LogPodContainers takes a Pod as an argument and attempts to output the current and previous logs from each container
+// in that Pod It uses the framework's KubeClient to retrieve the logs and outputs them using the provided logger.
+func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) {
 	log := TestLogger(t)
-	log.Infof("Logs for Pod %s in namespace %s:", pod.Name, pod.Namespace)
+	log.WithField("pod", pod.Name).WithField("namespace", pod.Namespace).Info("Logs for Pod:")
 
-	// sub-function so defer will fire on each loop, rather than at the end.
-	loop := func(container corev1.Container) error {
+	// sub-function so defer will fire on each printLogs, rather than at the end.
+	printLogs := func(container corev1.Container, previous bool) {
 		logOptions := &corev1.PodLogOptions{
 			Container: container.Name,
 			Follow:    false,
@@ -856,28 +856,26 @@ func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) error {
 
 		req := f.KubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOptions)
 		podLogs, err := req.Stream(context.Background())
-		defer podLogs.Close() // nolint:errcheck,staticcheck
 		if err != nil {
-			return errors.Wrapf(err, "Error opening log stream for container %s", container.Name)
+			log.WithError(err).WithField("previous", previous).WithField("container", container.Name).Warn("Error opening log stream for container")
+			return
 		}
+		defer podLogs.Close() // nolint:errcheck,staticcheck
 
 		logBytes, err := io.ReadAll(podLogs)
 		if err != nil {
-			return errors.Wrapf(err, "Error reading logs for container %s", container.Name)
+			log.WithError(err).WithField("previous", previous).WithField("container", container.Name).Warn("Error reading logs for container")
 		}
 
-		log.Infof("Logs for container %s:", container.Name)
+		log.WithField("previous", previous).WithField("container", container.Name).Info("Logs for container")
 		log.Info(string(logBytes))
 		log.Info("---End of container logs---")
-		return nil
 	}
 
 	for _, container := range pod.Spec.Containers {
-		if err := loop(container); err != nil {
-			return err
-		}
+		printLogs(container, false)
+		printLogs(container, true)
 	}
-	return nil
 }
 
 // SkipOnCloudProduct skips the test if the e2e was invoked with --cloud-product=<product>.

@@ -88,8 +88,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 
 		// Get container logs
 		log.Info("Game Server Container Logs:")
-		err = framework.LogPodContainers(t, pod)
-		require.NoError(t, err)
+		framework.LogPodContainers(t, pod)
 	}
 	require.NoError(t, err)
 
