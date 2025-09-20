@@ -46,8 +46,8 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Health: agonesv1.Health{
-				PeriodSeconds:       60,
-				InitialDelaySeconds: 30,
+				InitialDelaySeconds: 60,
+				PeriodSeconds:       5,
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
@@ -90,7 +90,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 		log.Info("Game Server Container Logs:")
 		framework.LogPodContainers(t, pod)
 	}
-	require.NoError(t, err)
+	require.NoError(t, err, "Ready game server timed out")
 
 	// Assert that the GameServer is in the expected state
 	require.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
