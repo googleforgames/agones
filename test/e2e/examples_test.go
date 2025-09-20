@@ -58,7 +58,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("1Gi"),
-									corev1.ResourceCPU:    resource.MustParse("200m"),
+									corev1.ResourceCPU:    resource.MustParse("500m"),
 								},
 							},
 							Env: []corev1.EnvVar{

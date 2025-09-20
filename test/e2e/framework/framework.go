@@ -851,7 +851,7 @@ func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) {
 		logOptions := &corev1.PodLogOptions{
 			Container: container.Name,
 			Follow:    false,
-			Previous:  true,
+			Previous:  previous,
 		}
 
 		req := f.KubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOptions)
