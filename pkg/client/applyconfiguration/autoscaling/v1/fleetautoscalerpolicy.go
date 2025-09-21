@@ -27,11 +27,12 @@ import (
 type FleetAutoscalerPolicyApplyConfiguration struct {
 	Type     *autoscalingv1.FleetAutoscalerPolicyType `json:"type,omitempty"`
 	Buffer   *BufferPolicyApplyConfiguration          `json:"buffer,omitempty"`
-	Webhook  *WebhookPolicyApplyConfiguration         `json:"webhook,omitempty"`
+	Webhook  *URLConfigurationApplyConfiguration      `json:"webhook,omitempty"`
 	Counter  *CounterPolicyApplyConfiguration         `json:"counter,omitempty"`
 	List     *ListPolicyApplyConfiguration            `json:"list,omitempty"`
 	Schedule *SchedulePolicyApplyConfiguration        `json:"schedule,omitempty"`
 	Chain    *autoscalingv1.ChainPolicy               `json:"chain,omitempty"`
+	Wasm     *WasmPolicyApplyConfiguration            `json:"wasm,omitempty"`
 }
 
 // FleetAutoscalerPolicyApplyConfiguration constructs a declarative configuration of the FleetAutoscalerPolicy type for use with
@@ -59,7 +60,7 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithBuffer(value *BufferPolicy
 // WithWebhook sets the Webhook field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Webhook field is set to the value of the last call.
-func (b *FleetAutoscalerPolicyApplyConfiguration) WithWebhook(value *WebhookPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+func (b *FleetAutoscalerPolicyApplyConfiguration) WithWebhook(value *URLConfigurationApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
 	b.Webhook = value
 	return b
 }
@@ -93,5 +94,13 @@ func (b *FleetAutoscalerPolicyApplyConfiguration) WithSchedule(value *SchedulePo
 // If called multiple times, the Chain field is set to the value of the last call.
 func (b *FleetAutoscalerPolicyApplyConfiguration) WithChain(value autoscalingv1.ChainPolicy) *FleetAutoscalerPolicyApplyConfiguration {
 	b.Chain = &value
+	return b
+}
+
+// WithWasm sets the Wasm field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Wasm field is set to the value of the last call.
+func (b *FleetAutoscalerPolicyApplyConfiguration) WithWasm(value *WasmPolicyApplyConfiguration) *FleetAutoscalerPolicyApplyConfiguration {
+	b.Wasm = value
 	return b
 }

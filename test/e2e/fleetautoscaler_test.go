@@ -450,7 +450,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale" //nolint:goconst
-	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.URLConfiguration{
 		Service: &admregv1.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
 			Namespace: framework.Namespace,
@@ -616,7 +616,7 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
 
-	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.URLConfiguration{
 		Service: &admregv1.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
 			Namespace: defaultNS,
@@ -688,7 +688,7 @@ func TestAutoscalerWebhookWithMetadata(t *testing.T) {
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
-	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.URLConfiguration{
 		Service: &admregv1.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
 			Namespace: framework.Namespace,
