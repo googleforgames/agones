@@ -4,6 +4,10 @@ go 1.24.0
 
 toolchain go1.24.4
 
+// Hotfix to address websocket connection issues with github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.2 and above.
+// See: https://github.com/grpc-ecosystem/grpc-gateway/issues/5326, https://github.com/googleforgames/agones/issues/4248
+replace github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 => github.com/swermin/grpc-websocket-proxy v0.1.0
+
 require (
 	cloud.google.com/go/cloudbuild v1.15.1
 	cloud.google.com/go/compute/metadata v0.7.0
@@ -39,6 +43,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.5.0
 	google.golang.org/api v0.220.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250826171959-ef028d996bc1
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250826171959-ef028d996bc1
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.8
 	gopkg.in/fsnotify.v1 v1.4.7
@@ -113,7 +118,6 @@ require (
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250826171959-ef028d996bc1 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

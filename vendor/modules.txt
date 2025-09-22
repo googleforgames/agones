@@ -356,7 +356,7 @@ github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 ## explicit
 github.com/subosito/gotenv
-# github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75
+# github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 => github.com/swermin/grpc-websocket-proxy v0.1.0
 ## explicit; go 1.15
 github.com/tmc/grpc-websocket-proxy/wsproxy
 # github.com/x448/float16 v0.8.4
