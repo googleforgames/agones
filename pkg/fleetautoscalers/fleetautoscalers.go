@@ -97,7 +97,7 @@ func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol auto
 }
 
 // buildURLFromWebhookPolicy - build URL for Webhook and set CARoot for client Transport
-func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (u *url.URL, err error) {
+func buildURLFromWebhookPolicy(w *autoscalingv1.URLConfiguration) (u *url.URL, err error) {
 	if w.URL != nil && w.Service != nil {
 		return nil, errors.New("service and URL cannot be used simultaneously")
 	}
@@ -164,7 +164,7 @@ func setCABundle(caBundle []byte) error {
 	return nil
 }
 
-func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
+func applyWebhookPolicy(w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
 	if w == nil {
 		return 0, false, errors.New("webhookPolicy parameter must not be nil")
 	}
