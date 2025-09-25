@@ -163,7 +163,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 				recvChan: make(chan *allocationpb.ProcessorMessage, 10),
 				sendChan: make(chan *allocationpb.ProcessorMessage, 10),
 			}
-			p := &processorClient{
+			p := &client{
 				config:          config,
 				logger:          logger,
 				hotBatch:        &allocationpb.BatchRequest{Requests: make([]*allocationpb.RequestWrapper, 0, config.MaxBatchSize)},
