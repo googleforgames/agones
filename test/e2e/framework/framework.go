@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/user"
@@ -837,6 +838,58 @@ func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string,
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
 	}
+}
+
+// LogPodContainers takes a Pod as an argument and attempts to output the current and previous logs from each container
+// in that Pod It uses the framework's KubeClient to retrieve the logs and outputs them using the provided logger.
+func (f *Framework) LogPodContainers(t *testing.T, pod *corev1.Pod) {
+	log := TestLogger(t)
+	log.WithField("pod", pod.Name).WithField("namespace", pod.Namespace).Info("Logs for Pod:")
+
+	// sub-function so defer will fire on each printLogs, rather than at the end.
+	printLogs := func(container corev1.Container, previous bool) {
+		logOptions := &corev1.PodLogOptions{
+			Container: container.Name,
+			Follow:    false,
+			Previous:  previous,
+		}
+
+		req := f.KubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOptions)
+		podLogs, err := req.Stream(context.Background())
+		log = log.WithField("options", logOptions)
+
+		if err != nil {
+			log.WithError(err).Warn("Error opening log stream for container")
+			return
+		}
+		defer podLogs.Close() // nolint:errcheck,staticcheck
+
+		logBytes, err := io.ReadAll(podLogs)
+		if err != nil {
+			log.WithError(err).WithField("options", logOptions).Warn("Error reading logs for container")
+			return
+		}
+
+		log.Info("---Logs for container---")
+		lines := strings.Split(string(logBytes), "\n")
+		for _, line := range lines {
+			if line == "" {
+				continue
+			}
+			log.Info(line)
+		}
+		log.Info("---End of container logs---")
+	}
+
+	// run through the container list twice, so we group current vs previous logs nicely.
+	for _, container := range pod.Spec.Containers {
+		printLogs(container, false)
+	}
+
+	for _, container := range pod.Spec.Containers {
+		printLogs(container, true)
+	}
+
 }
 
 // SkipOnCloudProduct skips the test if the e2e was invoked with --cloud-product=<product>.
