@@ -19,7 +19,7 @@ metadata:
   name: version-map
 data:
   DevVersion: ${DevVersion}
-  ReleaseVersion: "1.52.0"
+  ReleaseVersion: "1.52.1"
   version-mappings.json: |
     {
       "k8sToAgonesVersions": {
