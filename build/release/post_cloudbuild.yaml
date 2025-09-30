@@ -28,7 +28,7 @@ steps:
     args:
       - clone
       - --depth=1
-      - --branch=main
+      - --branch=${_BRANCH_NAME}
       - https://github.com/googleforgames/agones.git
       - .
 

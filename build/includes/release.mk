@@ -44,7 +44,7 @@ example-image-markdown.%:
     echo "- [$$tag](https://$$tag)"
 
 
-# Deploys the site by taking in the base version and deploying the previous version
+# Deploys the site by taking in the base version and deploying the previous minor or patch version
 release-deploy-site: $(ensure-build-image)
 release-deploy-site: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/local/go/bin/go
 release-deploy-site:
@@ -55,17 +55,15 @@ release-deploy-site:
 # creates release-branch
 release-branch: RELEASE_VERSION ?= $(base_version)
 release-branch: $(ensure-build-image)
-	@echo "Starting release for version: $(RELEASE_VERSION)"
+	@echo "Starting creating release branch for version: $(RELEASE_VERSION)"
 
 	# switch to the right project
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
-    
+
 	git remote update -p
 	git fetch --all --tags
 	git checkout -b release-$(RELEASE_VERSION) v$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
-
-	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 # push the current chart to google cloud storage and update the index
 # or push the current charts to the helm registry `CHARTS_REGISTRY`
@@ -85,18 +83,23 @@ endif
 # Ensure the example images exists
 pre-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
-		gcloud builds submit . --config=./pre_cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --substitutions _BRANCH_NAME=release-$(base_version) --config=./pre_cloudbuild.yaml $(ARGS)
 
-# Build and push the images in the release repository,
-# stores artifacts,
+# Build and push the images in the release repository, stores artifacts,
 # Pushes the current chart version to the helm repository hosted on gcs.
 post-build-release:
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
-		gcloud builds submit . --substitutions _VERSION=$(base_version) --config=./post_cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --substitutions _VERSION=$(base_version),_BRANCH_NAME=release-$(base_version) --config=./post_cloudbuild.yaml $(ARGS)
 
+# Tags images from the previous release as deprecated.
+# The tr -d '-' command is used to remove the dashes from the output of the script
+# (e.g., 1-52-1 becomes 1.52.1), which is the format needed for the Docker image tag.
+tag-deprecated-images: $(ensure-build-image)
+tag-deprecated-images: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/local/go/bin/go
 tag-deprecated-images:
-	previous_version=$(shell echo $(base_version) | awk -F. '{print $$1"."$$2-1"."$$3}'); \
-	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping agones-processor"; \
+	previous_version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(base_version)| tr '-' '.') && \
+	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping agones-processor" && \
 	for image in $$images; do \
+		echo "Tagging ${release_registry}/$$image:$$previous_version as deprecated..."; \
 		gcloud artifacts docker tags add ${release_registry}/$$image:$$previous_version ${release_registry}/$$image:deprecated-public-image-$$previous_version; \
 	done
