@@ -21,7 +21,7 @@ steps:
     script: rm *
 
   #
-  # Shallow clone of Agones/main branch from the main repository
+  # Shallow clone of the release branch from the Agones repository
   #
   - name: gcr.io/cloud-builders/git
     id: clone
@@ -31,25 +31,6 @@ steps:
       - --branch=${_BRANCH_NAME}
       - https://github.com/googleforgames/agones.git
       - .
-
-  #
-  # Restore any caches
-  #
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
-    id: cpp-sdk-build-restore-cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
-    id: cpp-sdk-conformance-restore-cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/CMakeLists.txt )
-  - name: us-docker.pkg.dev/$PROJECT_ID/ci/restore_cache
-    id: rust-sdk-build-restore-cache
-    args:
-      - --bucket=gs://$_CACHE_BUCKET
-      - --key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )
 
   #
   # Creates the initial make + docker build platform
@@ -129,8 +110,4 @@ options:
 substitutions:
   _STORAGE: gs://${PROJECT_ID}-agones-releases
   _REGISTRY: us-docker.pkg.dev/${PROJECT_ID}
-  _CACHE_BUCKET: agones-build-cache
-  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
-  _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
-  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 timeout: 7200s
