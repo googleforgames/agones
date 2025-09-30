@@ -68,7 +68,12 @@ func TestUpdateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		// Log error to make linter happy. CI / CD env will clean up, so no need to handle err.
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Log(err)
+		}
+	}()
 
 	// Test cases
 	testCases := []struct {
@@ -136,11 +141,11 @@ func TestUpdateFile(t *testing.T) {
 
 			// Create the test file
 			filePath := filepath.Join(tmpDir, tc.initialFile)
-			err := os.MkdirAll(filepath.Dir(filePath), 0755)
+			err := os.MkdirAll(filepath.Dir(filePath), 0o755)
 			if err != nil {
 				t.Fatalf("Failed to create dir for test file: %v", err)
 			}
-			err = os.WriteFile(filePath, []byte(tc.initialContent), 0644)
+			err = os.WriteFile(filePath, []byte(tc.initialContent), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to write initial test file: %v", err)
 			}

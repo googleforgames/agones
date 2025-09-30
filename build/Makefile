@@ -308,7 +308,7 @@ push-release-chart: $(ensure-build-image)
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 
 # Run all tests
-test: $(ensure-build-image) test-go test-sdks test-install-yaml helm-lint test-build-scripts
+test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test helm-lint test-build-scripts
 
 # Run go tests
 test-go: $(ensure-build-image)

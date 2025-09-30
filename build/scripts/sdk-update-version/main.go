@@ -28,6 +28,8 @@ import (
 var releaseStage string
 var version string
 
+const jsonExt string = ".json"
+
 func init() {
 	flag.StringVar(&releaseStage, "release-stage", "", "Specify the release stage ('before', 'after', or 'patch')")
 	flag.StringVar(&version, "version", "", "Specify the initial version")
@@ -81,7 +83,7 @@ func updateFile(filename string, version string) error {
 
 	switch releaseStage {
 	case "before":
-		if ext == ".json" {
+		if ext == jsonExt {
 			re := regexp.MustCompile(`"(\d+\.\d+\.\d+)-dev"`)
 			content = re.ReplaceAllString(content, `"$1"`)
 		} else {
@@ -89,7 +91,7 @@ func updateFile(filename string, version string) error {
 			content = re.ReplaceAllString(content, "${1}")
 		}
 	case "after":
-		if ext != ".json" {
+		if ext != jsonExt {
 			re := regexp.MustCompile(regexp.QuoteMeta(version))
 			newVersion := incrementVersionAfterRelease(version)
 			if strings.HasSuffix(filename, "build/Makefile") {
@@ -104,7 +106,7 @@ func updateFile(filename string, version string) error {
 		}
 	case "patch":
 		newVersion := incrementPatchVersion(version)
-		if ext != ".json" {
+		if ext != jsonExt {
 			re := regexp.MustCompile(regexp.QuoteMeta(version))
 			content = re.ReplaceAllString(content, newVersion)
 		} else {
