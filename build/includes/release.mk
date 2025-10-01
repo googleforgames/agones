@@ -52,18 +52,38 @@ release-deploy-site:
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
-# creates release-branch
-release-branch: RELEASE_VERSION ?= $(base_version)
-release-branch: $(ensure-build-image)
-	@echo "Starting creating release branch for version: $(RELEASE_VERSION)"
+# Creates, switches, and pushes a new minor version release branch based off of the main branch.
+# The should be run before pre_cloudbuild.yaml. This means base_version has not yet been updated.
+create-minor-release-branch: RELEASE_VERSION ?= $(shell echo $(base_version) | awk -F. '{$2++; $3=0; print $1"."$2"."$3}')
+create-minor-release-branch:
+	@echo "Starting creating release branch for minor version: $(RELEASE_VERSION)"
 
 	# switch to the right project
 	$(DOCKER_RUN) gcloud config configurations activate agones-images
 
 	git remote update -p
 	git fetch --all --tags
-	git checkout -b release-$(RELEASE_VERSION) v$(RELEASE_VERSION)
+	git checkout -b release-$(RELEASE_VERSION) upstream/main
 	git push -u upstream release-$(RELEASE_VERSION)
+
+# Creates, switches, and pushes a new patch version release branch based off of the release branch.
+# The should be run before pre_cloudbuild.yaml. Require user to the specify both the patch version,
+# and the version to base the release-branch off of.
+create-patch-release-branch: PREVIOUS_VERSION ?=
+create-patch-release-branch: PATCH_VERSION ?=
+create-patch-release-branch:
+	$(if $(PREVIOUS_VERSION),,$(error PREVIOUS_VERSION is not set. Please provide the version to branch from.))
+	$(if $(PATCH_VERSION),,$(error PATCH_VERSION is not set. Please provide the new patch version number.))
+
+	@echo "Creating new patch release branch release-$(PATCH_VERSION) from tag v$(PREVIOUS_VERSION)"
+
+	# switch to the right project
+	$(DOCKER_RUN) gcloud config configurations activate agones-images
+
+	git remote update -p
+	git fetch upstream --tags
+	git checkout -b release-$(PATCH_VERSION) v$(PREVIOUS_VERSION)
+	git push -u upstream release-$(PATCH_VERSION)
 
 # push the current chart to google cloud storage and update the index
 # or push the current charts to the helm registry `CHARTS_REGISTRY`
