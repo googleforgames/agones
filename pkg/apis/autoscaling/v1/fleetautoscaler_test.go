@@ -617,6 +617,77 @@ func TestFleetAutoscalerChainValidateUpdate(t *testing.T) {
 	}
 }
 
+func TestFleetAutoscalerWasmValidateUpdate(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		fas          *FleetAutoscaler
+		featureFlags string
+		wantLength   int
+		wantField    string
+	}{
+		"valid": {
+			fas:          wasmFixture(),
+			featureFlags: string(runtime.FeatureWasmAutoscaler) + "=true",
+			wantLength:   0,
+		},
+		"feature gate not turned on": {
+			fas:          wasmFixture(),
+			featureFlags: string(runtime.FeatureWasmAutoscaler) + "=false",
+			wantLength:   1,
+			wantField:    "spec.policy.wasm",
+		},
+		"nil wasm policy": {
+			fas: func() *FleetAutoscaler {
+				fas := wasmFixture()
+				fas.Spec.Policy.Wasm = nil
+				return fas
+			}(),
+			featureFlags: string(runtime.FeatureWasmAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.wasm",
+		},
+		"nil from.url": {
+			fas: func() *FleetAutoscaler {
+				fas := wasmFixture()
+				fas.Spec.Policy.Wasm.From.URL = nil
+				return fas
+			}(),
+			featureFlags: string(runtime.FeatureWasmAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.wasm.from",
+		},
+		"invalid url": {
+			fas: func() *FleetAutoscaler {
+				fas := wasmFixture()
+				badURL := "://invalid-url"
+				fas.Spec.Policy.Wasm.From.URL.URL = &badURL
+				return fas
+			}(),
+			featureFlags: string(runtime.FeatureWasmAutoscaler) + "=true",
+			wantLength:   1,
+			wantField:    "spec.policy.wasm.from.url.url",
+		},
+	}
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(tc.featureFlags)
+			assert.NoError(t, err)
+
+			causes := tc.fas.Validate()
+
+			assert.Len(t, causes, tc.wantLength)
+			if tc.wantLength > 0 && len(causes) > 0 {
+				assert.Equal(t, tc.wantField, causes[0].Field)
+			}
+		})
+	}
+}
+
 func TestFleetAutoscalerApplyDefaults(t *testing.T) {
 	fas := &FleetAutoscaler{}
 
@@ -664,7 +735,12 @@ func chainFixture() *FleetAutoscaler {
 	return customFixture(ChainPolicyType)
 }
 
+func wasmFixture() *FleetAutoscaler {
+	return customFixture(WasmPolicyType)
+}
+
 func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
+
 	res := &FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{Name: "test"},
 		Spec: FleetAutoscalerSpec{
@@ -690,7 +766,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Type = WebhookPolicyType
 		res.Spec.Policy.Buffer = nil
 		url := "/scale"
-		res.Spec.Policy.Webhook = &WebhookPolicy{
+		res.Spec.Policy.Webhook = &URLConfiguration{
 			Service: &admregv1.ServiceReference{
 				Name:      "service1",
 				Namespace: "default",
@@ -754,7 +830,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 							Type: CounterPolicyType,
 							Counter: &CounterPolicy{
 								Key:         "playerCount",
-								BufferSize:  intstr.FromInt(5),
+								BufferSize:  intstr.FromInt32(5),
 								MaxCapacity: 10,
 							},
 						},
@@ -766,9 +842,24 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 				FleetAutoscalerPolicy: FleetAutoscalerPolicy{
 					Type: BufferPolicyType,
 					Buffer: &BufferPolicy{
-						BufferSize:  intstr.FromInt(5),
+						BufferSize:  intstr.FromInt32(5),
 						MaxReplicas: 10,
 					},
+				},
+			},
+		}
+	case WasmPolicyType:
+		res.Spec.Policy.Type = WasmPolicyType
+		res.Spec.Policy.Buffer = nil
+		url := "http://example.com/wasm-module"
+		res.Spec.Policy.Wasm = &WasmPolicy{
+			Function: "scale",
+			Config: map[string]string{
+				"scale_buffer": "10",
+			},
+			From: WasmFrom{
+				URL: &URLConfiguration{
+					URL: &url,
 				},
 			},
 		}

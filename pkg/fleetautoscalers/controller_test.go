@@ -1245,7 +1245,7 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	url := "/autoscaler"
-	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.URLConfiguration{
 		Service: &admregv1.ServiceReference{
 			Name: "fleetautoscaler-service",
 			Path: &url,
