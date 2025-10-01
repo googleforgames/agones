@@ -68,7 +68,7 @@ type client struct {
 
 	batchMutex sync.RWMutex
 	// requestIDMapping is a map to correlate request IDs to pendingRequest objects for response handling
-	requestIDMapping sync.Map
+	requestIDMapping map[string]*pendingRequest
 }
 
 // pendingRequest represents a request waiting for processing
@@ -108,7 +108,8 @@ func NewProcessorClient(config Config, logger logrus.FieldLogger) Client {
 		hotBatch: &allocationpb.BatchRequest{
 			Requests: make([]*allocationpb.RequestWrapper, 0, config.MaxBatchSize),
 		},
-		pendingRequests: make([]*pendingRequest, 0, config.MaxBatchSize),
+		pendingRequests:  make([]*pendingRequest, 0, config.MaxBatchSize),
+		requestIDMapping: make(map[string]*pendingRequest),
 	}
 }
 
@@ -152,7 +153,6 @@ func (p *client) Allocate(ctx context.Context, req *allocationpb.AllocationReque
 		response: make(chan *allocationpb.AllocationResponse, 1),
 		error:    make(chan error, 1),
 	}
-	p.requestIDMapping.Store(requestID, pendingReq)
 
 	// Wrap the request for batching.
 	wrapper := &allocationpb.RequestWrapper{
@@ -160,21 +160,11 @@ func (p *client) Allocate(ctx context.Context, req *allocationpb.AllocationReque
 		Request:   req,
 	}
 
-	// Safely add the request to the current batch and pending list using a scoped lock
-	batchAdded := false
-	func() {
-		p.batchMutex.Lock()
-		defer p.batchMutex.Unlock()
-
-		p.hotBatch.Requests = append(p.hotBatch.Requests, wrapper)
-		p.pendingRequests = append(p.pendingRequests, pendingReq)
-		batchAdded = true
-	}()
-
-	if !batchAdded {
-		p.requestIDMapping.Delete(requestID)
-		return nil, status.Errorf(codes.Internal, "failed to add request to batch")
-	}
+	p.batchMutex.Lock()
+	p.requestIDMapping[requestID] = pendingReq
+	p.hotBatch.Requests = append(p.hotBatch.Requests, wrapper)
+	p.pendingRequests = append(p.pendingRequests, pendingReq)
+	p.batchMutex.Unlock()
 
 	// Wait for response, error, cancellation, or timeout
 	timeout := p.config.AllocationTimeout
@@ -189,12 +179,16 @@ func (p *client) Allocate(ctx context.Context, req *allocationpb.AllocationReque
 		return nil, err
 
 	case <-ctx.Done():
-		p.requestIDMapping.Delete(requestID)
+		p.batchMutex.Lock()
+		delete(p.requestIDMapping, requestID)
+		p.batchMutex.Unlock()
 		p.logger.WithField("requestID", requestID).Debug("Request cancelled by context")
 		return nil, ctx.Err()
 
 	case <-time.After(timeout):
-		p.requestIDMapping.Delete(requestID)
+		p.batchMutex.Lock()
+		delete(p.requestIDMapping, requestID)
+		p.batchMutex.Unlock()
 		p.logger.WithField("requestID", requestID).Error("Timeout waiting for processor response")
 		return nil, status.Errorf(codes.DeadlineExceeded, "allocation timeout after %v", timeout)
 	}
@@ -305,15 +299,15 @@ func (p *client) sendBatch(stream allocationpb.Processor_StreamBatchesClient, ba
 		p.logger.WithError(err).Error("Failed to send batch")
 
 		// Re-add the request to the hot batch and pendingRequests for the next pull
+		p.batchMutex.Lock()
 		for _, req := range requests {
-			p.batchMutex.Lock()
 			p.hotBatch.Requests = append(p.hotBatch.Requests, &allocationpb.RequestWrapper{
 				RequestId: req.id,
 				Request:   req.request,
 			})
 			p.pendingRequests = append(p.pendingRequests, req)
-			p.batchMutex.Unlock()
 		}
+		p.batchMutex.Unlock()
 		return
 	}
 
@@ -342,86 +336,80 @@ func (p *client) handleBatchResponse(batchResp *allocationpb.BatchResponse) {
 		requestID := respWrapper.RequestId
 
 		// Try to load the pending request for this response
-		if reqInterface, exists := p.requestIDMapping.Load(requestID); exists {
-			if req, ok := reqInterface.(*pendingRequest); ok {
+		p.batchMutex.RLock()
+		req, exists := p.requestIDMapping[requestID]
+		p.batchMutex.RUnlock()
 
-				// Track if response was processed successfully
-				responseProcessed := false
+		if exists {
+			// Track if response was processed successfully
+			responseProcessed := false
 
-				switch result := respWrapper.Result.(type) {
-				case *allocationpb.ResponseWrapper_Response:
-					// Success case: send response to caller
-					successCount++
-					responseProcessed = true
+			switch result := respWrapper.Result.(type) {
+			case *allocationpb.ResponseWrapper_Response:
+				// Success case: send response to caller
+				successCount++
+				responseProcessed = true
 
-					select {
-					case req.response <- result.Response:
-						p.logger.WithField("requestID", requestID).Debug("Response sent successfully")
-					default:
-						p.logger.WithField("requestID", requestID).Warn("Failed to send response - channel full")
-						responseProcessed = false
-					}
-
-				case *allocationpb.ResponseWrapper_Error:
-					// Error case: send error to caller
-					errorCount++
-					responseProcessed = true
-
-					code := codes.Code(result.Error.Code)
-					msg := result.Error.Message
-
-					p.logger.WithFields(logrus.Fields{
-						"component": "processor-client",
-						"requestID": requestID,
-						"batchID":   batchResp.BatchId,
-						"errorCode": code,
-						"errorMsg":  msg,
-					}).Error("Request failed with error from processor")
-
-					select {
-					case req.error <- status.Error(code, msg):
-						p.logger.WithField("requestID", requestID).Debug("Error sent successfully")
-					default:
-						p.logger.WithField("requestID", requestID).Warn("Failed to send error - channel full")
-						responseProcessed = false
-					}
-
+				select {
+				case req.response <- result.Response:
+					p.logger.WithField("requestID", requestID).Debug("Response sent successfully")
 				default:
-					// Missing result: treat as internal error
-					errorCount++
-					responseProcessed = true
-
-					p.logger.WithFields(logrus.Fields{
-						"component": "processor-client",
-						"requestID": requestID,
-						"batchID":   batchResp.BatchId,
-					}).Error("Response wrapper has no result")
-
-					select {
-					case req.error <- status.Errorf(codes.Internal, "empty response from processor"):
-						p.logger.WithField("requestID", requestID).Debug("Error sent successfully")
-					default:
-						p.logger.WithField("requestID", requestID).Warn("Failed to send error - channel full")
-						responseProcessed = false
-					}
+					p.logger.WithField("requestID", requestID).Warn("Failed to send response - channel full")
+					responseProcessed = false
 				}
 
-				// Only delete if response was processed successfully
-				if responseProcessed {
-					p.requestIDMapping.Delete(requestID)
-					p.logger.WithField("requestID", requestID).Debug("Request cleaned up successfully")
-				} else {
-					p.logger.WithField("requestID", requestID).Warn("Keeping request in map due to failed processing")
-				}
+			case *allocationpb.ResponseWrapper_Error:
+				// Error case: send error to caller
+				errorCount++
+				responseProcessed = true
 
-			} else {
-				// Failed to cast to pendingRequest
-				notFoundCount++
+				code := codes.Code(result.Error.Code)
+				msg := result.Error.Message
+
 				p.logger.WithFields(logrus.Fields{
 					"component": "processor-client",
 					"requestID": requestID,
 					"batchID":   batchResp.BatchId,
-				}).Error("Failed to cast request interface to pendingRequest")
+					"errorCode": code,
+					"errorMsg":  msg,
+				}).Error("Request failed with error from processor")
+
+				select {
+				case req.error <- status.Error(code, msg):
+					p.logger.WithField("requestID", requestID).Debug("Error sent successfully")
+				default:
+					p.logger.WithField("requestID", requestID).Warn("Failed to send error - channel full")
+					responseProcessed = false
+				}
+
+			default:
+				// Missing result: treat as internal error
+				errorCount++
+				responseProcessed = true
+
+				p.logger.WithFields(logrus.Fields{
+					"component": "processor-client",
+					"requestID": requestID,
+					"batchID":   batchResp.BatchId,
+				}).Error("Response wrapper has no result")
+
+				select {
+				case req.error <- status.Errorf(codes.Internal, "empty response from processor"):
+					p.logger.WithField("requestID", requestID).Debug("Error sent successfully")
+				default:
+					p.logger.WithField("requestID", requestID).Warn("Failed to send error - channel full")
+					responseProcessed = false
+				}
+			}
+
+			// Only delete if response was processed successfully
+			if responseProcessed {
+				p.batchMutex.Lock()
+				delete(p.requestIDMapping, requestID)
+				p.batchMutex.Unlock()
+				p.logger.WithField("requestID", requestID).Debug("Request cleaned up successfully")
+			} else {
+				p.logger.WithField("requestID", requestID).Warn("Keeping request in map due to failed processing")
 			}
 		} else {
 			// No pending request found for this response

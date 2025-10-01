@@ -164,10 +164,11 @@ func TestProcessorClient_Allocate(t *testing.T) {
 				sendChan: make(chan *allocationpb.ProcessorMessage, 10),
 			}
 			p := &client{
-				config:          config,
-				logger:          logger,
-				hotBatch:        &allocationpb.BatchRequest{Requests: make([]*allocationpb.RequestWrapper, 0, config.MaxBatchSize)},
-				pendingRequests: make([]*pendingRequest, 0, config.MaxBatchSize),
+				config:           config,
+				logger:           logger,
+				hotBatch:         &allocationpb.BatchRequest{Requests: make([]*allocationpb.RequestWrapper, 0, config.MaxBatchSize)},
+				pendingRequests:  make([]*pendingRequest, 0, config.MaxBatchSize),
+				requestIDMapping: make(map[string]*pendingRequest),
 			}
 
 			// Start handleStream in a goroutine
