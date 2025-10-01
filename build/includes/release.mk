@@ -68,7 +68,7 @@ release-branch: $(ensure-build-image)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 # push the current chart to google cloud storage and update the index
-# or push the current charts to the helm registry `CHARTS_REGISTRY`
+# or push the current charts to the helm registry `CHARTS_REGISTRY`s
 push-chart: $(ensure-build-image) build-chart
 ifneq ($(CHARTS_REGISTRY),)
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
