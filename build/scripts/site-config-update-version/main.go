@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"log"
 	"os"
 	"regexp"
@@ -48,58 +49,67 @@ type Config struct {
 }
 
 func main() {
-	// Read the content of the config.toml file
-	configFile := "site/config.toml"
-	content, err := os.ReadFile(configFile)
-	if err != nil {
-		log.Println("Read File: ", err)
+	var releaseStage, configFile string
+	flag.StringVar(&releaseStage, "release-stage", "minor", "Specify the release stage ('minor' or 'patch')")
+	flag.StringVar(&configFile, "config-file", "site/config.toml", "Path to the config.toml file")
+	flag.Parse()
+
+	if err := updateSiteConfig(configFile, releaseStage); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	log.Println("Values updated and saved successfully!")
+}
+
+func updateSiteConfig(filePath, stage string) error {
+	if stage != "minor" && stage != "patch" {
+		log.Fatalf("invalid release stage: must be 'minor' or 'patch'")
 	}
 
-	// Unmarshal the TOML content into a Config struct
-	var config Config
-	err = toml.Unmarshal(content, &config)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Println("Unmarshal: ", err)
+		return err
 	}
 
-	// Copy values from dev to prod
-	config.ProdConfig.SupportedK8s = config.DevConfig.DevSupportedK8s
-	config.ProdConfig.K8sAPIVersion = config.DevConfig.DevK8sAPIVersion
-	config.ProdConfig.GKEExampleClusterVersion = config.DevConfig.DevGKEExampleClusterVersion
-	config.ProdConfig.AKSExampleClusterVersion = config.DevConfig.DevAKSExampleClusterVersion
-	config.ProdConfig.EKSExampleClusterVersion = config.DevConfig.DevEKSExampleClusterVersion
-	config.ProdConfig.MinikubeExampleClusterVersion = config.DevConfig.DevMinikubeExampleClusterVersion
-
-	// Construct the updated TOML content
-	var lines []string
-	for _, line := range strings.Split(string(content), "\n") {
-		switch {
-		case strings.HasPrefix(line, "supported_k8s"):
-			line = "supported_k8s = " + tomlArray(config.ProdConfig.SupportedK8s)
-		case strings.HasPrefix(line, "k8s_api_version"):
-			line = "k8s_api_version = \"" + config.ProdConfig.K8sAPIVersion + "\""
-		case strings.HasPrefix(line, "gke_example_cluster_version"):
-			line = "gke_example_cluster_version = \"" + config.ProdConfig.GKEExampleClusterVersion + "\""
-		case strings.HasPrefix(line, "aks_example_cluster_version"):
-			line = "aks_example_cluster_version = \"" + config.ProdConfig.AKSExampleClusterVersion + "\""
-		case strings.HasPrefix(line, "eks_example_cluster_version"):
-			line = "eks_example_cluster_version = \"" + config.ProdConfig.EKSExampleClusterVersion + "\""
-		case strings.HasPrefix(line, "minikube_example_cluster_version"):
-			line = "minikube_example_cluster_version = \"" + config.ProdConfig.MinikubeExampleClusterVersion + "\""
+	var updatedLines []string
+	if stage == "minor" {
+		var config Config
+		err = toml.Unmarshal(content, &config)
+		if err != nil {
+			return err
 		}
-		lines = append(lines, line)
+
+		// Copy values from dev to prod
+		config.ProdConfig.SupportedK8s = config.DevConfig.DevSupportedK8s
+		config.ProdConfig.K8sAPIVersion = config.DevConfig.DevK8sAPIVersion
+		config.ProdConfig.GKEExampleClusterVersion = config.DevConfig.DevGKEExampleClusterVersion
+		config.ProdConfig.AKSExampleClusterVersion = config.DevConfig.DevAKSExampleClusterVersion
+		config.ProdConfig.EKSExampleClusterVersion = config.DevConfig.DevEKSExampleClusterVersion
+		config.ProdConfig.MinikubeExampleClusterVersion = config.DevConfig.DevMinikubeExampleClusterVersion
+
+		var lines []string
+		for _, line := range strings.Split(string(content), "\n") {
+			switch {
+			case strings.HasPrefix(line, "supported_k8s"):
+				line = "supported_k8s = " + tomlArray(config.ProdConfig.SupportedK8s)
+			case strings.HasPrefix(line, "k8s_api_version"):
+				line = "k8s_api_version = \"" + config.ProdConfig.K8sAPIVersion + "\""
+			case strings.HasPrefix(line, "gke_example_cluster_version"):
+				line = "gke_example_cluster_version = \"" + config.ProdConfig.GKEExampleClusterVersion + "\""
+			case strings.HasPrefix(line, "aks_example_cluster_version"):
+				line = "aks_example_cluster_version = \"" + config.ProdConfig.AKSExampleClusterVersion + "\""
+			case strings.HasPrefix(line, "eks_example_cluster_version"):
+				line = "eks_example_cluster_version = \"" + config.ProdConfig.EKSExampleClusterVersion + "\""
+			case strings.HasPrefix(line, "minikube_example_cluster_version"):
+				line = "minikube_example_cluster_version = \"" + config.ProdConfig.MinikubeExampleClusterVersion + "\""
+			}
+			lines = append(lines, line)
+		}
+		updatedLines = updateReleaseValues(lines, stage)
+	} else {
+		updatedLines = updateReleaseValues(strings.Split(string(content), "\n"), stage)
 	}
 
-	// Update release_branch and release_version values
-	updatedLines := updateReleaseValues(lines)
-
-	// Write the updated lines back to the config.toml file
-	err = writeLinesToFile(configFile, updatedLines)
-	if err != nil {
-		log.Println("Write File: ", err)
-	}
-
-	log.Println("Values copied and saved successfully!")
+	return writeLinesToFile(filePath, updatedLines)
 }
 
 // Helper function to convert an array of strings to a TOML array representation
@@ -118,17 +128,19 @@ func tomlArray(values []string) string {
 	return builder.String()
 }
 
-func updateReleaseValues(lines []string) []string {
+func updateReleaseValues(lines []string, stage string) []string {
 	var updatedLines []string
 
 	for _, line := range lines {
 		updatedLine := line
+		trimmedLine := strings.TrimSpace(line) // Trim leading/trailing spaces
 
-		switch {
-		case strings.HasPrefix(line, "release_branch"):
-			updatedLine = updateReleaseVersion(line)
-		case strings.HasPrefix(line, "release_version"):
-			updatedLine = updateReleaseVersion(line)
+		if strings.HasPrefix(trimmedLine, "release_branch") || strings.HasPrefix(trimmedLine, "release_version") {
+			if stage == "minor" {
+				updatedLine = incrementMinorVersion(line)
+			} else {
+				updatedLine = incrementPatchVersion(line)
+			}
 		}
 
 		updatedLines = append(updatedLines, updatedLine)
@@ -137,40 +149,46 @@ func updateReleaseValues(lines []string) []string {
 	return updatedLines
 }
 
-func updateReleaseVersion(line string) string {
-	// Use regular expression to find the version value
-	re := regexp.MustCompile(`"[^"]+"`)
-	match := re.FindString(line)
-	if match != "" {
-		// Remove the quotes around the version value
-		version := strings.Trim(match, `"`)
-
-		// Split the version into segments
+// Increments the minor version, and resets the patch version (if any) to 0
+// ex: 1.52.0 -> 1.53.0 or 1.52.1 -> 1.53.0
+func incrementMinorVersion(line string) string {
+	re := regexp.MustCompile(`"([^"]+)"`)
+	match := re.FindStringSubmatch(line)
+	if len(match) > 1 {
+		version := match[1]
 		segments := strings.Split(version, ".")
-
 		if len(segments) == 3 {
-			// Parse the second segment as an integer
 			secondSegment, err := strconv.Atoi(segments[1])
 			if err != nil {
 				return line
 			}
-
-			// Increment the second segment
 			secondSegment++
-
-			// Update the version with the incremented second segment
 			segments[1] = strconv.Itoa(secondSegment)
-
-			// Join the segments back into a version string
+			segments[2] = "0" // Reset patch version for minor release
 			updatedVersion := strings.Join(segments, ".")
-
-			// Replace the original version with the updated version in the line
-			updatedLine := strings.Replace(line, version, updatedVersion, 1)
-
-			return updatedLine
+			return strings.Replace(line, version, updatedVersion, 1)
 		}
 	}
+	return line
+}
 
+func incrementPatchVersion(line string) string {
+	re := regexp.MustCompile(`"([^"]+)"`)
+	match := re.FindStringSubmatch(line)
+	if len(match) > 1 {
+		version := match[1]
+		segments := strings.Split(version, ".")
+		if len(segments) == 3 {
+			patchSegment, err := strconv.Atoi(segments[2])
+			if err != nil {
+				return line
+			}
+			patchSegment++
+			segments[2] = strconv.Itoa(patchSegment)
+			updatedVersion := strings.Join(segments, ".")
+			return strings.Replace(line, version, updatedVersion, 1)
+		}
+	}
 	return line
 }
 

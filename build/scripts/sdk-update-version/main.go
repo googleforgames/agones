@@ -28,8 +28,10 @@ import (
 var releaseStage string
 var version string
 
+const jsonExt string = ".json"
+
 func init() {
-	flag.StringVar(&releaseStage, "release-stage", "", "Specify the release stage ('before' or 'after')")
+	flag.StringVar(&releaseStage, "release-stage", "", "Specify the release stage ('before', 'after', or 'patch')")
 	flag.StringVar(&version, "version", "", "Specify the initial version")
 }
 
@@ -37,7 +39,7 @@ func main() {
 	flag.Parse()
 
 	if releaseStage == "" || version == "" {
-		log.Fatalf("Please provide the release stage ('before' or 'after') and the version as command-line arguments")
+		log.Fatalf("Please provide the release stage ('before', 'after', or 'patch') and the version as command-line arguments")
 	}
 
 	log.Printf("Release Stage: %s", releaseStage)
@@ -61,15 +63,15 @@ func main() {
 		dir := filepath.Dir(filename)
 		log.Printf("Directory: %s", dir)
 
-		err := UpdateFile(filename, version)
+		err := updateFile(filename, version)
 		if err != nil {
 			log.Fatalf("Error updating file %s: %s\n", filename, err.Error())
 		}
 	}
 }
 
-// UpdateFile updates the specified file to the current release version before and after the release process.
-func UpdateFile(filename string, version string) error {
+// updateFile updates the specified file to the current release version before and after the release process.
+func updateFile(filename string, version string) error {
 	fileBytes, err := os.ReadFile(filename)
 	if err != nil {
 		return err
@@ -81,7 +83,7 @@ func UpdateFile(filename string, version string) error {
 
 	switch releaseStage {
 	case "before":
-		if ext == ".json" {
+		if ext == jsonExt {
 			re := regexp.MustCompile(`"(\d+\.\d+\.\d+)-dev"`)
 			content = re.ReplaceAllString(content, `"$1"`)
 		} else {
@@ -89,10 +91,10 @@ func UpdateFile(filename string, version string) error {
 			content = re.ReplaceAllString(content, "${1}")
 		}
 	case "after":
-		if ext != ".json" {
+		if ext != jsonExt {
 			re := regexp.MustCompile(regexp.QuoteMeta(version))
 			newVersion := incrementVersionAfterRelease(version)
-			if filename == "build/Makefile" {
+			if strings.HasSuffix(filename, "build/Makefile") {
 				content = re.ReplaceAllString(content, newVersion)
 			} else {
 				content = re.ReplaceAllString(content, newVersion+"-dev")
@@ -102,8 +104,17 @@ func UpdateFile(filename string, version string) error {
 			newVersion := incrementVersionAfterRelease(version) + "-dev"
 			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
 		}
+	case "patch":
+		newVersion := incrementPatchVersion(version)
+		if ext != jsonExt {
+			re := regexp.MustCompile(regexp.QuoteMeta(version))
+			content = re.ReplaceAllString(content, newVersion)
+		} else {
+			re := regexp.MustCompile(`"` + regexp.QuoteMeta(version) + `"`)
+			content = re.ReplaceAllString(content, `"`+newVersion+`"`)
+		}
 	default:
-		log.Fatalf("Invalid release stage. Please specify 'before' or 'after'.")
+		log.Fatalf("Invalid release stage. Please specify 'before', 'after', or 'patch'.")
 	}
 
 	err = os.WriteFile(filename, []byte(content), 0o644)
@@ -125,5 +136,19 @@ func incrementVersionAfterRelease(version string) string {
 		log.Fatalf("Error converting version segment to integer: %s\n", err.Error())
 	}
 	segments[len(segments)-2] = strconv.Itoa(lastButOneSegment + 1)
+	return strings.Join(segments, ".")
+}
+
+func incrementPatchVersion(version string) string {
+	segments := strings.Split(version, ".")
+	if len(segments) < 3 {
+		log.Fatalf("Invalid version format: %s\n", version)
+	}
+
+	patchSegment, err := strconv.Atoi(segments[len(segments)-1])
+	if err != nil {
+		log.Fatalf("Error converting version segment to integer: %s\n", err.Error())
+	}
+	segments[len(segments)-1] = strconv.Itoa(patchSegment + 1)
 	return strings.Join(segments, ".")
 }
