@@ -67,6 +67,8 @@ var (
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
 	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
+	// ErrGameServerUpdateConflict is returned when the game server selected for applying the allocation cannot be updated
+	ErrGameServerUpdateConflict = errors.New("Could not update the selected GameServer")
 )
 
 const (
@@ -174,7 +176,11 @@ func (c *Allocator) Run(ctx context.Context) error {
 	}
 
 	// workers and logic for batching allocations
-	go c.ListenAndAllocate(ctx, maxBatchQueue)
+	if runtime.FeatureEnabled(runtime.FeatureAllocatorBatchesUpdates) {
+		go c.ListenAndBatchAllocate(ctx, maxBatchQueue)
+	} else {
+		go c.ListenAndAllocate(ctx, maxBatchQueue)
+	}
 
 	return nil
 }
@@ -273,10 +279,10 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		return nil, err
 	}
 
-	switch err {
-	case ErrNoGameServer:
+	switch {
+	case goErrors.Is(err, ErrNoGameServer), goErrors.Is(err, ErrGameServerUpdateConflict):
 		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
-	case ErrConflictInGameServerSelection:
+	case goErrors.Is(err, ErrConflictInGameServerSelection):
 		gsa.Status.State = allocationv1.GameServerAllocationContention
 	default:
 		gsa.ObjectMeta.Name = gs.ObjectMeta.Name
@@ -511,14 +517,23 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 	var list []*agonesv1.GameServer
 	var sortKey uint64
 	requestCount := 0
+	metrics := c.newMetrics(ctx)
+
+	flush := func() {
+		if requestCount > 0 {
+			metrics.recordAllocationsBatchSize(ctx, requestCount)
+		}
+
+		list = nil
+		requestCount = 0
+	}
 
 	for {
 		select {
 		case req := <-c.pendingRequests:
 			// refresh the list after every 100 allocations made in a single batch
 			if requestCount >= maxBatchBeforeRefresh {
-				list = nil
-				requestCount = 0
+				flush()
 			}
 
 			if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
@@ -536,8 +551,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 
 				if newSortKey != sortKey {
 					sortKey = newSortKey
-					list = nil
-					requestCount = 0
+					flush()
 				}
 			}
 
@@ -571,8 +585,8 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 		case <-ctx.Done():
 			return
 		default:
-			list = nil
-			requestCount = 0
+			flush()
+
 			// slow down cpu churn, and allow items to batch
 			time.Sleep(c.batchWaitTime)
 		}
@@ -600,7 +614,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 							// we should wait for it to get updated with fresh info.
 							c.allocationCache.AddGameServer(gs)
 						}
-						res.err = errors.Wrap(err, "error updating allocated gameserver")
+						res.err = goErrors.Join(ErrGameServerUpdateConflict, err)
 					} else {
 						// put the GameServer back into the cache, so it's immediately around for re-allocation
 						c.allocationCache.AddGameServer(gs)
@@ -663,10 +677,15 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 		}
 	}
 
+	metrics := c.newMetrics(ctx)
+	requestStartTime := time.Now()
+
 	gsUpdate, updateErr := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
 	if updateErr != nil {
+		metrics.recordAllocationUpdateFailure(ctx, time.Since(requestStartTime))
 		return gsUpdate, updateErr
 	}
+	metrics.recordAllocationUpdateSuccess(ctx, time.Since(requestStartTime))
 
 	// If successful Update record any Counter or List action errors as a warning
 	if counterErrors != nil {
@@ -693,11 +712,10 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 			}
 		}
 
+		// No quick 400s, still do retries for ErrNoGameServer
 		switch {
 		case err == nil:
 			return true, nil
-		case err == ErrNoGameServer:
-			return true, err
 		case err == ErrTotalTimeoutExceeded:
 			return true, err
 		default:
