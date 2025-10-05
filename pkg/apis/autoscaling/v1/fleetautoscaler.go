@@ -76,7 +76,7 @@ type FleetAutoscalerPolicy struct {
 	Buffer *BufferPolicy `json:"buffer,omitempty"`
 	// Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.
 	// +optional
-	Webhook *WebhookPolicy `json:"webhook,omitempty"`
+	Webhook *URLConfiguration `json:"webhook,omitempty"`
 	// [Stage:Beta]
 	// [FeatureFlag:CountsAndLists]
 	// Counter policy config params. Present only if FleetAutoscalerPolicyType = Counter.
@@ -97,6 +97,9 @@ type FleetAutoscalerPolicy struct {
 	// Chain policy config params. Present only if FleetAutoscalerPolicyType = Chain.
 	// +optional
 	Chain ChainPolicy `json:"chain,omitempty"`
+	// Wasm policy config params. Present only if FleetAutoscalerPolicyType = Wasm.
+	// +optional
+	Wasm *WasmPolicy `json:"wasm,omitempty"`
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -143,6 +146,10 @@ const (
 	// ChainPolicyType is for Chain based fleet autoscaling
 	// nolint:revive // Linter contains comment doesn't start with ChainPolicyType
 	ChainPolicyType FleetAutoscalerPolicyType = "Chain"
+	// WasmPolicyType is for WebAssembly based fleet autoscaling
+	// [Stage:Dev]
+	// [FeatureFlag:WasmAutoscaler]
+	WasmPolicyType FleetAutoscalerPolicyType = "Wasm"
 	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
 	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
 
@@ -173,10 +180,9 @@ type BufferPolicy struct {
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
-// WebhookPolicy controls the desired behavior of the webhook policy.
-// It contains the description of the webhook autoscaler service
-// used to form url which is accessible inside the cluster
-type WebhookPolicy admregv1.WebhookClientConfig
+// URLConfiguration is a generic configuration for any integration with an external URL or
+// cluster provided service. For example, it can be used to configure a webhook or Wasm module
+type URLConfiguration admregv1.WebhookClientConfig
 
 // CounterPolicy controls the desired behavior of the Counter autoscaler policy.
 type CounterPolicy struct {
@@ -275,6 +281,27 @@ type ChainEntry struct {
 // ChainPolicy controls the desired behavior of the Chain autoscaler policy.
 type ChainPolicy []ChainEntry
 
+// WasmFrom defines the source of the Wasm module
+type WasmFrom struct {
+	// URL is the URL of the Wasm module to use for autoscaling.
+	URL *URLConfiguration `json:"url"`
+}
+
+// WasmPolicy controls the desired behavior of the Wasm policy.
+// It contains the configuration for the WebAssembly module used for autoscaling.
+type WasmPolicy struct {
+	// Function is the exported function to call in the wasm module, defaults to 'scale'
+	// +optional
+	Function string `json:"function,omitempty"`
+	// Config values to pass to the wasm program on startup
+	// +optional
+	Config map[string]string `json:"config,omitempty"`
+	// WasmFrom defines the source of the Wasm module
+	From WasmFrom `json:"from"`
+	// Hash of the Wasm module, used to verify the integrity of the module
+	Hash string `json:"hash,omitempty"`
+}
+
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
 	// Seconds defines how often we run fleet autoscaling in seconds
@@ -362,7 +389,7 @@ func (f *FleetAutoscalerPolicy) ValidatePolicy(fldPath *field.Path) field.ErrorL
 		allErrs = f.Buffer.ValidateBufferPolicy(fldPath.Child("buffer"))
 
 	case WebhookPolicyType:
-		allErrs = f.Webhook.ValidateWebhookPolicy(fldPath.Child("webhook"))
+		allErrs = f.Webhook.ValidateURLConfiguration(fldPath.Child("webhook"))
 
 	case CounterPolicyType:
 		allErrs = f.Counter.ValidateCounterPolicy(fldPath.Child("counter"))
@@ -375,12 +402,16 @@ func (f *FleetAutoscalerPolicy) ValidatePolicy(fldPath *field.Path) field.ErrorL
 
 	case ChainPolicyType:
 		allErrs = f.Chain.ValidateChainPolicy(fldPath.Child("chain"))
+
+	case WasmPolicyType:
+		allErrs = f.Wasm.ValidateWasmPolicy(fldPath.Child("wasm"))
 	}
 	return allErrs
 }
 
-// ValidateWebhookPolicy validates the FleetAutoscaler Webhook policy settings
-func (w *WebhookPolicy) ValidateWebhookPolicy(fldPath *field.Path) field.ErrorList {
+// ValidateURLConfiguration validates the URLConfiguration settings to make sure either a URL is set or
+// a Service is set, but not both. Also checks that the CABundle is valid if HTTPS is used.
+func (w *URLConfiguration) ValidateURLConfiguration(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 	if w == nil {
 		return append(allErrs, field.Required(fldPath, "webhook policy config params are missing"))
@@ -589,13 +620,33 @@ func (c *ChainPolicy) ValidateChainPolicy(fldPath *field.Path) field.ErrorList {
 			seenIDs[entry.ID] = true
 		}
 		// Ensure that chain entry has a policy
-		hasValidPolicy := entry.Buffer != nil || entry.Webhook != nil || entry.Counter != nil || entry.List != nil || entry.Schedule != nil
+		hasValidPolicy := entry.Buffer != nil || entry.Webhook != nil || entry.Counter != nil || entry.List != nil || entry.Schedule != nil || entry.Wasm != nil
 		if entry.Type == "" || !hasValidPolicy {
 			allErrs = append(allErrs, field.Required(fldPath.Index(i), "valid policy is missing"))
 		}
 		// Validate the chain entry's policy
 		allErrs = append(allErrs, entry.FleetAutoscalerPolicy.ValidatePolicy(fldPath.Index(i).Child("policy"))...)
 	}
+	return allErrs
+}
+
+// ValidateWasmPolicy validates the FleetAutoscaler Wasm policy settings
+func (w *WasmPolicy) ValidateWasmPolicy(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	if w == nil {
+		return append(allErrs, field.Required(fldPath, "wasm policy config params are missing"))
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureWasmAutoscaler) {
+		return append(allErrs, field.Forbidden(fldPath, "feature WasmAutoscaler must be enabled"))
+	}
+
+	fldPath = fldPath.Child("from")
+	if w.From.URL == nil {
+		return append(allErrs, field.Required(fldPath, "wasm from configuration is missing"))
+	}
+	allErrs = w.From.URL.ValidateURLConfiguration(fldPath.Child("url"))
+
 	return allErrs
 }
 

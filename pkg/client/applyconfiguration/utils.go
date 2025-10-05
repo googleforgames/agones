@@ -112,8 +112,12 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationautoscalingv1.ListPolicyApplyConfiguration{}
 	case autoscalingv1.SchemeGroupVersion.WithKind("SchedulePolicy"):
 		return &applyconfigurationautoscalingv1.SchedulePolicyApplyConfiguration{}
-	case autoscalingv1.SchemeGroupVersion.WithKind("WebhookPolicy"):
-		return &applyconfigurationautoscalingv1.WebhookPolicyApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("URLConfiguration"):
+		return &applyconfigurationautoscalingv1.URLConfigurationApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("WasmFrom"):
+		return &applyconfigurationautoscalingv1.WasmFromApplyConfiguration{}
+	case autoscalingv1.SchemeGroupVersion.WithKind("WasmPolicy"):
+		return &applyconfigurationautoscalingv1.WasmPolicyApplyConfiguration{}
 
 		// Group=multicluster.agones.dev, Version=v1
 	case multiclusterv1.SchemeGroupVersion.WithKind("ClusterConnectionInfo"):
