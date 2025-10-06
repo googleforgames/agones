@@ -47,7 +47,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 			}},
 			Health: agonesv1.Health{
 				InitialDelaySeconds: 60,
-				PeriodSeconds:       5,
+				PeriodSeconds:       10,
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
