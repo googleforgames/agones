@@ -17,11 +17,9 @@ package processor
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -29,6 +27,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	allocationpb "agones.dev/agones/pkg/allocation/go"
 )
@@ -96,10 +95,10 @@ type Client interface {
 	Allocate(ctx context.Context, req *allocationpb.AllocationRequest) (*allocationpb.AllocationResponse, error)
 }
 
-// NewProcessorClient creates a new processor client
-func NewProcessorClient(config Config, logger logrus.FieldLogger) Client {
-	if len(config.ClientID) == 0 {
-		config.ClientID = uuid.New().String()
+// NewClient creates a new processor client
+func NewClient(config Config, logger logrus.FieldLogger) Client {
+	if config.ClientID == "" {
+		config.ClientID = string(uuid.NewUUID())
 	}
 
 	return &client{
@@ -144,7 +143,7 @@ func (p *client) Run(ctx context.Context) error {
 
 // Allocate performs an allocation request by batching it and waiting for a response or error
 func (p *client) Allocate(ctx context.Context, req *allocationpb.AllocationRequest) (*allocationpb.AllocationResponse, error) {
-	requestID := generateRequestID()
+	requestID := string(uuid.NewUUID())
 
 	// Create a pendingRequest to track this allocation request and its response/error
 	pendingReq := &pendingRequest{
@@ -284,7 +283,7 @@ func (p *client) handlePullRequest(stream allocationpb.Processor_StreamBatchesCl
 
 // sendBatch sends a batch of allocation requests to the processor
 func (p *client) sendBatch(stream allocationpb.Processor_StreamBatchesClient, batch *allocationpb.BatchRequest, requests []*pendingRequest) {
-	batch.BatchId = uuid.NewString()
+	batch.BatchId = string(uuid.NewUUID())
 
 	// Prepare batch message
 	batchMsg := &allocationpb.ProcessorMessage{
@@ -528,9 +527,4 @@ func (p *client) registerClient(stream allocationpb.Processor_StreamBatchesClien
 	}
 
 	return nil
-}
-
-// generateRequestID generates a unique request ID
-func generateRequestID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), rand.Int63())
 }
