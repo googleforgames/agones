@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/httpserver"
@@ -196,6 +197,23 @@ func main() {
 	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
 		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
 
+	var processorClient processor.Client
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		logger.Info("ProcessorAllocator feature enabled, setting up processor client")
+
+		// TODO: Retrieve there from ENV / CONFIG as well
+		processorConfig := processor.Config{
+			ClientID:          os.Getenv("POD_NAME"),
+			ProcessorAddress:  "agones-processor.agones-system.svc.cluster.local:9090",
+			MaxBatchSize:      100,
+			AllocationTimeout: 30 * time.Second,
+			ReconnectInterval: 5 * time.Second,
+		}
+
+		processorClient = processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
+		gasExtensions = gasExtensions.WithProcessorClient(processorClient)
+	}
+
 	gameservers.NewExtensions(controllerHooks, wh)
 	gameserversets.NewExtensions(controllerHooks, wh)
 	fleets.NewExtensions(controllerHooks, wh)
@@ -204,7 +222,14 @@ func main() {
 	kubeInformerFactory.Start(ctx.Done())
 	agonesInformerFactory.Start(ctx.Done())
 
-	for _, r := range []runner{httpsServer, gasExtensions, server} {
+	runners := []runner{httpsServer, gasExtensions, server}
+
+	// Add processor client as a runner
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) && processorClient != nil {
+		runners = append(runners, &processorClientRunner{client: processorClient})
+	}
+
+	for _, r := range runners {
 		go func(rr runner) {
 			if runErr := rr.Run(ctx, ctlConf.NumWorkers); runErr != nil {
 				logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
@@ -338,4 +363,16 @@ type config struct {
 
 type runner interface {
 	Run(ctx context.Context, workers int) error
+}
+
+// TODO: Might want to move that
+
+// processorClientRunner adapts a processor.Client to the runner interface
+type processorClientRunner struct {
+	client processor.Client
+}
+
+func (p *processorClientRunner) Run(ctx context.Context, _ int) error {
+	// processor client doesn't use workers parameter
+	return p.client.Run(ctx)
 }
