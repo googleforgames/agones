@@ -22,8 +22,12 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
-- [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
-- [ ] `git checkout main && git pull --rebase upstream main`
+- [ ] Create a new branch for the minor release, and base it off of the main branch. `make create-minor-release-branch`.
+  - [ ] Run `git remote update -p`
+  - [ ] Run `git fetch --all --tags`
+  - [ ] Run `git checkout -b release-{version} upstream/main`
+  - [ ] Run `git status` to confirm you are on the expected branch name.
+  - [ ] Run `git push -u upstream release-{version}`
 - [ ] Run `make pre-build-release` to ensure all example images exist on agones-images/examples repository and to deploy the {version}-1 service on GCP/App Engine/Services.
 - [ ] Run `make sdk-update-version release_stage=before version={version}` file. This command will update the version number in the sdks/install files to {version}.
 - [ ] Create a _draft_ release with the [release template][release-template].
@@ -50,6 +54,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
         to publish.
   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials.
         Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
+  - [ ] Run `make sdk-publish-rust`. This command executes `cargo login` for authentication, performs a dry-run publish, and if that succeeds, does the actual publish. Will need [crate's API TOKEN](https://crates.io/settings/tokens) from your crate's account.
 - [ ] Run `make post-build-release` to build the artifacts in GCS(These files will be attached in the release notes) and to push the latest images in the release repository and push chart on agones-chart.
 - [ ] Run `make tag-deprecated-images` to tag images from the previous version with a `deprecated-public-image-<version>` label, indicating they are no longer actively maintained.
 - [ ] Run `make shell` and run `gcloud config configurations activate <your development project>` to switch Agones
@@ -62,8 +67,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Email mailing lists with the release details (copy-paste the release blog post). Refer to the [Internal Mailing list posting guide][Internal Mailing list posting guide] for details.
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) Twitter account.
-- [ ] Run `git checkout main`.
-- [ ] Run `make sdk-publish-rust`. This command executes `cargo login` for authentication, performs a dry-run publish, and if that succeeds, does the actual publish. Will need [crate's API TOKEN](https://crates.io/settings/tokens) from your crate's account.
+- [ ] Run `git checkout main && git pull upstream main && git checkout -b post-release-{version}`.
 - [ ] Run `make sdk-update-version release_stage=after version={version}` file. This command will update the SDKs and install directories files with `{version}+1-dev` and will also set `{version}+1` in `build/Makefile`.
 - [ ] In `test/sdk/go/Makefile` change `release_version` to `{version}`.
   - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
