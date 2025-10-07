@@ -35,6 +35,7 @@ import (
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/fswatch"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -266,7 +267,39 @@ func main() {
 	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
 
 	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
+
+	var processorClient processor.Client
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		logger.Info("ProcessorAllocator feature enabled, setting up processor client")
+
+		// TODO: Retrieve there from ENV / CONFIG as well
+		processorConfig := processor.Config{
+			ClientID:          os.Getenv("POD_NAME"),
+			ProcessorAddress:  "agones-processor.agones-system.svc.cluster.local:9090",
+			MaxBatchSize:      100,
+			AllocationTimeout: 30 * time.Second,
+			ReconnectInterval: 5 * time.Second,
+		}
+
+		processorClient = processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
+
+		go func() {
+			if err := processorClient.Run(workerCtx); err != nil {
+				if workerCtx.Err() != nil || errors.Is(err, context.Canceled) {
+					logger.WithError(err).Info("Processor client stopped due to context cancellation")
+					return
+				}
+				logger.WithError(err).Error("Processor client failed, initiating graceful shutdown")
+				cancelListenCtx()
+			}
+		}()
+	}
+
 	h := newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
+
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		h = h.WithProcessorClient(processorClient)
+	}
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -430,34 +463,39 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 }
 
 func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, grpcUnallocatedStatusCode codes.Code) *serviceHandler {
-	defaultResync := 30 * time.Second
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
-	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
-	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
-
-	allocator := gameserverallocations.NewAllocator(
-		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-		kubeInformerFactory.Core().V1().Secrets(),
-		agonesClient.AgonesV1(),
-		kubeClient,
-		gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
-		remoteAllocationTimeout,
-		totalRemoteAllocationTimeout,
-		allocationBatchWaitTime)
-
 	h := serviceHandler{
-		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-			return allocator.Allocate(ctx, gsa)
-		},
 		mTLSDisabled:              mTLSDisabled,
 		tlsDisabled:               tlsDisabled,
 		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
 	}
 
-	kubeInformerFactory.Start(ctx.Done())
-	agonesInformerFactory.Start(ctx.Done())
-	if err := allocator.Run(ctx); err != nil {
-		logger.WithError(err).Fatal("starting allocator failed.")
+	if !runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		logger.Info("Setting up traditional allocator")
+
+		defaultResync := 30 * time.Second
+		agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+		kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+		gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+
+		allocator := gameserverallocations.NewAllocator(
+			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+			kubeInformerFactory.Core().V1().Secrets(),
+			agonesClient.AgonesV1(),
+			kubeClient,
+			gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
+			remoteAllocationTimeout,
+			totalRemoteAllocationTimeout,
+			allocationBatchWaitTime)
+
+		h.allocationCallback = func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
+			return allocator.Allocate(ctx, gsa)
+		}
+
+		kubeInformerFactory.Start(ctx.Done())
+		agonesInformerFactory.Start(ctx.Done())
+		if err := allocator.Run(ctx); err != nil {
+			logger.WithError(err).Fatal("starting allocator failed.")
+		}
 	}
 
 	if !h.tlsDisabled {
@@ -653,14 +691,43 @@ type serviceHandler struct {
 	tlsDisabled  bool
 
 	grpcUnallocatedStatusCode codes.Code
+
+	// Processor client for allocation requests (when feature flag enabled)
+	processorClient processor.Client
 }
 
-// Allocate implements the Allocate gRPC method definition
-func (h *serviceHandler) Allocate(_ context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+// WithProcessorClient sets the processor client for the service handler and configures processor-based allocation
+func (h *serviceHandler) WithProcessorClient(processorClient processor.Client) *serviceHandler {
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) && processorClient != nil {
+		logger.Info("Using processor client for allocations")
+
+		// Store the processor client for use in the Allocate method
+		h.processorClient = processorClient
+	}
+	return h
+} // Allocate implements the Allocate gRPC method definition
+func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
+
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	gsa.ApplyDefaults()
-	resultObj, err := h.allocationCallback(gsa)
+
+	var resultObj k8sruntime.Object
+	var err error
+
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		req := converters.ConvertGSAToAllocationRequest(gsa)
+
+		resp, procErr := h.processorClient.Allocate(ctx, req)
+		if procErr != nil {
+			resultObj, err = nil, procErr
+		} else {
+			resultObj, err = converters.ConvertAllocationResponseToGSA(resp, resp.Source), nil
+		}
+	} else {
+		resultObj, err = h.allocationCallback(gsa)
+	}
+
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
 		return nil, err
