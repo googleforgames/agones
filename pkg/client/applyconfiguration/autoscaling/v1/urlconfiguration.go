@@ -22,24 +22,24 @@ import (
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 )
 
-// WebhookPolicyApplyConfiguration represents a declarative configuration of the WebhookPolicy type for use
+// URLConfigurationApplyConfiguration represents a declarative configuration of the URLConfiguration type for use
 // with apply.
-type WebhookPolicyApplyConfiguration struct {
+type URLConfigurationApplyConfiguration struct {
 	URL      *string                                   `json:"url,omitempty"`
 	Service  *admissionregistrationv1.ServiceReference `json:"service,omitempty"`
 	CABundle []byte                                    `json:"caBundle,omitempty"`
 }
 
-// WebhookPolicyApplyConfiguration constructs a declarative configuration of the WebhookPolicy type for use with
+// URLConfigurationApplyConfiguration constructs a declarative configuration of the URLConfiguration type for use with
 // apply.
-func WebhookPolicy() *WebhookPolicyApplyConfiguration {
-	return &WebhookPolicyApplyConfiguration{}
+func URLConfiguration() *URLConfigurationApplyConfiguration {
+	return &URLConfigurationApplyConfiguration{}
 }
 
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *WebhookPolicyApplyConfiguration) WithURL(value string) *WebhookPolicyApplyConfiguration {
+func (b *URLConfigurationApplyConfiguration) WithURL(value string) *URLConfigurationApplyConfiguration {
 	b.URL = &value
 	return b
 }
@@ -47,7 +47,7 @@ func (b *WebhookPolicyApplyConfiguration) WithURL(value string) *WebhookPolicyAp
 // WithService sets the Service field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Service field is set to the value of the last call.
-func (b *WebhookPolicyApplyConfiguration) WithService(value admissionregistrationv1.ServiceReference) *WebhookPolicyApplyConfiguration {
+func (b *URLConfigurationApplyConfiguration) WithService(value admissionregistrationv1.ServiceReference) *URLConfigurationApplyConfiguration {
 	b.Service = &value
 	return b
 }
@@ -55,7 +55,7 @@ func (b *WebhookPolicyApplyConfiguration) WithService(value admissionregistratio
 // WithCABundle adds the given value to the CABundle field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the CABundle field.
-func (b *WebhookPolicyApplyConfiguration) WithCABundle(values ...byte) *WebhookPolicyApplyConfiguration {
+func (b *URLConfigurationApplyConfiguration) WithCABundle(values ...byte) *URLConfigurationApplyConfiguration {
 	for i := range values {
 		b.CABundle = append(b.CABundle, values[i])
 	}
