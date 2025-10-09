@@ -1180,9 +1180,6 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *beta.AddListValueReque
 			return nil, errors.Errorf("already exists. Value: %s already in List: %s", in.Value, in.Name)
 		}
 	}
-	if in.Value == "" {
-		return nil, errors.Errorf("cannot add empty value to list: %s", in.Name)
-	}
 	list.Values = append(list.Values, in.Value)
 	batchList := s.gsListUpdates[in.Name]
 	batchList.valuesToAppend = append(batchList.valuesToAppend, in.Value)
