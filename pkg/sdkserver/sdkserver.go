@@ -1213,7 +1213,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 
 	// Track this removal for batch persistence to K8s
 	batchList := s.gsListUpdates[in.Name]
-
+	
 	removedFromBatch := false
 	if len(batchList.valuesToAppend) > 0 {
 		newAppend := make([]string, 0, len(batchList.valuesToAppend))
@@ -1226,7 +1226,6 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 		}
 		batchList.valuesToAppend = newAppend
 	}
-
 	if !removedFromBatch {
 		found := false
 		newValues := make([]string, 0, len(list.Values))
@@ -1237,25 +1236,19 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 			}
 			newValues = append(newValues, val)
 		}
-
 		if !found {
 			return nil, fmt.Errorf("not found: value %s not in list %s", in.Value, in.Name)
 		}
-
 		list.Values = newValues
-
 		// Track deletions
 		if batchList.valuesToDelete == nil {
 			batchList.valuesToDelete = make(map[string]bool)
 		}
 		batchList.valuesToDelete[in.Value] = true
 	}
-
 	s.gsListUpdates[in.Name] = batchList
-
 	// Queue up the Update for later batch processing by updateLists.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-
 	return list, nil
 }
 
