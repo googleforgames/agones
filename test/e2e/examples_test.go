@@ -45,10 +45,6 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}},
-			Health: agonesv1.Health{
-				InitialDelaySeconds: 120,
-				PeriodSeconds:       10,
-			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
