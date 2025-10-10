@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	extism "github.com/extism/go-sdk"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
@@ -44,7 +45,10 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 )
 
-const maxDuration = "2540400h" // 290 Years
+const (
+	maxDuration  = "2540400h" // 290 Years
+	wasmStateKey = "wasm"     // Key used to store the Wasm plugin in the state map
+)
 
 var tlsConfig = &tls.Config{}
 var client = http.Client{
@@ -84,6 +88,9 @@ func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol auto
 		replicas, limited, err = applySchedulePolicy(ctx, state, pol.Schedule, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	case autoscalingv1.ChainPolicyType:
 		replicas, limited, err = applyChainPolicy(ctx, state, pol.Chain, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
+	case autoscalingv1.WasmPolicyType:
+		replicas, limited, err = applyWasmPolicy(ctx, state, pol.Wasm, f, fasLog)
+
 	default:
 		err = errors.New("wrong policy type, should be one of: Buffer, Webhook, Counter, List, Schedule, Chain")
 	}
@@ -94,6 +101,105 @@ func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol auto
 	}
 
 	return replicas, limited, err
+}
+
+func applyWasmPolicy(ctx context.Context, state map[string]any, wp *autoscalingv1.WasmPolicy, f *agonesv1.Fleet, log *FasLogger) (int32, bool, error) {
+	if !runtime.FeatureEnabled(runtime.FeatureWasmAutoscaler) {
+		return 0, false, errors.Errorf("cannot apply WasmPolicy unless feature flag %s is enabled", runtime.FeatureWasmAutoscaler)
+	}
+
+	if wp == nil {
+		return 0, false, errors.New("wasmPolicy parameter must not be nil")
+	}
+
+	if f == nil {
+		return 0, false, errors.New("fleet parameter must not be nil")
+	}
+
+	_, ok := state[wasmStateKey]
+	if !ok {
+		// Build URL from the WasmPolicy
+		u, err := buildURLFromWebhookPolicy(wp.From.URL)
+		if err != nil {
+			return 0, false, err
+		}
+		res, err := client.Get(u.String())
+		if err != nil {
+			return 0, false, errors.Wrapf(err, "failed to fetch Wasm module from %s", u.String())
+		}
+		defer res.Body.Close() //nolint:errcheck
+
+		if res.StatusCode != http.StatusOK {
+			return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
+		}
+
+		b, err := io.ReadAll(res.Body)
+		if err != nil {
+			return 0, false, errors.Wrapf(err, "failed to read Wasm module from %s", u.String())
+		}
+
+		data := extism.WasmData{Data: b}
+		if len(wp.Hash) > 0 {
+			data.Hash = wp.Hash
+		}
+		manifest := extism.Manifest{
+			Wasm: []extism.Wasm{
+				data,
+			},
+			Config: wp.Config,
+		}
+
+		config := extism.PluginConfig{
+			EnableWasi: true,
+		}
+		plugin, err := extism.NewPlugin(ctx, manifest, config, []extism.HostFunction{})
+		if err != nil {
+			return 0, false, errors.Wrapf(err, "failed to create Wasm plugin from %s", u.String())
+		}
+		state[wasmStateKey] = plugin // Store the plugin in the state map
+	}
+
+	// This should never panic as we control what's in the state map
+	plugin := state[wasmStateKey].(*extism.Plugin)
+
+	// Create FleetAutoscaleReview
+	review := autoscalingv1.FleetAutoscaleReview{
+		Request: &autoscalingv1.FleetAutoscaleRequest{
+			UID:       uuid.NewUUID(),
+			Name:      f.Name,
+			Namespace: f.Namespace,
+			Status:    f.Status,
+		},
+		Response: nil,
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureFleetAutoscaleRequestMetaData) {
+		review.Request.Annotations = f.ObjectMeta.Annotations
+		review.Request.Labels = f.ObjectMeta.Labels
+	}
+
+	b, err := json.Marshal(review)
+	if err != nil {
+		return 0, false, errors.Wrap(err, "failed to marshal autoscaling request")
+	}
+
+	_, b, err = plugin.CallWithContext(ctx, wp.Function, b)
+	if err != nil {
+		return 0, false, errors.Wrapf(err, "failed to call Wasm plugin function %s", wp.Function)
+	}
+
+	if err := json.Unmarshal(b, &review); err != nil {
+		return 0, false, errors.Wrap(err, "failed to unmarshal autoscaling response")
+	}
+
+	loggerForFleetAutoscalerKey(log.fas.ObjectMeta.Name, log.baseLogger).Debugf(
+		"Fleet Autoscaler operation completed for fleet: %s, with was function: %s", f.ObjectMeta.Name, wp.Function)
+
+	if review.Response.Scale {
+		return review.Response.Replicas, false, nil
+	}
+
+	return f.Status.Replicas, false, nil
 }
 
 // buildURLFromWebhookPolicy - build URL for Webhook and set CARoot for client Transport
