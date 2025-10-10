@@ -46,7 +46,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Health: agonesv1.Health{
-				InitialDelaySeconds: 300,
+				InitialDelaySeconds: 60,
 				PeriodSeconds:       10,
 			},
 			Template: corev1.PodTemplateSpec{
