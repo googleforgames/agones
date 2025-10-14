@@ -1698,7 +1698,7 @@ func TestLists(t *testing.T) {
 		},
 		"DeleteListValue value does not exist": {
 			msg:        "DELETE_LIST_VALUE games game4",
-			want:       "ERROR: could not get List games: rpc error: code = Unknown desc = not found. Value: game4 not found in List: games\n",
+			want:       "ERROR: could not get List games: rpc error: code = Unknown desc = not found: value game4 not in list games\n",
 			listName:   "games",
 			wantLength: "LENGTH: 2\n",
 		},
