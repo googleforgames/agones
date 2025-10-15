@@ -36,6 +36,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	extism "github.com/extism/go-sdk"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -67,8 +68,13 @@ type fasThread struct {
 }
 
 // close cancels the context and cleans up any resources
-func (ft *fasThread) close(_ context.Context) {
+func (ft *fasThread) close(ctx context.Context) {
 	ft.cancel()
+	if plugin, ok := ft.state[wasmStateKey]; ok {
+		if p, ok := plugin.(*extism.Plugin); ok {
+			_ = p.Close(ctx) // Ignore any errors during cleanup
+		}
+	}
 }
 
 // Extensions struct contains what is needed to bind webhook handlers

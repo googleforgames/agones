@@ -17,6 +17,13 @@
 1. Complete all items in the release issue checklist.
 1. Close the release issue.
 
+# Patch Release Process
+
+1. Create a Release Issue from the [patch release issue template](./templates/patch_release_issue.md).
+1. Label the issue `kind/release`, and attach it to the milestone that it matches.
+1. Complete all items in the patch release issue checklist.
+1. Close the patch release issue.
+
 # Hot fix Process
  
 1. Hotfixes will occur as needed, to be determined by those will commit access on the repository.
