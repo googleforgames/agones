@@ -491,14 +491,6 @@ func newProcessorServiceHandler(processorClient processor.Client, mTLSDisabled, 
 }
 
 func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, grpcUnallocatedStatusCode codes.Code) *serviceHandler {
-	h := serviceHandler{
-		mTLSDisabled:              mTLSDisabled,
-		tlsDisabled:               tlsDisabled,
-		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
-	}
-
-	logger.Info("Setting up traditional allocator")
-
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -514,8 +506,13 @@ func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, ago
 		totalRemoteAllocationTimeout,
 		allocationBatchWaitTime)
 
-	h.allocationCallback = func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-		return allocator.Allocate(ctx, gsa)
+	h := serviceHandler{
+		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
+			return allocator.Allocate(ctx, gsa)
+		},
+		mTLSDisabled:              mTLSDisabled,
+		tlsDisabled:               tlsDisabled,
+		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
 	}
 
 	kubeInformerFactory.Start(ctx.Done())
