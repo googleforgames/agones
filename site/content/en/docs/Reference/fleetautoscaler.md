@@ -348,8 +348,8 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
 A webhook based `FleetAutoscaler` sends an HTTP POST request to the webhook endpoint every sync period (default is 30s) 
 with a JSON body, and scale the target fleet based on the data that is returned.
 
-The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `FleetAutoscaleResponse` data 
-structure is expected to be returned. 
+The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `FleetAutoscaleReview` with a populated 
+`FleetAutoscaleResponse` data structure is expected to be returned. 
 
 The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
 providing the autoscaling functionality.

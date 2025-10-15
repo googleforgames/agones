@@ -6076,6 +6076,7 @@ spec:
                       - Webhook
                       - Counter
                       - List
+                      - Wasm
                       - Schedule
                       - Chain
                     buffer:
@@ -6095,7 +6096,7 @@ spec:
                           anyOf:
                             - type: integer
                             - type: string
-                    webhook:
+                    webhook:      
                       type: object
                       nullable: true
                       properties:
@@ -6196,6 +6197,7 @@ spec:
                               - Webhook
                               - Counter
                               - List
+                              - Wasm
                             buffer:
                               type: object
                               nullable: true
@@ -6213,7 +6215,7 @@ spec:
                                   anyOf:
                                     - type: integer
                                     - type: string
-                            webhook:
+                            webhook:      
                               type: object
                               nullable: true
                               properties:
@@ -6278,6 +6280,50 @@ spec:
                                   anyOf:
                                     - type: integer
                                     - type: string
+                            wasm:
+                              type: object
+                              nullable: true
+                              required:
+                                - from
+                              properties:
+                                function: # The exported function to call in the wasm module, defaults to 'scale'
+                                  type: string
+                                  default: "scale"
+                                config: # Config values to pass to the wasm program on startup
+                                  type: object
+                                  additionalProperties:
+                                    type: string
+                                from:
+                                  type: object
+                                  required:
+                                    - url
+                                  properties:
+                                    url:              
+                                      type: object
+                                      nullable: true
+                                      properties:
+                                        url:
+                                          type: string
+                                        service:
+                                          type: object
+                                          required:
+                                            - namespace
+                                            - name
+                                          properties:
+                                            namespace:
+                                              type: string
+                                            name:
+                                              type: string
+                                            path:
+                                              type: string
+                                            port:
+                                              type: integer
+                                        caBundle:
+                                          type: string
+                                          format: byte
+                                hash: # optional sha256 hash to match against wasm file (it's optional, but recommended)
+                                  type: string
+                                  pattern: "^[a-fA-F0-9]{64}$"
                     chain:
                       type: array
                       nullable: true
@@ -6296,6 +6342,7 @@ spec:
                             - Webhook
                             - Counter
                             - List
+                            - Wasm
                             - Schedule
                           buffer:
                             type: object
@@ -6314,7 +6361,7 @@ spec:
                                 anyOf:
                                   - type: integer
                                   - type: string
-                          webhook:
+                          webhook:      
                             type: object
                             nullable: true
                             properties:
@@ -6415,6 +6462,7 @@ spec:
                                     - Webhook
                                     - Counter
                                     - List
+                                    - Wasm
                                   buffer:
                                     type: object
                                     nullable: true
@@ -6432,7 +6480,7 @@ spec:
                                         anyOf:
                                           - type: integer
                                           - type: string
-                                  webhook:
+                                  webhook:      
                                     type: object
                                     nullable: true
                                     properties:
@@ -6496,7 +6544,139 @@ spec:
                                         x-kubernetes-int-or-string: true
                                         anyOf:
                                           - type: integer
-                                          - type: string # Defines which policy to apply during the active period. Required.
+                                          - type: string
+                                  wasm:
+                                    type: object
+                                    nullable: true
+                                    required:
+                                      - from
+                                    properties:
+                                      function: # The exported function to call in the wasm module, defaults to 'scale'
+                                        type: string
+                                        default: "scale"
+                                      config: # Config values to pass to the wasm program on startup
+                                        type: object
+                                        additionalProperties:
+                                          type: string
+                                      from:
+                                        type: object
+                                        required:
+                                          - url
+                                        properties:
+                                          url:              
+                                            type: object
+                                            nullable: true
+                                            properties:
+                                              url:
+                                                type: string
+                                              service:
+                                                type: object
+                                                required:
+                                                  - namespace
+                                                  - name
+                                                properties:
+                                                  namespace:
+                                                    type: string
+                                                  name:
+                                                    type: string
+                                                  path:
+                                                    type: string
+                                                  port:
+                                                    type: integer
+                                              caBundle:
+                                                type: string
+                                                format: byte
+                                      hash: # optional sha256 hash to match against wasm file (it's optional, but recommended)
+                                        type: string
+                                        pattern: "^[a-fA-F0-9]{64}$"
+                          wasm:
+                            type: object
+                            nullable: true
+                            required:
+                              - from
+                            properties:
+                              function: # The exported function to call in the wasm module, defaults to 'scale'
+                                type: string
+                                default: "scale"
+                              config: # Config values to pass to the wasm program on startup
+                                type: object
+                                additionalProperties:
+                                  type: string
+                              from:
+                                type: object
+                                required:
+                                  - url
+                                properties:
+                                  url:              
+                                    type: object
+                                    nullable: true
+                                    properties:
+                                      url:
+                                        type: string
+                                      service:
+                                        type: object
+                                        required:
+                                          - namespace
+                                          - name
+                                        properties:
+                                          namespace:
+                                            type: string
+                                          name:
+                                            type: string
+                                          path:
+                                            type: string
+                                          port:
+                                            type: integer
+                                      caBundle:
+                                        type: string
+                                        format: byte
+                              hash: # optional sha256 hash to match against wasm file (it's optional, but recommended)
+                                type: string
+                                pattern: "^[a-fA-F0-9]{64}$" # Defines which policy to apply during the active period. Required.
+                    wasm:
+                      type: object
+                      nullable: true
+                      required:
+                        - from
+                      properties:
+                        function: # The exported function to call in the wasm module, defaults to 'scale'
+                          type: string
+                          default: "scale"
+                        config: # Config values to pass to the wasm program on startup
+                          type: object
+                          additionalProperties:
+                            type: string
+                        from:
+                          type: object
+                          required:
+                            - url
+                          properties:
+                            url:              
+                              type: object
+                              nullable: true
+                              properties:
+                                url:
+                                  type: string
+                                service:
+                                  type: object
+                                  required:
+                                    - namespace
+                                    - name
+                                  properties:
+                                    namespace:
+                                      type: string
+                                    name:
+                                      type: string
+                                    path:
+                                      type: string
+                                    port:
+                                      type: integer
+                                caBundle:
+                                  type: string
+                                  format: byte
+                        hash: # optional sha256 hash to match against wasm file (it's optional, but recommended)
+                          type: string
+                          pattern: "^[a-fA-F0-9]{64}$"
                 sync:
                   type: object
                   required:
