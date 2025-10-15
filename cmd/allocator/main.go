@@ -743,7 +743,6 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 	}
 
 	resultObj, err := h.allocationCallback(gsa)
-
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
 		return nil, err
