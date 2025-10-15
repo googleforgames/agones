@@ -497,33 +497,31 @@ func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, ago
 		grpcUnallocatedStatusCode: grpcUnallocatedStatusCode,
 	}
 
-	if !runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
-		logger.Info("Setting up traditional allocator")
+	logger.Info("Setting up traditional allocator")
 
-		defaultResync := 30 * time.Second
-		agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
-		kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
-		gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+	defaultResync := 30 * time.Second
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
-		allocator := gameserverallocations.NewAllocator(
-			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-			kubeInformerFactory.Core().V1().Secrets(),
-			agonesClient.AgonesV1(),
-			kubeClient,
-			gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
-			remoteAllocationTimeout,
-			totalRemoteAllocationTimeout,
-			allocationBatchWaitTime)
+	allocator := gameserverallocations.NewAllocator(
+		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+		kubeInformerFactory.Core().V1().Secrets(),
+		agonesClient.AgonesV1(),
+		kubeClient,
+		gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
+		remoteAllocationTimeout,
+		totalRemoteAllocationTimeout,
+		allocationBatchWaitTime)
 
-		h.allocationCallback = func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-			return allocator.Allocate(ctx, gsa)
-		}
+	h.allocationCallback = func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
+		return allocator.Allocate(ctx, gsa)
+	}
 
-		kubeInformerFactory.Start(ctx.Done())
-		agonesInformerFactory.Start(ctx.Done())
-		if err := allocator.Run(ctx); err != nil {
-			logger.WithError(err).Fatal("starting allocator failed.")
-		}
+	kubeInformerFactory.Start(ctx.Done())
+	agonesInformerFactory.Start(ctx.Done())
+	if err := allocator.Run(ctx); err != nil {
+		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
 	if !h.tlsDisabled {
