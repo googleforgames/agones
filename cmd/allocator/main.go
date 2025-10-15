@@ -264,11 +264,9 @@ func main() {
 		cancelListenCtx()
 	})
 
-	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
-
 	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
 
-	var processorClient processor.Client
+	var h *serviceHandler
 	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		logger.Info("ProcessorAllocator feature enabled, setting up processor client")
 
@@ -281,7 +279,7 @@ func main() {
 			ReconnectInterval: 5 * time.Second,
 		}
 
-		processorClient = processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
+		processorClient := processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
 
 		go func() {
 			if err := processorClient.Run(workerCtx); err != nil {
@@ -293,12 +291,12 @@ func main() {
 				cancelListenCtx()
 			}
 		}()
-	}
 
-	h := newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
+		h = newProcessorServiceHandler(processorClient, conf.MTLSDisabled, conf.TLSDisabled)
+	} else {
+		grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
 
-	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
-		h = h.WithProcessorClient(processorClient)
+		h = newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
 	}
 
 	if !h.tlsDisabled {
@@ -460,6 +458,36 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 		os.Exit(0)
 
 	}()
+}
+
+func newProcessorServiceHandler(processorClient processor.Client, mTLSDisabled, tlsDisabled bool) *serviceHandler {
+	h := serviceHandler{
+		mTLSDisabled:    mTLSDisabled,
+		tlsDisabled:     tlsDisabled,
+		processorClient: processorClient,
+	}
+
+	if !h.tlsDisabled {
+		tlsCert, err := readTLSCert()
+		if err != nil {
+			logger.WithError(err).Fatal("could not load TLS certs.")
+		}
+		h.tlsMutex.Lock()
+		h.tlsCert = tlsCert
+		h.tlsMutex.Unlock()
+
+		if !h.mTLSDisabled {
+			caCertPool, err := getCACertPool(certDir)
+			if err != nil {
+				logger.WithError(err).Fatal("could not load CA certs.")
+			}
+			h.certMutex.Lock()
+			h.caCertPool = caCertPool
+			h.certMutex.Unlock()
+		}
+	}
+
+	return &h
 }
 
 func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, grpcUnallocatedStatusCode codes.Code) *serviceHandler {
@@ -696,37 +724,30 @@ type serviceHandler struct {
 	processorClient processor.Client
 }
 
-// WithProcessorClient sets the processor client for the service handler and configures processor-based allocation
-func (h *serviceHandler) WithProcessorClient(processorClient processor.Client) *serviceHandler {
-	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) && processorClient != nil {
-		logger.Info("Using processor client for allocations")
-
-		// Store the processor client for use in the Allocate method
-		h.processorClient = processorClient
-	}
-	return h
-} // Allocate implements the Allocate gRPC method definition
+// Allocate implements the Allocate gRPC method definition
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
 
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	gsa.ApplyDefaults()
 
-	var resultObj k8sruntime.Object
-	var err error
-
 	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		req := converters.ConvertGSAToAllocationRequest(gsa)
 
-		resp, procErr := h.processorClient.Allocate(ctx, req)
-		if procErr != nil {
-			resultObj, err = nil, procErr
-		} else {
-			resultObj, err = converters.ConvertAllocationResponseToGSA(resp, resp.Source), nil
+		resp, err := h.processorClient.Allocate(ctx, req)
+		if err != nil {
+			logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
+			return nil, err
 		}
-	} else {
-		resultObj, err = h.allocationCallback(gsa)
+
+		allocatedGsa := converters.ConvertAllocationResponseToGSA(resp, resp.Source)
+		response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, h.grpcUnallocatedStatusCode)
+		logger.WithField("response", response).WithError(err).Info("allocation response is being sent")
+
+		return response, err
 	}
+
+	resultObj, err := h.allocationCallback(gsa)
 
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
