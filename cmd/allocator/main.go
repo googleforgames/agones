@@ -294,8 +294,6 @@ func main() {
 
 	var h *serviceHandler
 	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
-		logger.Info("ProcessorAllocator feature enabled, setting up processor client")
-
 		processorConfig := processor.Config{
 			ClientID:          os.Getenv("POD_NAME"),
 			ProcessorAddress:  fmt.Sprintf("%s:%d", conf.processorGRPCAddress, conf.processorGRPCPort),
@@ -309,7 +307,7 @@ func main() {
 		go func() {
 			if err := processorClient.Run(workerCtx); err != nil {
 				if workerCtx.Err() != nil {
-					logger.WithError(err).Info("Processor client stopped due to context error")
+					logger.WithError(err).Error("Processor client stopped due to context error")
 					return
 				}
 				logger.WithError(err).Error("Processor client failed, initiating graceful shutdown")
