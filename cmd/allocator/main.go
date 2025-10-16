@@ -738,7 +738,6 @@ type serviceHandler struct {
 
 	grpcUnallocatedStatusCode codes.Code
 
-	// Processor client for allocation requests (when feature flag enabled)
 	processorClient processor.Client
 }
 
