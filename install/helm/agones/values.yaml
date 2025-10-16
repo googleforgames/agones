@@ -290,6 +290,9 @@ agones:
     topologySpreadConstraints: []
     processor:
       replicas: 2
+      maxBatchSize: 100
+      allocationTimeout: 30s
+      reconnectInterval: 5s
       resources: {}
       nodeSelector: {}
       annotations: {}
@@ -305,6 +308,9 @@ agones:
       leaderElection: {}
       http:
         port: 8080
+      grpc:
+        address: agones-processor.agones-system.svc.cluster.local
+        port: 9090
       readiness:
         initialDelaySeconds: 3
         periodSeconds: 3
