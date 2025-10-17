@@ -236,9 +236,7 @@ func main() {
 	fleets.NewExtensions(controllerHooks, wh)
 	fleetautoscalers.NewExtensions(wh)
 
-	runners := []runner{httpsServer, gasExtensions, server}
-
-	for _, r := range runners {
+	for _, r := range []runner{httpsServer, gasExtensions, server} {
 		go func(rr runner) {
 			if runErr := rr.Run(ctx, ctlConf.NumWorkers); runErr != nil {
 				logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
