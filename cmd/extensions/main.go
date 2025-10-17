@@ -198,12 +198,7 @@ func main() {
 
 	server.Handle("/", health)
 
-	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
-
-	gasExtensions := gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
-		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
-
-	var processorClient processor.Client
+	var gasExtensions *gameserverallocations.Extensions
 	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
 		processorConfig := processor.Config{
 			ClientID:          os.Getenv("POD_NAME"),
@@ -212,9 +207,28 @@ func main() {
 			AllocationTimeout: ctlConf.processorAllocationTimeout,
 			ReconnectInterval: ctlConf.processorReconnectInterval,
 		}
+		processorClient := processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
 
-		processorClient = processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
-		gasExtensions = gasExtensions.WithProcessorClient(processorClient)
+		go func() {
+			if err := processorClient.Run(ctx); err != nil {
+				if ctx.Err() != nil {
+					logger.WithError(err).Error("Processor client stopped due to context error")
+					return
+				}
+				logger.WithError(err).Error("Processor client failed, initiating graceful shutdown")
+			}
+		}()
+
+		gasExtensions = gameserverallocations.NewProcessorExtensions(api, kubeClient, processorClient)
+	} else {
+		gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+
+		gasExtensions = gameserverallocations.NewExtensions(api, health, gsCounter, kubeClient, kubeInformerFactory,
+			agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
+
+		kubeInformerFactory.Start(ctx.Done())
+		agonesInformerFactory.Start(ctx.Done())
+
 	}
 
 	gameservers.NewExtensions(controllerHooks, wh)
@@ -222,15 +236,7 @@ func main() {
 	fleets.NewExtensions(controllerHooks, wh)
 	fleetautoscalers.NewExtensions(wh)
 
-	kubeInformerFactory.Start(ctx.Done())
-	agonesInformerFactory.Start(ctx.Done())
-
 	runners := []runner{httpsServer, gasExtensions, server}
-
-	// Add processor client as a runner
-	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) && processorClient != nil {
-		runners = append(runners, &processorClientRunner{client: processorClient})
-	}
 
 	for _, r := range runners {
 		go func(rr runner) {
@@ -391,16 +397,4 @@ type config struct {
 
 type runner interface {
 	Run(ctx context.Context, workers int) error
-}
-
-// TODO: Might want to move that
-
-// processorClientRunner adapts a processor.Client to the runner interface
-type processorClientRunner struct {
-	client processor.Client
-}
-
-func (p *processorClientRunner) Run(ctx context.Context, _ int) error {
-	// processor client doesn't use workers parameter
-	return p.client.Run(ctx)
 }

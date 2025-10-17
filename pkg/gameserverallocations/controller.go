@@ -76,17 +76,15 @@ func NewExtensions(apiServer *apiserver.APIServer,
 		api: apiServer,
 	}
 
-	if !runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
-		c.allocator = NewAllocator(
-			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-			kubeInformerFactory.Core().V1().Secrets(),
-			agonesClient.AgonesV1(),
-			kubeClient,
-			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
-			remoteAllocationTimeout,
-			totalAllocationTimeout,
-			allocationBatchWaitTime)
-	}
+	c.allocator = NewAllocator(
+		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+		kubeInformerFactory.Core().V1().Secrets(),
+		agonesClient.AgonesV1(),
+		kubeClient,
+		NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
+		remoteAllocationTimeout,
+		totalAllocationTimeout,
+		allocationBatchWaitTime)
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
@@ -98,9 +96,19 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	return c
 }
 
-// WithProcessorClient sets the processor client for the extensions controller
-func (c *Extensions) WithProcessorClient(pc processor.Client) *Extensions {
-	c.processorClient = pc
+func NewProcessorExtensions(apiServer *apiserver.APIServer, kubeClient kubernetes.Interface, processorClient processor.Client) *Extensions {
+	c := &Extensions{
+		api:             apiServer,
+		processorClient: processorClient,
+	}
+
+	c.baseLogger = runtime.NewLoggerWithType(c)
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
+
 	return c
 }
 
@@ -160,15 +168,12 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 		req := converters.ConvertGSAToAllocationRequest(gsa)
 		resp, err := c.processorClient.Allocate(ctx, req)
 		if err != nil {
-			// The processor client already returns proper gRPC status errors
-			// Just extract and convert them to HTTP responses
 			if st, ok := status.FromError(err); ok {
 				code = gwruntime.HTTPStatusFromCode(st.Code())
 			} else {
 				code = http.StatusInternalServerError
 			}
 
-			// Create a Status object for error response
 			result = &metav1.Status{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Status",
@@ -179,7 +184,6 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 				Code:    int32(code),
 			}
 		} else {
-			// Handle successful response
 			result = converters.ConvertAllocationResponseToGSA(resp, resp.Source)
 			code = http.StatusCreated
 		}
