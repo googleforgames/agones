@@ -1182,11 +1182,11 @@ func (s *SDKServer) AddListValue(ctx context.Context, in *beta.AddListValueReque
 	}
 	list.Values = append(list.Values, in.Value)
 	batchList := s.gsListUpdates[in.Name]
-	batchList.valuesToAppend = list.Values
+	batchList.valuesToAppend = append(batchList.valuesToAppend, in.Value)
 	s.gsListUpdates[in.Name] = batchList
 	// Queue up the Update for later batch processing by updateLists.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-	return &beta.List{}, nil
+	return list, nil
 }
 
 // RemoveListValue collapses all remove a value from a List requests into a single UpdateList request.
@@ -1201,7 +1201,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 	if in == nil {
 		return nil, errors.Errorf("RemoveListValueRequest cannot be nil")
 	}
-	s.logger.WithField("name", in.Name).Debug("Remove List Value")
+	s.logger.WithField("name", in.Name).WithField("value", in.Value).Debug("Remove List Value")
 
 	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.Name})
 	if err != nil {
@@ -1211,23 +1211,45 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
 
-	// Verify value exists in the list
-	for _, val := range list.Values {
-		if in.Value != val {
-			continue
+	// Track this removal for batch persistence to K8s
+	batchList := s.gsListUpdates[in.Name]
+	
+	removedFromBatch := false
+	if len(batchList.valuesToAppend) > 0 {
+		newAppend := make([]string, 0, len(batchList.valuesToAppend))
+		for _, v := range batchList.valuesToAppend {
+			if v == in.Value {
+				removedFromBatch = true
+				continue // skip value
+			}
+			newAppend = append(newAppend, v)
 		}
-		// Add value to remove to gsListUpdates map.
-		batchList := s.gsListUpdates[in.Name]
+		batchList.valuesToAppend = newAppend
+	}
+	if !removedFromBatch {
+		found := false
+		newValues := make([]string, 0, len(list.Values))
+		for _, val := range list.Values {
+			if val == in.Value {
+				found = true
+				continue
+			}
+			newValues = append(newValues, val)
+		}
+		if !found {
+			return nil, fmt.Errorf("not found: value %s not in list %s", in.Value, in.Name)
+		}
+		list.Values = newValues
+		// Track deletions
 		if batchList.valuesToDelete == nil {
-			batchList.valuesToDelete = map[string]bool{}
+			batchList.valuesToDelete = make(map[string]bool)
 		}
 		batchList.valuesToDelete[in.Value] = true
-		s.gsListUpdates[in.Name] = batchList
-		// Queue up the Update for later batch processing by updateLists.
-		s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
-		return &beta.List{}, nil
 	}
-	return nil, errors.Errorf("not found. Value: %s not found in List: %s", in.Value, in.Name)
+	s.gsListUpdates[in.Name] = batchList
+	// Queue up the Update for later batch processing by updateLists.
+	s.workerqueue.Enqueue(cache.ExplicitKey(updateLists))
+	return list, nil
 }
 
 // updateList updates the Lists in the GameServer's Status with the batched update list requests.
