@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -69,6 +70,11 @@ const (
 	readinessShutdownDuration    = "readiness-shutdown-duration"
 	httpPort                     = "http-port"
 	webhookPort                  = "webhook-port"
+	processorGRPCAddress         = "processor-grpc-address"
+	processorGRPCPort            = "processor-grpc-port"
+	processorMaxBatchSize        = "processor-max-batch-size"
+	processorAllocationTimeout   = "processor-allocation-timeout"
+	processorReconnectInterval   = "processor-reconnect-interval"
 )
 
 var (
@@ -199,15 +205,12 @@ func main() {
 
 	var processorClient processor.Client
 	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
-		logger.Info("ProcessorAllocator feature enabled, setting up processor client")
-
-		// TODO: Retrieve there from ENV / CONFIG as well
 		processorConfig := processor.Config{
 			ClientID:          os.Getenv("POD_NAME"),
-			ProcessorAddress:  "agones-processor.agones-system.svc.cluster.local:9090",
-			MaxBatchSize:      100,
-			AllocationTimeout: 30 * time.Second,
-			ReconnectInterval: 5 * time.Second,
+			ProcessorAddress:  fmt.Sprintf("%s:%d", ctlConf.processorGRPCAddress, ctlConf.processorGRPCPort),
+			MaxBatchSize:      ctlConf.processorMaxBatchSize,
+			AllocationTimeout: ctlConf.processorAllocationTimeout,
+			ReconnectInterval: ctlConf.processorReconnectInterval,
 		}
 
 		processorClient = processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
@@ -266,6 +269,12 @@ func parseEnvFlags() config {
 	viper.SetDefault(httpPort, "8080")
 	viper.SetDefault(webhookPort, "8081")
 
+	viper.SetDefault(processorGRPCAddress, "agones-processor.agones-system.svc.cluster.local")
+	viper.SetDefault(processorGRPCPort, 9090)
+	viper.SetDefault(processorMaxBatchSize, 100)
+	viper.SetDefault(processorAllocationTimeout, 30*time.Second)
+	viper.SetDefault(processorReconnectInterval, 5*time.Second)
+
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
@@ -285,6 +294,13 @@ func parseEnvFlags() config {
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM handler to sleep for.")
+
+	pflag.String(processorGRPCAddress, viper.GetString(processorGRPCAddress), "The gRPC address of the Agones Processor service")
+	pflag.Int32(processorGRPCPort, viper.GetInt32(processorGRPCPort), "The gRPC port of the Agones Processor service")
+	pflag.Int32(processorMaxBatchSize, viper.GetInt32(processorMaxBatchSize), "The maximum batch size to send to the Agones Processor service")
+	pflag.Duration(processorAllocationTimeout, viper.GetDuration(processorAllocationTimeout), "The allocation timeout when using the Agones Processor service")
+	pflag.Duration(processorReconnectInterval, viper.GetDuration(processorReconnectInterval), "The reconnect interval to use when connecting to the Agones Processor service")
+
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -335,6 +351,12 @@ func parseEnvFlags() config {
 		WebhookPort:               viper.GetString(webhookPort),
 		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
+
+		processorGRPCAddress:       viper.GetString(processorGRPCAddress),
+		processorGRPCPort:          int(viper.GetInt32(processorGRPCPort)),
+		processorMaxBatchSize:      int(viper.GetInt32(processorMaxBatchSize)),
+		processorAllocationTimeout: viper.GetDuration(processorAllocationTimeout),
+		processorReconnectInterval: viper.GetDuration(processorReconnectInterval),
 	}
 }
 
@@ -359,6 +381,12 @@ type config struct {
 	WebhookPort               string
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
+
+	processorGRPCAddress       string
+	processorGRPCPort          int
+	processorMaxBatchSize      int
+	processorAllocationTimeout time.Duration
+	processorReconnectInterval time.Duration
 }
 
 type runner interface {
