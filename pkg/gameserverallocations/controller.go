@@ -96,6 +96,7 @@ func NewExtensions(apiServer *apiserver.APIServer,
 	return c
 }
 
+// NewProcessorExtensions returns the extensions controller for a GameServerAllocation
 func NewProcessorExtensions(apiServer *apiserver.APIServer, kubeClient kubernetes.Interface, processorClient processor.Client) *Extensions {
 	c := &Extensions{
 		api:             apiServer,
