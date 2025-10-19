@@ -291,8 +291,6 @@ agones:
     processor:
       replicas: 2
       maxBatchSize: 100
-      allocationTimeout: 30s
-      reconnectInterval: 5s
       resources: {}
       nodeSelector: {}
       annotations: {}

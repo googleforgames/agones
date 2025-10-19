@@ -91,8 +91,6 @@ const (
 	processorGRPCAddress             = "processor-grpc-address"
 	processorGRPCPort                = "processor-grpc-port"
 	processorMaxBatchSize            = "processor-max-batch-size"
-	processorAllocationTimeout       = "processor-allocation-timeout"
-	processorReconnectInterval       = "processor-reconnect-interval"
 )
 
 func parseEnvFlags() config {
@@ -114,8 +112,6 @@ func parseEnvFlags() config {
 	viper.SetDefault(processorGRPCAddress, "agones-processor.agones-system.svc.cluster.local")
 	viper.SetDefault(processorGRPCPort, 9090)
 	viper.SetDefault(processorMaxBatchSize, 100)
-	viper.SetDefault(processorAllocationTimeout, 30*time.Second)
-	viper.SetDefault(processorReconnectInterval, 5*time.Second)
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -136,8 +132,6 @@ func parseEnvFlags() config {
 	pflag.String(processorGRPCAddress, viper.GetString(processorGRPCAddress), "The gRPC address of the Agones Processor service")
 	pflag.Int32(processorGRPCPort, viper.GetInt32(processorGRPCPort), "The gRPC port of the Agones Processor service")
 	pflag.Int32(processorMaxBatchSize, viper.GetInt32(processorMaxBatchSize), "The maximum batch size to send to the Agones Processor service")
-	pflag.Duration(processorAllocationTimeout, viper.GetDuration(processorAllocationTimeout), "The allocation timeout when using the Agones Processor service")
-	pflag.Duration(processorReconnectInterval, viper.GetDuration(processorReconnectInterval), "The reconnect interval to use when connecting to the Agones Processor service")
 
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
@@ -184,8 +178,6 @@ func parseEnvFlags() config {
 		processorGRPCAddress:         viper.GetString(processorGRPCAddress),
 		processorGRPCPort:            int(viper.GetInt32(processorGRPCPort)),
 		processorMaxBatchSize:        int(viper.GetInt32(processorMaxBatchSize)),
-		processorAllocationTimeout:   viper.GetDuration(processorAllocationTimeout),
-		processorReconnectInterval:   viper.GetDuration(processorReconnectInterval),
 	}
 }
 
@@ -209,8 +201,6 @@ type config struct {
 	processorGRPCAddress         string
 	processorGRPCPort            int
 	processorMaxBatchSize        int
-	processorAllocationTimeout   time.Duration
-	processorReconnectInterval   time.Duration
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -298,8 +288,8 @@ func main() {
 			ClientID:          os.Getenv("POD_NAME"),
 			ProcessorAddress:  fmt.Sprintf("%s:%d", conf.processorGRPCAddress, conf.processorGRPCPort),
 			MaxBatchSize:      conf.processorMaxBatchSize,
-			AllocationTimeout: conf.processorAllocationTimeout,
-			ReconnectInterval: conf.processorReconnectInterval,
+			AllocationTimeout: 30 * time.Second,
+			ReconnectInterval: 5 * time.Second,
 		}
 
 		processorClient := processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
