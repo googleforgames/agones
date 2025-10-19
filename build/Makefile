@@ -308,12 +308,18 @@ push-release-chart: $(ensure-build-image)
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 
 # Run all tests
-test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test helm-lint
+test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test helm-lint test-build-scripts
 
 # Run go tests
 test-go: $(ensure-build-image)
 	$(GO_TEST) $(agones_package)/pkg/... \
 	    $(agones_package)/sdks/... $(agones_package)/cmd/...
+
+# Run unit tests for all build scripts. Run script tests that have their own Go module separately.
+test-build-scripts: $(ensure-build-image)
+	$(GO_TEST) $(agones_package)/build/scripts/...
+	$(DOCKER_RUN) bash -c "cd build/scripts/previousversion && go test -v ."
+	$(DOCKER_RUN) bash -c "cd build/scripts/site-config-update-version && go test -v ."
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets

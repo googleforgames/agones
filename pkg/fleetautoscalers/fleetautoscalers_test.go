@@ -17,6 +17,7 @@
 package fleetautoscalers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -185,6 +186,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
+			ctx := context.Background()
 			fas.Spec.Policy = tc.policy
 			f.Spec.Replicas = tc.specReplicas
 			f.Status.Replicas = tc.statusReplicas
@@ -207,7 +209,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 
-			replicas, limited, err := computeDesiredFleetSize(fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
+			replicas, limited, err := computeDesiredFleetSize(ctx, map[string]any{}, fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -390,7 +392,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 
 	var testCases = []struct {
 		description             string
-		webhookPolicy           *autoscalingv1.WebhookPolicy
+		webhookPolicy           *autoscalingv1.URLConfiguration
 		specReplicas            int32
 		statusReplicas          int32
 		statusAllocatedReplicas int32
@@ -399,7 +401,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	}{
 		{
 			description: "Allocated replicas per cent < 70%, no scaling",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &(server.URL),
 			},
@@ -415,7 +417,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Allocated replicas per cent == 70%, no scaling",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &(server.URL),
 			},
@@ -431,7 +433,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Allocated replicas per cent 80% > 70%, scale up",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &(server.URL),
 			},
@@ -456,7 +458,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "URL and Service are not nil",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "default",
@@ -472,7 +474,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "URL not nil but empty",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &emptyString,
 			},
@@ -484,7 +486,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Invalid URL",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &invalidURL,
 			},
@@ -496,7 +498,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Service name is empty",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "",
 					Namespace: "default",
@@ -511,7 +513,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "No certs",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "default",
@@ -527,7 +529,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Wrong server URL",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &wrongServerURL,
 			},
@@ -539,7 +541,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Handle server error",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &(server.URL),
 			},
@@ -556,7 +558,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Handle invalid response from the server",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     &(server.URL),
 			},
@@ -572,7 +574,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		},
 		{
 			description: "Service and URL are nil",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
 				URL:     nil,
 			},
@@ -634,7 +636,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 		"fixedReplicas": fmt.Sprintf("%d", fixedReplicas),
 	}
 
-	webhookPolicy := &autoscalingv1.WebhookPolicy{
+	webhookPolicy := &autoscalingv1.URLConfiguration{
 		Service: nil,
 		URL:     &(server.URL),
 	}
@@ -657,7 +659,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	t.Parallel()
 
 	url := webhookURL
-	w := &autoscalingv1.WebhookPolicy{
+	w := &autoscalingv1.URLConfiguration{
 		Service: &admregv1.ServiceReference{
 			Name:      "service1",
 			Namespace: "default",
@@ -752,12 +754,12 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 
 	var testCases = []struct {
 		description   string
-		webhookPolicy *autoscalingv1.WebhookPolicy
+		webhookPolicy *autoscalingv1.URLConfiguration
 		expected      expected
 	}{
 		{
 			description: "No namespace provided, default should be used",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "",
@@ -771,7 +773,7 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 		},
 		{
 			description: "No url provided, empty string should be used",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
+			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "test",
@@ -2507,6 +2509,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
+			ctx := context.Background()
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
@@ -2515,7 +2518,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applySchedulePolicy(tc.sp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applySchedulePolicy(ctx, map[string]any{}, tc.sp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2597,7 +2600,7 @@ func TestApplyChainPolicy(t *testing.T) {
 		ID: "webhook policy",
 		FleetAutoscalerPolicy: autoscalingv1.FleetAutoscalerPolicy{
 			Type: autoscalingv1.WebhookPolicyType,
-			Webhook: &autoscalingv1.WebhookPolicy{
+			Webhook: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "default",
@@ -2698,6 +2701,7 @@ func TestApplyChainPolicy(t *testing.T) {
 			err := utilruntime.ParseFeatures(tc.featureFlags)
 			assert.NoError(t, err)
 
+			ctx := context.Background()
 			fas, f := defaultFixtures()
 			m := agtesting.NewMocks()
 			fasLog := FasLogger{
@@ -2706,7 +2710,7 @@ func TestApplyChainPolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applyChainPolicy(*tc.cp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applyChainPolicy(ctx, map[string]any{}, *tc.cp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
