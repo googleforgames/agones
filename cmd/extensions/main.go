@@ -73,8 +73,6 @@ const (
 	processorGRPCAddress         = "processor-grpc-address"
 	processorGRPCPort            = "processor-grpc-port"
 	processorMaxBatchSize        = "processor-max-batch-size"
-	processorAllocationTimeout   = "processor-allocation-timeout"
-	processorReconnectInterval   = "processor-reconnect-interval"
 )
 
 var (
@@ -204,8 +202,8 @@ func main() {
 			ClientID:          os.Getenv("POD_NAME"),
 			ProcessorAddress:  fmt.Sprintf("%s:%d", ctlConf.processorGRPCAddress, ctlConf.processorGRPCPort),
 			MaxBatchSize:      ctlConf.processorMaxBatchSize,
-			AllocationTimeout: ctlConf.processorAllocationTimeout,
-			ReconnectInterval: ctlConf.processorReconnectInterval,
+			AllocationTimeout: 30 * time.Second,
+			ReconnectInterval: 5 * time.Second,
 		}
 		processorClient := processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
 
@@ -276,8 +274,6 @@ func parseEnvFlags() config {
 	viper.SetDefault(processorGRPCAddress, "agones-processor.agones-system.svc.cluster.local")
 	viper.SetDefault(processorGRPCPort, 9090)
 	viper.SetDefault(processorMaxBatchSize, 100)
-	viper.SetDefault(processorAllocationTimeout, 30*time.Second)
-	viper.SetDefault(processorReconnectInterval, 5*time.Second)
 
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
@@ -302,8 +298,6 @@ func parseEnvFlags() config {
 	pflag.String(processorGRPCAddress, viper.GetString(processorGRPCAddress), "The gRPC address of the Agones Processor service")
 	pflag.Int32(processorGRPCPort, viper.GetInt32(processorGRPCPort), "The gRPC port of the Agones Processor service")
 	pflag.Int32(processorMaxBatchSize, viper.GetInt32(processorMaxBatchSize), "The maximum batch size to send to the Agones Processor service")
-	pflag.Duration(processorAllocationTimeout, viper.GetDuration(processorAllocationTimeout), "The allocation timeout when using the Agones Processor service")
-	pflag.Duration(processorReconnectInterval, viper.GetDuration(processorReconnectInterval), "The reconnect interval to use when connecting to the Agones Processor service")
 
 	cloudproduct.BindFlags()
 	runtime.FeaturesBindFlags()
@@ -356,11 +350,9 @@ func parseEnvFlags() config {
 		AllocationBatchWaitTime:   viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration: viper.GetDuration(readinessShutdownDuration),
 
-		processorGRPCAddress:       viper.GetString(processorGRPCAddress),
-		processorGRPCPort:          int(viper.GetInt32(processorGRPCPort)),
-		processorMaxBatchSize:      int(viper.GetInt32(processorMaxBatchSize)),
-		processorAllocationTimeout: viper.GetDuration(processorAllocationTimeout),
-		processorReconnectInterval: viper.GetDuration(processorReconnectInterval),
+		processorGRPCAddress:  viper.GetString(processorGRPCAddress),
+		processorGRPCPort:     int(viper.GetInt32(processorGRPCPort)),
+		processorMaxBatchSize: int(viper.GetInt32(processorMaxBatchSize)),
 	}
 }
 
@@ -386,11 +378,9 @@ type config struct {
 	AllocationBatchWaitTime   time.Duration
 	ReadinessShutdownDuration time.Duration
 
-	processorGRPCAddress       string
-	processorGRPCPort          int
-	processorMaxBatchSize      int
-	processorAllocationTimeout time.Duration
-	processorReconnectInterval time.Duration
+	processorGRPCAddress  string
+	processorGRPCPort     int
+	processorMaxBatchSize int
 }
 
 type runner interface {
