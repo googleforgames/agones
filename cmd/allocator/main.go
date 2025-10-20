@@ -35,6 +35,7 @@ import (
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/fswatch"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -87,6 +88,9 @@ const (
 	allocationBatchWaitTime          = "allocation-batch-wait-time"
 	readinessShutdownDuration        = "readiness-shutdown-duration"
 	httpUnallocatedStatusCode        = "http-unallocated-status-code"
+	processorGRPCAddress             = "processor-grpc-address"
+	processorGRPCPort                = "processor-grpc-port"
+	processorMaxBatchSize            = "processor-max-batch-size"
 )
 
 func parseEnvFlags() config {
@@ -105,6 +109,9 @@ func parseEnvFlags() config {
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 	viper.SetDefault(httpUnallocatedStatusCode, http.StatusTooManyRequests)
+	viper.SetDefault(processorGRPCAddress, "agones-processor.agones-system.svc.cluster.local")
+	viper.SetDefault(processorGRPCPort, 9090)
+	viper.SetDefault(processorMaxBatchSize, 100)
 
 	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
 	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
@@ -122,6 +129,10 @@ func parseEnvFlags() config {
 	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	pflag.Duration(readinessShutdownDuration, viper.GetDuration(readinessShutdownDuration), "Time in seconds for SIGTERM/SIGINT handler to sleep for.")
 	pflag.Int32(httpUnallocatedStatusCode, viper.GetInt32(httpUnallocatedStatusCode), "HTTP status code to return when no GameServer is available")
+	pflag.String(processorGRPCAddress, viper.GetString(processorGRPCAddress), "The gRPC address of the Agones Processor service")
+	pflag.Int32(processorGRPCPort, viper.GetInt32(processorGRPCPort), "The gRPC port of the Agones Processor service")
+	pflag.Int32(processorMaxBatchSize, viper.GetInt32(processorMaxBatchSize), "The maximum batch size to send to the Agones Processor service")
+
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -164,6 +175,9 @@ func parseEnvFlags() config {
 		allocationBatchWaitTime:      viper.GetDuration(allocationBatchWaitTime),
 		ReadinessShutdownDuration:    viper.GetDuration(readinessShutdownDuration),
 		httpUnallocatedStatusCode:    int(viper.GetInt32(httpUnallocatedStatusCode)),
+		processorGRPCAddress:         viper.GetString(processorGRPCAddress),
+		processorGRPCPort:            int(viper.GetInt32(processorGRPCPort)),
+		processorMaxBatchSize:        int(viper.GetInt32(processorMaxBatchSize)),
 	}
 }
 
@@ -184,6 +198,9 @@ type config struct {
 	allocationBatchWaitTime      time.Duration
 	ReadinessShutdownDuration    time.Duration
 	httpUnallocatedStatusCode    int
+	processorGRPCAddress         string
+	processorGRPCPort            int
+	processorMaxBatchSize        int
 }
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -263,10 +280,35 @@ func main() {
 		cancelListenCtx()
 	})
 
-	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
-
 	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
-	h := newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
+
+	var h *serviceHandler
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		processorConfig := processor.Config{
+			ClientID:          os.Getenv("POD_NAME"),
+			ProcessorAddress:  fmt.Sprintf("%s:%d", conf.processorGRPCAddress, conf.processorGRPCPort),
+			MaxBatchSize:      conf.processorMaxBatchSize,
+			AllocationTimeout: 30 * time.Second,
+			ReconnectInterval: 5 * time.Second,
+		}
+
+		processorClient := processor.NewClient(processorConfig, logger.WithField("component", "processor-client"))
+
+		go func() {
+			if err := processorClient.Run(workerCtx); err != nil {
+				if workerCtx.Err() != nil {
+					logger.WithError(err).Error("Processor client stopped due to context error")
+					return
+				}
+				logger.WithError(err).Error("Processor client failed, initiating graceful shutdown")
+			}
+		}()
+
+		h = newProcessorServiceHandler(processorClient, conf.MTLSDisabled, conf.TLSDisabled)
+	} else {
+		grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.httpUnallocatedStatusCode)
+		h = newServiceHandler(workerCtx, kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime, grpcUnallocatedStatusCode)
+	}
 
 	if !h.tlsDisabled {
 		cancelTLS, err := fswatch.Watch(logger, tlsDir, time.Second, func() {
@@ -427,6 +469,36 @@ func runGRPC(ctx context.Context, h *serviceHandler, grpcHealth *grpchealth.Serv
 		os.Exit(0)
 
 	}()
+}
+
+func newProcessorServiceHandler(processorClient processor.Client, mTLSDisabled, tlsDisabled bool) *serviceHandler {
+	h := serviceHandler{
+		mTLSDisabled:    mTLSDisabled,
+		tlsDisabled:     tlsDisabled,
+		processorClient: processorClient,
+	}
+
+	if !h.tlsDisabled {
+		tlsCert, err := readTLSCert()
+		if err != nil {
+			logger.WithError(err).Fatal("could not load TLS certs.")
+		}
+		h.tlsMutex.Lock()
+		h.tlsCert = tlsCert
+		h.tlsMutex.Unlock()
+
+		if !h.mTLSDisabled {
+			caCertPool, err := getCACertPool(certDir)
+			if err != nil {
+				logger.WithError(err).Fatal("could not load CA certs.")
+			}
+			h.certMutex.Lock()
+			h.caCertPool = caCertPool
+			h.certMutex.Unlock()
+		}
+	}
+
+	return &h
 }
 
 func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration, grpcUnallocatedStatusCode codes.Code) *serviceHandler {
@@ -653,13 +725,33 @@ type serviceHandler struct {
 	tlsDisabled  bool
 
 	grpcUnallocatedStatusCode codes.Code
+
+	processorClient processor.Client
 }
 
 // Allocate implements the Allocate gRPC method definition
-func (h *serviceHandler) Allocate(_ context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
+
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	gsa.ApplyDefaults()
+
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		req := converters.ConvertGSAToAllocationRequest(gsa)
+
+		resp, err := h.processorClient.Allocate(ctx, req)
+		if err != nil {
+			logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
+			return nil, err
+		}
+
+		allocatedGsa := converters.ConvertAllocationResponseToGSA(resp, resp.Source)
+		response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, h.grpcUnallocatedStatusCode)
+		logger.WithField("response", response).WithError(err).Info("allocation response is being sent")
+
+		return response, err
+	}
+
 	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Error("allocation failed")
