@@ -21,9 +21,11 @@ import (
 	"net/http"
 	"time"
 
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -34,10 +36,12 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
+	"agones.dev/agones/pkg/allocation/converters"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/processor"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
@@ -49,10 +53,11 @@ func init() {
 
 // Extensions is a GameServerAllocation controller within the Extensions service
 type Extensions struct {
-	api        *apiserver.APIServer
-	baseLogger *logrus.Entry
-	recorder   record.EventRecorder
-	allocator  *Allocator
+	api             *apiserver.APIServer
+	baseLogger      *logrus.Entry
+	recorder        record.EventRecorder
+	allocator       *Allocator
+	processorClient processor.Client
 }
 
 // NewExtensions returns the extensions controller for a GameServerAllocation
@@ -69,16 +74,35 @@ func NewExtensions(apiServer *apiserver.APIServer,
 ) *Extensions {
 	c := &Extensions{
 		api: apiServer,
-		allocator: NewAllocator(
-			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
-			kubeInformerFactory.Core().V1().Secrets(),
-			agonesClient.AgonesV1(),
-			kubeClient,
-			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
-			remoteAllocationTimeout,
-			totalAllocationTimeout,
-			allocationBatchWaitTime),
 	}
+
+	c.allocator = NewAllocator(
+		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
+		kubeInformerFactory.Core().V1().Secrets(),
+		agonesClient.AgonesV1(),
+		kubeClient,
+		NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
+		remoteAllocationTimeout,
+		totalAllocationTimeout,
+		allocationBatchWaitTime)
+
+	c.baseLogger = runtime.NewLoggerWithType(c)
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
+
+	return c
+}
+
+// NewProcessorExtensions returns the extensions controller for a GameServerAllocation
+func NewProcessorExtensions(apiServer *apiserver.APIServer, kubeClient kubernetes.Interface, processorClient processor.Client) *Extensions {
+	c := &Extensions{
+		api:             apiServer,
+		processorClient: processorClient,
+	}
+
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -109,8 +133,10 @@ func (c *Extensions) registerAPIResource(ctx context.Context) {
 // Run runs this extensions controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
 func (c *Extensions) Run(ctx context.Context, _ int) error {
-	if err := c.allocator.Run(ctx); err != nil {
-		return err
+	if !runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		if err := c.allocator.Run(ctx); err != nil {
+			return err
+		}
 	}
 
 	c.registerAPIResource(ctx)
@@ -134,6 +160,36 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 	gsa, err := c.allocationDeserialization(r, namespace)
 	if err != nil {
 		return err
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureProcessorAllocator) {
+		var result k8sruntime.Object
+		var code int
+
+		req := converters.ConvertGSAToAllocationRequest(gsa)
+		resp, err := c.processorClient.Allocate(ctx, req)
+		if err != nil {
+			if st, ok := status.FromError(err); ok {
+				code = gwruntime.HTTPStatusFromCode(st.Code())
+			} else {
+				code = http.StatusInternalServerError
+			}
+
+			result = &metav1.Status{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Status",
+					APIVersion: "v1",
+				},
+				Status:  metav1.StatusFailure,
+				Message: err.Error(),
+				Code:    int32(code),
+			}
+		} else {
+			result = converters.ConvertAllocationResponseToGSA(resp, resp.Source)
+			code = http.StatusCreated
+		}
+
+		return c.serialisation(r, w, result, code, scheme.Codecs)
 	}
 
 	result, err := c.allocator.Allocate(ctx, gsa)
