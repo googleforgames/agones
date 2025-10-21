@@ -118,7 +118,7 @@ feature-shortcode-update: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/feature-shortcode-update/main.go -version=$(version)
 
-# update SDKS/Install version
+# update SDKS/Install version. Specify the release stage ('before', 'after', or 'patch').
 sdk-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/sdk-update-version/main.go -release-stage=$(release_stage) -version=$(version)
@@ -129,7 +129,8 @@ del-data-proofer-ignore: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/remove-data-proofer-ignore/main.go -file=$(FILENAME)
 
-# update release version and replicate data between dev and prod in site/config.toml for release_stage=minor or release_stage=patch
+# update release version and replicate data between dev and prod in site/config.toml for
+# release_stage=minor or release_stage=patch
 site-config-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/site-config-update-version/main.go -release-stage=$(release_stage)

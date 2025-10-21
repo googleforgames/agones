@@ -62,5 +62,7 @@ steps:
   - name: make-docker
     id: release-deploy-site
     dir: build
+    env:
+      - VERSION=${_VERSION}
     args: [release-deploy-site]
 timeout: 5400s

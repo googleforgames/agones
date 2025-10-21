@@ -48,13 +48,14 @@ example-image-markdown.%:
 release-deploy-site: $(ensure-build-image)
 release-deploy-site: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/local/go/bin/go
 release-deploy-site:
-	version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(base_version)) && \
+	version_to_process=$(if $(VERSION),$(VERSION),$(base_version)) && \
+	version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $$version_to_process) && \
 	echo "Deploying Site Version: $$version" && \
 	$(MAKE) ENV=HUGO_ENV=snapshot site-deploy SERVICE=$$version
 
 # Creates, switches, and pushes a new minor version release branch based off of the main branch.
 # The should be run before pre_cloudbuild.yaml. This means base_version has not yet been updated.
-create-minor-release-branch: RELEASE_VERSION ?= $(shell echo $(base_version) | awk -F. '{$2++; $3=0; print $1"."$2"."$3}')
+create-minor-release-branch: RELEASE_VERSION ?= $(base_version)
 create-minor-release-branch:
 	@echo "Starting creating release branch for minor version: $(RELEASE_VERSION)"
 
@@ -100,24 +101,30 @@ else
 		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
 endif
 
-# Ensure the example images exists
+# Ensure the example images exists for a release and deploy the previous version's website.
+pre-build-release: VERSION ?=
 pre-build-release:
+	$(if $(VERSION),,$(error VERSION is not set. Please provide the current release version.))
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
-		gcloud builds submit . --substitutions _BRANCH_NAME=release-$(base_version) --config=./pre_cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --substitutions _BRANCH_NAME=release-$(VERSION),_VERSION=$(VERSION) --config=./pre_cloudbuild.yaml $(ARGS)
 
 # Build and push the images in the release repository, stores artifacts,
 # Pushes the current chart version to the helm repository hosted on gcs.
+post-build-release: VERSION ?=
 post-build-release:
+	$(if $(VERSION),,$(error VERSION is not set. Please provide the current release version.))
 	docker run --rm $(common_mounts) -w $(workdir_path)/build/release $(build_tag) \
-		gcloud builds submit . --substitutions _VERSION=$(base_version),_BRANCH_NAME=release-$(base_version) --config=./post_cloudbuild.yaml $(ARGS)
+		gcloud builds submit . --substitutions _VERSION=$(VERSION),_BRANCH_NAME=release-$(VERSION) --config=./post_cloudbuild.yaml $(ARGS)
 
 # Tags images from the previous release as deprecated.
 # The tr -d '-' command is used to remove the dashes from the output of the script
 # (e.g., 1-52-1 becomes 1.52.1), which is the format needed for the Docker image tag.
+tag-deprecated-images: VERSION ?=
 tag-deprecated-images: $(ensure-build-image)
 tag-deprecated-images: DOCKER_RUN_ARGS += -e GOFLAGS="-mod=mod" --entrypoint=/usr/local/go/bin/go
 tag-deprecated-images:
-	previous_version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(base_version)| tr '-' '.') && \
+	$(if $(VERSION),,$(error VERSION is not set. Please provide the current release version.))
+	previous_version=$$($(DOCKER_RUN) run $(mount_path)/build/scripts/previousversion/main.go -version $(VERSION)| tr '-' '.') && \
 	images="agones-controller agones-extensions agones-sdk agones-allocator agones-ping agones-processor" && \
 	for image in $$images; do \
 		echo "Tagging ${release_registry}/$$image:$$previous_version as deprecated..."; \
