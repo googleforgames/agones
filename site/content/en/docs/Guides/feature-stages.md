@@ -26,7 +26,7 @@ be disabled.
 
 The current set of `alpha` and `beta` feature gates:
 
-{{% feature publishVersion="1.53.0" %}}
+{{% feature publishVersion="1.54.0" %}}
 
 | Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
 |----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
@@ -42,12 +42,12 @@ The current set of `alpha` and `beta` feature gates:
 | [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
 | [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
-| [Wasm Autoscaler](https://github.com/googleforgames/agones/issues/4080)                                                    | `WasmAutoscaler`                   | Disabled | `Alpha`  | 1.53.0 |
+| [Wasm Autoscaler](https://github.com/googleforgames/agones/issues/4080)                                                    | `WasmAutoscaler`                   | Disabled | `Alpha`  | 1.54.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
 
 {{% /feature %}}
 
-{{% feature expiryVersion="1.53.0" %}}
+{{% feature expiryVersion="1.54.0" %}}
 
 | Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
 |----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|

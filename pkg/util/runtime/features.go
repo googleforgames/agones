@@ -166,10 +166,10 @@ var (
 		FeaturePlayerAllocationFilter:        false,
 		FeaturePlayerTracking:                false,
 		FeatureSidecarContainers:             false,
+		FeatureWasmAutoscaler:                false,
 
 		// Dev features
 		FeatureProcessorAllocator: false,
-		FeatureWasmAutoscaler:     false,
 
 		// Example feature
 		FeatureExample: false,
