@@ -143,7 +143,7 @@ spec:
         - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
           value: {{ .Values.agones.allocator.totalRemoteAllocationTimeout | quote }}
         - name: ALLOCATION_BATCH_WAIT_TIME
-          value: {{ .Values.agones.allocator.allocationBatchWaitTime | quote }}
+          value: {{ .Values.agones.allocator.processor.allocationBatchWaitTime | quote }}
         livenessProbe:
           httpGet:
             path: /live
