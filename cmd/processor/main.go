@@ -215,7 +215,7 @@ func main() {
 
 	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
-		logger.WithError(err).Fatal("could not create clients")
+		logger.WithError(err).Fatal("Could not create clients")
 	}
 
 	grpcUnallocatedStatusCode := grpcCodeFromHTTPStatus(conf.HTTPUnallocatedStatusCode)
@@ -303,7 +303,7 @@ func runGRPC(ctx context.Context, h *processorHandler, grpcHealth *grpchealth.Se
 	logger.WithField("port", grpcPort).Info("Running the grpc handler on port")
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
-		logger.WithError(err).Fatalf("failed to listen on TCP port %d", grpcPort)
+		logger.WithError(err).Fatalf("Failed to listen on TCP port %d", grpcPort)
 		os.Exit(1)
 	}
 
@@ -319,10 +319,10 @@ func runGRPC(ctx context.Context, h *processorHandler, grpcHealth *grpchealth.Se
 
 		err := grpcServer.Serve(listener)
 		if err != nil {
-			logger.WithError(err).Fatal("allocation service crashed")
+			logger.WithError(err).Fatal("Allocation service crashed")
 			os.Exit(1)
 		}
-		logger.Info("allocation server closed")
+		logger.Info("Allocation server closed")
 		os.Exit(0)
 
 	}()
@@ -381,7 +381,7 @@ func grpcCodeFromHTTPStatus(httpUnallocatedStatusCode int) codes.Code {
 	case http.StatusServiceUnavailable:
 		return codes.Unavailable
 	default:
-		logger.WithField("httpStatusCode", httpUnallocatedStatusCode).Warnf("received unknown http status code, defaulting to codes.ResourceExhausted / 429")
+		logger.WithField("httpStatusCode", httpUnallocatedStatusCode).Warnf("Received unknown http status code, defaulting to codes.ResourceExhausted / 429")
 		return codes.ResourceExhausted
 	}
 }
