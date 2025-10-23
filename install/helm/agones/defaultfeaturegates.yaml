@@ -34,10 +34,12 @@ FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 SidecarContainers: false
+AllocatorBatchesUpdates: false
 
 # Dev features
 ProcessorAllocator: false
 WasmAutoscaler: false
+AllocatorBatchesUpdates: false
 
 # Example feature
 Example: false

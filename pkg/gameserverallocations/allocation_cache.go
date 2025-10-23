@@ -18,6 +18,7 @@ import (
 	"context"
 	"sort"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -174,64 +175,17 @@ func (c *AllocationCache) ListSortedGameServers(gsa *allocationv1.GameServerAllo
 	counts := c.counter.Counts()
 
 	sort.Slice(list, func(i, j int) bool {
-		gs1 := list[i]
-		gs2 := list[j]
+		gs0 := list[i]
+		gs1 := list[j]
 
-		// Search Allocated GameServers first.
-		if gs1.Status.State != gs2.Status.State {
-			return gs1.Status.State == agonesv1.GameServerStateAllocated
-		}
-
-		c1, ok := counts[gs1.Status.NodeName]
-		if !ok {
-			return false
-		}
-
-		c2, ok := counts[gs2.Status.NodeName]
-		if !ok {
-			return true
-		}
-
-		if c1.Allocated > c2.Allocated {
-			return true
-		}
-		if c1.Allocated < c2.Allocated {
-			return false
-		}
-
-		// prefer nodes that have the most Ready gameservers on them - they are most likely to be
-		// completely filled and least likely target for scale down.
-		if c1.Ready < c2.Ready {
-			return false
-		}
-		if c1.Ready > c2.Ready {
-			return true
-		}
-
-		// if player tracking is enabled, prefer game servers with the least amount of room left
-		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
-			if gs1.Status.Players != nil && gs2.Status.Players != nil {
-				cap1 := gs1.Status.Players.Capacity - gs1.Status.Players.Count
-				cap2 := gs2.Status.Players.Capacity - gs2.Status.Players.Count
-
-				// if they are equal, pass the comparison through.
-				if cap1 < cap2 {
-					return true
-				} else if cap2 < cap1 {
-					return false
-				}
-			}
-		}
-
-		// if we end up here, then break the tie with Counter or List Priority.
+		var priorities []agonesv1.Priority
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
-			if res := gs1.CompareCountAndListPriorities(gsa.Spec.Priorities, gs2); res != nil {
-				return *res
-			}
+			priorities = gsa.Spec.Priorities
+		} else {
+			priorities = nil
 		}
 
-		// finally sort lexicographically, so we have a stable order
-		return gs1.GetObjectMeta().GetName() < gs2.GetObjectMeta().GetName()
+		return compareGameServersForPakcedStrategy(gs0, gs1, priorities, counts)
 	})
 
 	return list
@@ -246,17 +200,17 @@ func (c *AllocationCache) ListSortedGameServersPriorities(gsa *allocationv1.Game
 	}
 
 	sort.Slice(list, func(i, j int) bool {
-		gs1 := list[i]
-		gs2 := list[j]
+		gs0 := list[i]
+		gs1 := list[j]
 
+		var priorities []agonesv1.Priority
 		if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && (gsa != nil) {
-			if res := gs1.CompareCountAndListPriorities(gsa.Spec.Priorities, gs2); res != nil {
-				return *res
-			}
+			priorities = gsa.Spec.Priorities
+		} else {
+			priorities = nil
 		}
 
-		// finally sort lexicographically, so we have a stable order
-		return gs1.GetObjectMeta().GetName() < gs2.GetObjectMeta().GetName()
+		return compareGameServersForDistributedStrategy(gs0, gs1, priorities)
 	})
 
 	return list
@@ -326,4 +280,197 @@ func (c *AllocationCache) getKey(gs *agonesv1.GameServer) (string, bool) {
 		runtime.HandleError(c.baseLogger.WithField("obj", gs), err)
 	}
 	return key, ok
+}
+
+// ReorderGameServerAfterAllocation positions the new gsAfterAllocation in the gsList according to the given priorities
+// and using the gsIndexBeforeAllocation as hint to optimize the reordering. This is used by the batch allocator
+// to reorder the gs after locally (not in cache) applying an allocation.
+func (c *AllocationCache) ReorderGameServerAfterAllocation(
+	gsList []*agonesv1.GameServer,
+	gsIndexBeforeAllocation int, gsAfterAllocation *agonesv1.GameServer,
+	priorities []agonesv1.Priority, strategy apis.SchedulingStrategy) {
+	if len(gsList) == 0 || gsIndexBeforeAllocation < 0 || gsIndexBeforeAllocation >= len(gsList) || gsAfterAllocation == nil {
+		c.baseLogger.WithField("gsIndexBeforeAllocation", gsIndexBeforeAllocation).
+			WithField("gsAfterAllocation", gsAfterAllocation).
+			WithField("gsListLength", len(gsList)).
+			Warn("ReorderGameServerAfterAllocation called with invalid parameters! Reordering is skipped!")
+		return
+	}
+
+	newIndex := gsIndexBeforeAllocation
+	gsToReorderOriginal := gsList[gsIndexBeforeAllocation]
+
+	optimizeList := func(greater bool) []*agonesv1.GameServer {
+		var optimizedGsList []*agonesv1.GameServer
+		if greater {
+			// If the gs has less priority than the original, we need to insert it at the end of the list
+			optimizedGsList = gsList[gsIndexBeforeAllocation+1:]
+		} else {
+			// Otherwise, we need to insert it at the beginning of the list
+			optimizedGsList = gsList[:gsIndexBeforeAllocation]
+		}
+		return optimizedGsList
+	}
+
+	switch strategy {
+	case apis.Packed:
+		counts := c.counter.Counts()
+		greater, equal := compareGameServersAfterAllocationForPackedStrategy(gsToReorderOriginal, gsAfterAllocation, priorities, counts)
+		if !equal {
+			newIndex = findIndexAfterAllocationForPackedStrategy(optimizeList(greater), gsAfterAllocation, priorities, counts)
+			if greater {
+				newIndex += gsIndexBeforeAllocation
+			}
+		}
+	case apis.Distributed:
+		greater, equal := compareGameServersAfterAllocationForDistributedStrategy(gsToReorderOriginal, gsAfterAllocation, priorities)
+		if !equal {
+			newIndex = findIndexAfterAllocationForDistributedStrategy(optimizeList(greater), gsAfterAllocation, priorities)
+			if greater {
+				newIndex += gsIndexBeforeAllocation
+			}
+		} else {
+			c.baseLogger.WithField("strategy", strategy).
+				Warn("Scheduling strategy not supported! Reordering is skipped!")
+		}
+	}
+
+	if newIndex != gsIndexBeforeAllocation {
+		// If the new index is different than the original index, we need to:
+		// remove the original
+		gsList = append(gsList[:gsIndexBeforeAllocation], gsList[gsIndexBeforeAllocation+1:]...)
+		// and insert the updated one
+		gsList = append(gsList[:newIndex], append([]*agonesv1.GameServer{gsAfterAllocation}, gsList[newIndex:]...)...)
+	} else {
+		// No reordering needed, just update the gs in the list
+		gsList[gsIndexBeforeAllocation] = gsAfterAllocation
+	}
+}
+
+// compareGameServersAfterAllocationForDistributedStrategy compares the priority of the before and after applying an allocation to a game server.
+// The first bool returned has the meaning of greater (before has greater priority than after) and the second of equal. If equal is true, discard the value of less.
+// It does not take into account the name of the game server, so it can return an equal result.
+// Used for the distributed strategy.
+func compareGameServersAfterAllocationForDistributedStrategy(
+	before, after *agonesv1.GameServer,
+	priorities []agonesv1.Priority) (bool, bool) {
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && priorities != nil {
+		if res := before.CompareCountAndListPriorities(priorities, after); res != nil {
+			return *res, false
+		}
+	}
+
+	// gs priority remains the same after allocation
+	return false, true
+}
+
+// compareGameServersAfterAllocationForPackedStrategy compares the priority of the before and after applying an allocation to a game server.
+// The first bool returned has the meaning of greater (before has greater priority than after) and the second of equal. If equal is true, discard the value of less.
+// It does not take into account the name of the game server, so it can return an equal result.
+// Used for the packed strategy.
+func compareGameServersAfterAllocationForPackedStrategy(
+	before, after *agonesv1.GameServer,
+	priorities []agonesv1.Priority,
+	counts map[string]gameservers.NodeCount) (bool, bool) {
+	// Search Allocated GameServers first.
+	if before.Status.State != after.Status.State {
+		return before.Status.State == agonesv1.GameServerStateAllocated, false
+	}
+
+	c1, ok := counts[before.Status.NodeName]
+	if !ok {
+		return false, false
+	}
+
+	c2, ok := counts[after.Status.NodeName]
+	if !ok {
+		return true, false
+	}
+
+	if c1.Allocated > c2.Allocated {
+		return true, false
+	}
+	if c1.Allocated < c2.Allocated {
+		return false, false
+	}
+
+	// prefer nodes that have the most Ready gameservers on them - they are most likely to be
+	// completely filled and least likely target for scale down.
+	if c1.Ready < c2.Ready {
+		return false, false
+	}
+	if c1.Ready > c2.Ready {
+		return true, false
+	}
+
+	// if player tracking is enabled, prefer game servers with the least amount of room left
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		if before.Status.Players != nil && after.Status.Players != nil {
+			cap1 := before.Status.Players.Capacity - before.Status.Players.Count
+			cap2 := after.Status.Players.Capacity - after.Status.Players.Count
+
+			// if they are equal, pass the comparison through.
+			if cap1 < cap2 {
+				return true, false
+			} else if cap2 < cap1 {
+				return false, false
+			}
+		}
+	}
+
+	// if we end up here, then break the tie with Counter or List Priority.
+	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) && priorities != nil {
+		if res := before.CompareCountAndListPriorities(priorities, after); res != nil {
+			return *res, false
+		}
+	}
+
+	// gs priority remains the same after allocation
+	return false, true
+}
+
+// compareGameServersForPakcedStrategy compares the priority of two game servers based on the given priorities and node counts.
+// The bool returned has the meaning of greater (gs0 has greater priority than gs1 which is equivalent to the
+// less comparison as higher priority gs are positioned to the beginning of the list).
+// Used for the packed strategy.
+func compareGameServersForPakcedStrategy(gs0, gs1 *agonesv1.GameServer, priorities []agonesv1.Priority, counts map[string]gameservers.NodeCount) bool {
+	greater, equal := compareGameServersAfterAllocationForPackedStrategy(gs0, gs1, priorities, counts)
+	if !equal {
+		return greater
+	}
+
+	// finally sort lexicographically, so we have a stable order
+	return gs0.GetObjectMeta().GetName() < gs1.GetObjectMeta().GetName()
+}
+
+// compareGameServers compares the priority of two game servers based on the given priorities.
+// The bool returned has the meaning of greater (gs0 has greater priority than gs1 which is equivalent to the
+// less comparison as higher priority gs are positioned to the beginning of the list).
+// Used for the distributed strategy.
+func compareGameServersForDistributedStrategy(gs0, gs1 *agonesv1.GameServer, priorities []agonesv1.Priority) bool {
+	greater, equal := compareGameServersAfterAllocationForDistributedStrategy(gs0, gs1, priorities)
+	if !equal {
+		return greater
+	}
+
+	// finally sort lexicographically, so we have a stable order
+	return gs0.GetObjectMeta().GetName() < gs1.GetObjectMeta().GetName()
+}
+
+// findIndexAfterAllocationForPackedStrategy finds the index where the gs should be inserted to maintain the list sorted.
+// Used for the packed strategy.
+func findIndexAfterAllocationForPackedStrategy(gsList []*agonesv1.GameServer, gs *agonesv1.GameServer, priorities []agonesv1.Priority, counts map[string]gameservers.NodeCount) int {
+	pos := sort.Search(len(gsList), func(i int) bool {
+		return compareGameServersForPakcedStrategy(gs, gsList[i], priorities, counts)
+	})
+	return pos
+}
+
+// findIndexAfterAllocationForDistributedStrategy finds the index where the gs should be inserted to maintain the list sorted.
+// Used for the distributed strategy.
+func findIndexAfterAllocationForDistributedStrategy(gsList []*agonesv1.GameServer, gs *agonesv1.GameServer, priorities []agonesv1.Priority) int {
+	pos := sort.Search(len(gsList), func(i int) bool {
+		return compareGameServersForDistributedStrategy(gs, gsList[i], priorities)
+	})
+	return pos
 }
