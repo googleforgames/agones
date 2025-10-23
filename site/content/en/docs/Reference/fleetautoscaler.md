@@ -177,6 +177,197 @@ spec:
 See the [Webhook Endpoint Specification](#webhook-endpoint-specification) for the specification of the incoming and 
 outgoing JSON packet structure for the webhook endpoint.
 
+### Webhook Endpoint Specification
+
+A webhook based `FleetAutoscaler` sends an HTTP POST request to the webhook endpoint every sync period (default is 30s)
+with a JSON body, and scale the target fleet based on the data that is returned.
+
+The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `FleetAutoscaleReview` with a populated
+`FleetAutoscaleResponse` data structure is expected to be returned.
+
+The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
+providing the autoscaling functionality.
+
+```go
+// FleetAutoscaleReview is passed to the webhook with a populated Request value,
+// and then returned with a populated Response.
+type FleetAutoscaleReview struct {
+	Request  *FleetAutoscaleRequest  `json:"request"`
+	Response *FleetAutoscaleResponse `json:"response"`
+}
+
+type FleetAutoscaleRequest struct {
+	// UID is an identifier for the individual request/response. It allows us to distinguish instances of requests which are
+	// otherwise identical (parallel requests, requests when earlier requests did not modify etc)
+	// The UID is meant to track the round trip (request/response) between the Autoscaler and the WebHook, not the user request.
+	// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
+	UID types.UID `json:"uid""`
+	// Name is the name of the Fleet being scaled
+	Name string `json:"name"`
+	// Namespace is the namespace associated with the request (if any).
+	Namespace string `json:"namespace"`
+	// The Fleet's status values
+	Status v1.FleetStatus `json:"status"`
+	// Standard map labels; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Standard map annotations; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations.
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type FleetAutoscaleResponse struct {
+	// UID is an identifier for the individual request/response.
+	// This should be copied over from the corresponding FleetAutoscaleRequest.
+	UID types.UID `json:"uid"`
+	// Set to false if no scaling should occur to the Fleet
+	Scale bool `json:"scale"`
+	// The targeted replica count
+	Replicas int32 `json:"replicas"`
+}
+
+// FleetStatus is the status of a Fleet
+type FleetStatus struct {
+	// Replicas the total number of current GameServer replicas
+	Replicas int32 `json:"replicas"`
+	// ReadyReplicas are the number of Ready GameServer replicas
+	ReadyReplicas int32 `json:"readyReplicas"`
+	// ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+	// Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up.
+	ReservedReplicas int32 `json:"reservedReplicas"`
+	// AllocatedReplicas are the number of Allocated GameServer replicas
+	AllocatedReplicas int32 `json:"allocatedReplicas"`
+}
+```
+
+For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by the presence of `caBundle`.
+The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
+
+It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.
+
+
+{{% feature publishVersion="1.54.0" %}}
+
+## Wasm Autoscaling
+
+A Wasm-based `FleetAutoscaler` can be used to implement custom scaling logic using WebAssembly modules. This
+provides a flexible and secure way to run custom autoscaling algorithms without requiring external services. Wasm
+modules are sandboxed and can be written in multiple languages that compile to WebAssembly, such as Rust, Go, or
+C++.
+
+Agones uses the [Extism](https://extism.org/) WebAssembly plugin framework to load and execute Wasm modules, providing
+a secure and performant runtime environment with support for multiple programming languages.
+
+Wasm based autoscalers offer the benefits of custom scaling logic similar to webhooks, but with the added advantages
+of running within the cluster without having to spin up dedicated service within your architecture.
+
+In order to define the source of your Wasm module you can use either `URL` or `service`. The Wasm module is downloaded
+from the specified location and executed locally.
+
+For Wasm FleetAutoscaler below and in {{< ghlink href="examples/wasmfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
+
+```yaml
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: wasm-fleet-autoscaler
+spec:
+  fleetName: simple-game-server
+  policy:
+    # type of the policy - this example is Wasm
+    type: Wasm
+    # parameters for the wasm policy
+    wasm:
+      # The exported function to call in the wasm module, defaults to 'scale'
+      function: 'scale'
+      # Config values to pass to the wasm program on startup
+      config:
+        buffer_size: 10
+      from:
+        url:
+          # use a service, or direct URL
+          service:
+            name: fileserver
+            namespace: default
+            path: /wasm/plugin.wasm
+          # optionally can define a full URL if not hosted on cluster
+          # url: "https://my-bucket-storage.cloud/wasm/plugin.wasm"
+          # caBundle:  optional, used for HTTPS paths with custom certs
+      # optional hex encoded sha256 hash to match against wasm file (recommended)
+      hash: "df7199d01a25bf34b3d650c7e6f685736b2c794e6a526d86b2e55bf074df3f36"
+```
+
+See the [Wasm Function Specification](#wasm-function-specification) for the specification of the incoming and 
+outgoing JSON data structure for the Wasm function.
+
+### Wasm Function Specification
+
+A Wasm-based `FleetAutoscaler` calls the configured exported function in the Wasm module every sync period (default is 30s)
+with JSON input data, and scales the target fleet based on the JSON output data that is returned.
+
+The JSON input data is provided via the [Extism PDK's](https://extism.org/docs/quickstart/plugin-quickstart) input 
+functions (e.g., `pdk.InputJSON()` in Go) as a `FleetAutoscaleReview` 
+data structure with a populated `Request` field. The Wasm function must return a `FleetAutoscaleReview` with a populated 
+`Response` field via the Extism PDK's output functions (e.g., `pdk.OutputJSON()` in Go). As you may note, this is the
+exact same structure as the [Webhook Autoscaler Specification](#webhook-endpoint-specification).
+
+The `FleetAutoscaleResponse`'s `Replicas` field is used to set the target `Fleet` count with each sync interval, thereby
+providing the autoscaling functionality. The `Scale` field indicates whether scaling should occur.
+
+```go
+// FleetAutoscaleReview is passed to the Wasm function with a populated Request value,
+// and then returned with a populated Response.
+type FleetAutoscaleReview struct {
+	Request  *FleetAutoscaleRequest  `json:"request"`
+	Response *FleetAutoscaleResponse `json:"response"`
+}
+
+type FleetAutoscaleRequest struct {
+	// UID is an identifier for the individual request/response. It allows us to distinguish instances of requests which are
+	// otherwise identical (parallel requests, requests when earlier requests did not modify etc)
+	// The UID is meant to track the round trip (request/response) between the Autoscaler and the Wasm function, not the user request.
+	// It is suitable for correlating log entries between the autoscaler and the Wasm function, for either auditing or debugging.
+	UID string `json:"uid"`
+	// Name is the name of the Fleet being scaled
+	Name string `json:"name"`
+	// Namespace is the namespace associated with the request (if any).
+	Namespace string `json:"namespace"`
+	// The Fleet's status values
+	Status FleetStatus `json:"status"`
+	// Standard map labels; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Standard map annotations; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations.
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type FleetAutoscaleResponse struct {
+	// UID is an identifier for the individual request/response.
+	// This should be copied over from the corresponding FleetAutoscaleRequest.
+	UID string `json:"uid"`
+	// Set to false if no scaling should occur to the Fleet
+	Scale bool `json:"scale"`
+	// The targeted replica count
+	Replicas int32 `json:"replicas"`
+}
+
+// FleetStatus is the status of a Fleet
+type FleetStatus struct {
+	// Replicas the total number of current GameServer replicas
+	Replicas int32 `json:"replicas"`
+	// ReadyReplicas are the number of Ready GameServer replicas
+	ReadyReplicas int32 `json:"readyReplicas"`
+	// ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+	// Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up.
+	ReservedReplicas int32 `json:"reservedReplicas"`
+	// AllocatedReplicas are the number of Allocated GameServer replicas
+	AllocatedReplicas int32 `json:"allocatedReplicas"`
+}
+```
+
+The example of a Wasm autoscaler written in Go using the Extism PDK can be found {{< ghlink href="examples/autoscaler-wasm/main.go" >}}here{{< /ghlink >}}.
+
+It implements {{< ghlink href="examples/autoscaler-wasm/" >}}scaling logic{{< /ghlink >}} that maintains a buffer of available replicas based on allocated game servers.
+
+{{% /feature %}}
+
 ## Schedule and Chain Autoscaling
 
 A schedule-based autoscaler can automatically scale GameServers at a specific time based on a FleetAutoscaler policy.
@@ -304,7 +495,7 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
 - `fleetName` is name of the fleet to attach to and control. Must be an existing `Fleet` in the same namespace
    as this `FleetAutoscaler`.
 - `policy` is the autoscaling policy
-  - `type` is type of the policy. "Buffer" and "Webhook" are available
+  - `type` is type of the policy. "Buffer", "Webhook", "Counter", "List", "Schedule", "Chain", and "Wasm" are available
   - `buffer` parameters of the buffer policy type
     - `bufferSize`  is the size of a buffer of "ready" and "reserved" game server instances.
                     The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
@@ -338,73 +529,24 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
       - `bufferSize` is the size of a buffer based on the List capacity that is available over the current aggregate List length in the Fleet (available capacity). It can be specified either as an absolute value or percentage format.
       - `minCapacity` is the minimum aggregate List total capacity across the fleet. If zero, it is ignored. If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
       - `maxCapacity` is the maximum aggregate List total capacity across the fleet. It must be bigger than both MinCapacity and BufferSize. Required field.
+{{% feature publishVersion="1.54.0" %}}
+  - `wasm` parameters of the wasm policy type
+    - The following are subfields of the `wasm` field, which contains the settings for WebAssembly-based autoscaling:
+      - `function` is the exported function to call in the wasm module. Optional, defaults to 'scale'.
+      - `config` is a map of key-value pairs to pass to the wasm program on startup. Optional.
+      - `from` defines the source of the Wasm module. Required.
+        - `url` is the URL configuration for the Wasm module location. Required.
+          - `service` is a reference to the service hosting the Wasm module. Either `service` or `url` must be specified.
+            - `name` is the service name. Required if using service.
+            - `namespace` is the kubernetes namespace where the service is deployed. Optional, defaults to "default".
+            - `path` is the URL path to the Wasm module file (e.g., /wasm/plugin.wasm). Optional.
+            - `port` is the port for the service. Optional, defaults to 8000.
+          - `url` gives the direct URL location of the Wasm module, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. Optional.
+          - `caBundle` is a PEM encoded certificate authority bundle for HTTPS. Base64 encoded PEM string. Required only for HTTPS with custom certificates.
+      - `hash` is an optional hex encoded sha256 hash to verify the integrity of the Wasm module. Optional but recommended.
+{{% /feature %}}
 - `sync` is autoscaling sync strategy. It defines when to run the autoscaling
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync
     - `seconds` is the time in seconds between each autoscaling
 
-## Webhook Endpoint Specification
-
-A webhook based `FleetAutoscaler` sends an HTTP POST request to the webhook endpoint every sync period (default is 30s) 
-with a JSON body, and scale the target fleet based on the data that is returned.
-
-The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `FleetAutoscaleReview` with a populated 
-`FleetAutoscaleResponse` data structure is expected to be returned. 
-
-The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
-providing the autoscaling functionality.
-
-```go
-// FleetAutoscaleReview is passed to the webhook with a populated Request value,
-// and then returned with a populated Response.
-type FleetAutoscaleReview struct {
-	Request  *FleetAutoscaleRequest  `json:"request"`
-	Response *FleetAutoscaleResponse `json:"response"`
-}
-
-type FleetAutoscaleRequest struct {
-	// UID is an identifier for the individual request/response. It allows us to distinguish instances of requests which are
-	// otherwise identical (parallel requests, requests when earlier requests did not modify etc)
-	// The UID is meant to track the round trip (request/response) between the Autoscaler and the WebHook, not the user request.
-	// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
-	UID types.UID `json:"uid""`
-	// Name is the name of the Fleet being scaled
-	Name string `json:"name"`
-	// Namespace is the namespace associated with the request (if any).
-	Namespace string `json:"namespace"`
-	// The Fleet's status values
-	Status v1.FleetStatus `json:"status"`
-	// Standard map labels; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels.
-	Labels map[string]string `json:"labels,omitempty"`
-	// Standard map annotations; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations.
-	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
-type FleetAutoscaleResponse struct {
-	// UID is an identifier for the individual request/response.
-	// This should be copied over from the corresponding FleetAutoscaleRequest.
-	UID types.UID `json:"uid"`
-	// Set to false if no scaling should occur to the Fleet
-	Scale bool `json:"scale"`
-	// The targeted replica count
-	Replicas int32 `json:"replicas"`
-}
-
-// FleetStatus is the status of a Fleet
-type FleetStatus struct {
-	// Replicas the total number of current GameServer replicas
-	Replicas int32 `json:"replicas"`
-	// ReadyReplicas are the number of Ready GameServer replicas
-	ReadyReplicas int32 `json:"readyReplicas"`
-	// ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
-	// Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up.
-	ReservedReplicas int32 `json:"reservedReplicas"`
-	// AllocatedReplicas are the number of Allocated GameServer replicas
-	AllocatedReplicas int32 `json:"allocatedReplicas"`
-}
-```
-
-For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by the presence of `caBundle`.
-The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
-
-It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.
