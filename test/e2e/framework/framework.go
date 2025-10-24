@@ -197,7 +197,9 @@ func NewFromFlags() (*Framework, error) {
 	framework.CloudProduct = viper.GetString(cloudProductFlag)
 	framework.WaitForState = 5 * time.Minute
 	if framework.CloudProduct == "gke-autopilot" {
-		framework.WaitForState = 10 * time.Minute // Autopilot can take a little while due to autoscaling, be a little liberal.
+		// Autopilot can take a little while due to autoscaling, be a little liberal.
+		// Keeping it under 10m so we don't get stack track dumps at 10m as unit tests can't be extended past 10m.
+		framework.WaitForState = 8 * time.Minute
 	}
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).

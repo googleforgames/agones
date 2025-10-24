@@ -61,9 +61,7 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 
 	// create fleet
 	flt, err := helper.CreateFleet(ctx, framework.Namespace, framework)
-	if !assert.Nil(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	logger.Infof("=== agones-allocator available, gRPC client initialized ===")
