@@ -186,6 +186,10 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 			}
 		} else {
 			result = converters.ConvertAllocationResponseToGSA(resp, resp.Source)
+			// TODO: investigate this part
+			// Re-apply the spec, as the processor does not return it within the proto response
+			// but focus on the status/result fields
+			result.(*allocationv1.GameServerAllocation).Spec = gsa.Spec
 			code = http.StatusCreated
 		}
 
