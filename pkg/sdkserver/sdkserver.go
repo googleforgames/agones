@@ -1213,7 +1213,7 @@ func (s *SDKServer) RemoveListValue(ctx context.Context, in *beta.RemoveListValu
 
 	// Track this removal for batch persistence to K8s
 	batchList := s.gsListUpdates[in.Name]
-	
+
 	removedFromBatch := false
 	if len(batchList.valuesToAppend) > 0 {
 		newAppend := make([]string, 0, len(batchList.valuesToAppend))
