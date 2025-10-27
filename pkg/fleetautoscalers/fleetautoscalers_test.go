@@ -209,7 +209,7 @@ func TestComputeDesiredFleetSize(t *testing.T) {
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
 
-			replicas, limited, err := computeDesiredFleetSize(ctx, map[string]any{}, fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
+			replicas, limited, err := computeDesiredFleetSize(ctx, fasState{}, fas.Spec.Policy, f, gameServers.Lister().GameServers(f.ObjectMeta.Namespace), nc, &fasLog)
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
@@ -2518,7 +2518,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applySchedulePolicy(ctx, map[string]any{}, tc.sp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applySchedulePolicy(ctx, fasState{}, tc.sp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)
@@ -2710,7 +2710,7 @@ func TestApplyChainPolicy(t *testing.T) {
 				recorder:       m.FakeRecorder,
 				currChainEntry: &fas.Status.LastAppliedPolicy,
 			}
-			replicas, limited, err := applyChainPolicy(ctx, map[string]any{}, *tc.cp, f, nil, nil, tc.now, &fasLog)
+			replicas, limited, err := applyChainPolicy(ctx, fasState{}, *tc.cp, f, nil, nil, tc.now, &fasLog)
 
 			if tc.want.wantErr {
 				assert.NotNil(t, err)

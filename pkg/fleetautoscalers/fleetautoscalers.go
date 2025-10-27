@@ -46,8 +46,7 @@ import (
 )
 
 const (
-	maxDuration  = "2540400h" // 290 Years
-	wasmStateKey = "wasm"     // Key used to store the Wasm plugin in the state map
+	maxDuration = "2540400h" // 290 Years
 )
 
 var tlsConfig = &tls.Config{}
@@ -66,7 +65,7 @@ func (InactiveScheduleError) Error() string {
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
+func computeDesiredFleetSize(ctx context.Context, state fasState, pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
 	gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 
 	var (
@@ -103,7 +102,7 @@ func computeDesiredFleetSize(ctx context.Context, state map[string]any, pol auto
 	return replicas, limited, err
 }
 
-func applyWasmPolicy(ctx context.Context, state map[string]any, wp *autoscalingv1.WasmPolicy, f *agonesv1.Fleet, log *FasLogger) (int32, bool, error) {
+func applyWasmPolicy(ctx context.Context, state fasState, wp *autoscalingv1.WasmPolicy, f *agonesv1.Fleet, log *FasLogger) (int32, bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureWasmAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply WasmPolicy unless feature flag %s is enabled", runtime.FeatureWasmAutoscaler)
 	}
@@ -116,8 +115,7 @@ func applyWasmPolicy(ctx context.Context, state map[string]any, wp *autoscalingv
 		return 0, false, errors.New("fleet parameter must not be nil")
 	}
 
-	_, ok := state[wasmStateKey]
-	if !ok {
+	if state.wasmPlugin == nil {
 		// Build URL from the WasmPolicy
 		u, err := buildURLFromWebhookPolicy(wp.From.URL)
 		if err != nil {
@@ -156,11 +154,8 @@ func applyWasmPolicy(ctx context.Context, state map[string]any, wp *autoscalingv
 		if err != nil {
 			return 0, false, errors.Wrapf(err, "failed to create Wasm plugin from %s", u.String())
 		}
-		state[wasmStateKey] = plugin // Store the plugin in the state map
+		state.wasmPlugin = plugin // Store the plugin in the state map
 	}
-
-	// This should never panic as we control what's in the state map
-	plugin := state[wasmStateKey].(*extism.Plugin)
 
 	// Create FleetAutoscaleReview
 	review := autoscalingv1.FleetAutoscaleReview{
@@ -183,7 +178,7 @@ func applyWasmPolicy(ctx context.Context, state map[string]any, wp *autoscalingv
 		return 0, false, errors.Wrap(err, "failed to marshal autoscaling request")
 	}
 
-	_, b, err = plugin.CallWithContext(ctx, wp.Function, b)
+	_, b, err = state.wasmPlugin.CallWithContext(ctx, wp.Function, b)
 	if err != nil {
 		return 0, false, errors.Wrapf(err, "failed to call Wasm plugin function %s", wp.Function)
 	}
@@ -539,7 +534,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	return 0, false, errors.Errorf("unable to apply ListPolicy %v", l)
 }
 
-func applySchedulePolicy(ctx context.Context, state map[string]any, s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applySchedulePolicy(ctx context.Context, state fasState, s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
@@ -556,7 +551,7 @@ func applySchedulePolicy(ctx context.Context, state map[string]any, s *autoscali
 	return f.Status.Replicas, false, &InactiveScheduleError{}
 }
 
-func applyChainPolicy(ctx context.Context, state map[string]any, c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applyChainPolicy(ctx context.Context, state fasState, c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply ChainPolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
