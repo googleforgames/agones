@@ -316,7 +316,7 @@ func TestApplyWasmPolicy(t *testing.T) {
 			// Create a new state for each test case
 			state := fasState{}
 
-			replicas, limited, err := applyWasmPolicy(context.Background(), state, tc.wasmPolicy, fleet, logger)
+			replicas, limited, err := applyWasmPolicy(context.Background(), &state, tc.wasmPolicy, fleet, logger)
 
 			if tc.expected.err != "" {
 				require.ErrorContains(t, err, tc.expected.err)

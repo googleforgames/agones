@@ -65,7 +65,7 @@ func (InactiveScheduleError) Error() string {
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(ctx context.Context, state fasState, pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
+func computeDesiredFleetSize(ctx context.Context, state *fasState, pol autoscalingv1.FleetAutoscalerPolicy, f *agonesv1.Fleet,
 	gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 
 	var (
@@ -76,13 +76,13 @@ func computeDesiredFleetSize(ctx context.Context, state fasState, pol autoscalin
 
 	switch pol.Type {
 	case autoscalingv1.BufferPolicyType:
-		replicas, limited, err = applyBufferPolicy(pol.Buffer, f, fasLog)
+		replicas, limited, err = applyBufferPolicy(state, pol.Buffer, f, fasLog)
 	case autoscalingv1.WebhookPolicyType:
-		replicas, limited, err = applyWebhookPolicy(pol.Webhook, f, fasLog)
+		replicas, limited, err = applyWebhookPolicy(state, pol.Webhook, f, fasLog)
 	case autoscalingv1.CounterPolicyType:
-		replicas, limited, err = applyCounterOrListPolicyWrapper(pol.Counter, nil, f, gameServerNamespacedLister, nodeCounts, fasLog)
+		replicas, limited, err = applyCounterOrListPolicyWrapper(state, pol.Counter, nil, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	case autoscalingv1.ListPolicyType:
-		replicas, limited, err = applyCounterOrListPolicyWrapper(nil, pol.List, f, gameServerNamespacedLister, nodeCounts, fasLog)
+		replicas, limited, err = applyCounterOrListPolicyWrapper(state, nil, pol.List, f, gameServerNamespacedLister, nodeCounts, fasLog)
 	case autoscalingv1.SchedulePolicyType:
 		replicas, limited, err = applySchedulePolicy(ctx, state, pol.Schedule, f, gameServerNamespacedLister, nodeCounts, time.Now(), fasLog)
 	case autoscalingv1.ChainPolicyType:
@@ -102,7 +102,7 @@ func computeDesiredFleetSize(ctx context.Context, state fasState, pol autoscalin
 	return replicas, limited, err
 }
 
-func applyWasmPolicy(ctx context.Context, state fasState, wp *autoscalingv1.WasmPolicy, f *agonesv1.Fleet, log *FasLogger) (int32, bool, error) {
+func applyWasmPolicy(ctx context.Context, state *fasState, wp *autoscalingv1.WasmPolicy, f *agonesv1.Fleet, log *FasLogger) (int32, bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeatureWasmAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply WasmPolicy unless feature flag %s is enabled", runtime.FeatureWasmAutoscaler)
 	}
@@ -265,7 +265,7 @@ func setCABundle(caBundle []byte) error {
 	return nil
 }
 
-func applyWebhookPolicy(w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
+func applyWebhookPolicy(_ *fasState, w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
 	if w == nil {
 		return 0, false, errors.New("webhookPolicy parameter must not be nil")
 	}
@@ -346,7 +346,7 @@ func applyWebhookPolicy(w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fa
 	return f.Status.Replicas, false, nil
 }
 
-func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet, fasLog *FasLogger) (int32, bool, error) {
+func applyBufferPolicy(_ *fasState, b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet, fasLog *FasLogger) (int32, bool, error) {
 	var replicas int32
 
 	if b.BufferSize.Type == intstr.Int {
@@ -386,7 +386,7 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet, fasLog 
 }
 
 // New function to call applyCounterOrListPolicy
-func applyCounterOrListPolicyWrapper(c *autoscalingv1.CounterPolicy, l *autoscalingv1.ListPolicy,
+func applyCounterOrListPolicyWrapper(_ *fasState, c *autoscalingv1.CounterPolicy, l *autoscalingv1.ListPolicy,
 	f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister,
 	nodeCounts map[string]gameservers.NodeCount, fasLog *FasLogger) (int32, bool, error) {
 
@@ -534,7 +534,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 	return 0, false, errors.Errorf("unable to apply ListPolicy %v", l)
 }
 
-func applySchedulePolicy(ctx context.Context, state fasState, s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applySchedulePolicy(ctx context.Context, state *fasState, s *autoscalingv1.SchedulePolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply SchedulePolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
@@ -551,7 +551,7 @@ func applySchedulePolicy(ctx context.Context, state fasState, s *autoscalingv1.S
 	return f.Status.Replicas, false, &InactiveScheduleError{}
 }
 
-func applyChainPolicy(ctx context.Context, state fasState, c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
+func applyChainPolicy(ctx context.Context, state *fasState, c autoscalingv1.ChainPolicy, f *agonesv1.Fleet, gameServerNamespacedLister listeragonesv1.GameServerNamespaceLister, nodeCounts map[string]gameservers.NodeCount, currentTime time.Time, fasLog *FasLogger) (int32, bool, error) {
 	// Ensure the scheduled autoscaler feature gate is enabled
 	if !runtime.FeatureEnabled(runtime.FeatureScheduledAutoscaler) {
 		return 0, false, errors.Errorf("cannot apply ChainPolicy unless feature flag %s is enabled", runtime.FeatureScheduledAutoscaler)
@@ -573,7 +573,7 @@ func applyChainPolicy(ctx context.Context, state fasState, c autoscalingv1.Chain
 					"Failed to apply SchedulePolicy ID=%s in ChainPolicy: %v", entry.ID, err)
 			}
 		case autoscalingv1.WebhookPolicyType:
-			replicas, limited, err = applyWebhookPolicy(entry.Webhook, f, fasLog)
+			replicas, limited, err = applyWebhookPolicy(state, entry.Webhook, f, fasLog)
 
 			if err != nil {
 				loggerForFleetAutoscalerKey(fasLog.fas.ObjectMeta.Name, fasLog.baseLogger).Debugf(
