@@ -271,6 +271,13 @@ First, [install Minikube](https://github.com/kubernetes/minikube#installation).
 Next we will create the Agones Minikube cluster. Run `make minikube-test-cluster` to create the `agones` profile,
 and a Kubernetes cluster of the supported version under this profile.
 
+For e2e testing that requires multiple nodes, you can specify the number of nodes using the `MINIKUBE_NODES` environment variable.
+A minimum of 2-3 nodes is recommended for comprehensive e2e testing:
+
+```bash
+MINIKUBE_NODES=3 make minikube-test-cluster
+```
+
 This will also install the kubectl authentication credentials in `~/.kube`, and set the
 [`kubectl` context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
 to `agones`.
@@ -300,7 +307,7 @@ To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
 
-**Note:** Minikube is single-node only and is limited to approximately 110 pods per node. Running all e2e tests may exceed this limit and cause pod scheduling failures. Consider running individual tests or reducing test load if you encounter pod limits.
+**Note:** Minikube supports both single-node and multi-node clusters. By default, it creates a single-node cluster which is limited to approximately 110 pods per node. For e2e tests, you can create a multi-node cluster using `MINIKUBE_NODES=3 make minikube-test-cluster` to provide more pod capacity. Running all e2e tests on a single-node cluster may exceed the pod limit and cause scheduling failures. Consider using multiple nodes or running individual tests to avoid pod limits.
 
 Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm a local minikube cluster, so use at your own risk. Take a look at [Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case basis.
 
