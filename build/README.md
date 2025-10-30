@@ -275,7 +275,7 @@ For e2e testing that requires multiple nodes, you can specify the number of node
 A minimum of 2-3 nodes is recommended for comprehensive e2e testing:
 
 ```bash
-MINIKUBE_NODES=3 make minikube-test-cluster
+make minikube-test-cluster MINIKUBE_NODES=3 
 ```
 
 This will also install the kubectl authentication credentials in `~/.kube`, and set the
