@@ -306,9 +306,6 @@ and makes cross-platform support for the build system much easier.
 To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
-
-**Note:** Minikube supports both single-node and multi-node clusters. By default, it creates a single-node cluster which is limited to approximately 110 pods per node. For e2e tests, you can create a multi-node cluster using `MINIKUBE_NODES=3 make minikube-test-cluster` to provide more pod capacity. Running all e2e tests on a single-node cluster may exceed the pod limit and cause scheduling failures. Consider using multiple nodes or running individual tests to avoid pod limits.
-
 Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm a local minikube cluster, so use at your own risk. Take a look at [Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case basis.
 
 If you are getting issues connecting to `GameServers` running on minikube, check the
