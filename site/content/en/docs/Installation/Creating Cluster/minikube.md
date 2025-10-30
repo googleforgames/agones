@@ -27,6 +27,11 @@ clusters you may have running with Minikube.
 minikube start --kubernetes-version v{{% minikube-example-cluster-version %}} -p agones
 ```
 
+For testing scenarios that require multiple nodes, you can add the `--nodes` parameter to create a multi-node cluster.
+```bash
+minikube start --kubernetes-version v{{% minikube-example-cluster-version %}} -p agones --nodes 3
+```
+
 Check the official [minikube start](https://minikube.sigs.k8s.io/docs/commands/start/) reference for more options that
 may be required for your platform of choice.
 
@@ -68,6 +73,54 @@ Depending on your operating system and virtualization platform that you are usin
 possible to connect directly to a `GameServer` hosted on Agones as you would on a cloud hosted Kubernetes cluster.
 
 If you are unable to do so, the following workarounds are available, and may work on your platform:
+
+## Setting up LoadBalancer Support with MetalLB
+
+By default, Minikube doesn't provide LoadBalancer functionality, which means services of type `LoadBalancer` will remain in a "Pending" state. For Agones, LoadBalancer services are often used for the allocator and ping services to provide external access. To enable LoadBalancer support in Minikube, you need to install MetalLB.
+
+### Installing MetalLB
+
+First, add the MetalLB Helm repository and install it:
+
+```bash
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update
+helm install metallb metallb/metallb --namespace metallb-system --create-namespace
+```
+
+### Configuring MetalLB
+
+After installation, you need to configure MetalLB with an IP address range. Create a configuration file:
+
+```bash
+# Get the minikube IP to determine the network range
+MINIKUBE_IP=$(minikube ip -p agones)
+NETWORK_PREFIX=$(echo "$MINIKUBE_IP" | cut -d '.' -f 1-3)
+METALLB_IP_RANGE="$NETWORK_PREFIX.50-$NETWORK_PREFIX.250"
+
+# Create MetalLB configuration
+cat <<EOF | kubectl apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - ${METALLB_IP_RANGE}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - default-pool
+EOF
+```
+
+Once MetalLB is installed and configured, LoadBalancer services will receive external IP addresses from the configured range, allowing external access to Agones services.
 
 ### minikube ip
 
