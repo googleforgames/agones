@@ -2129,6 +2129,7 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 				},
 			},
 		}
+
 		gs.ApplyDefaults()
 		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
 		require.NoError(t, err)
