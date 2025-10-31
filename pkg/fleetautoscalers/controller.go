@@ -60,20 +60,25 @@ import (
 	"k8s.io/utils/clock"
 )
 
+// fasState is the state for each Fleet Autoscaler instance
+// expand this structure if extra state is needed for other autoscaler
+// strategies.
+type fasState struct {
+	wasmPlugin *extism.Plugin
+}
+
 // fasThread is used for tracking each Fleet's autoscaling jobs
 type fasThread struct {
 	cancel     context.CancelFunc
-	state      map[string]any
+	state      fasState
 	generation int64
 }
 
 // close cancels the context and cleans up any resources
 func (ft *fasThread) close(ctx context.Context) {
 	ft.cancel()
-	if plugin, ok := ft.state[wasmStateKey]; ok {
-		if p, ok := plugin.(*extism.Plugin); ok {
-			_ = p.Close(ctx) // Ignore any errors during cleanup
-		}
+	if ft.state.wasmPlugin != nil {
+		_ = ft.state.wasmPlugin.Close(ctx)
 	}
 }
 
@@ -350,7 +355,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 
 	currentReplicas := fleet.Status.Replicas
 	gameServerNamespacedLister := c.gameServerLister.GameServers(fleet.ObjectMeta.Namespace)
-	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(ctx, thread.state, fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts(), &fasLog)
+	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(ctx, &thread.state, fas.Spec.Policy, fleet, gameServerNamespacedLister, c.counter.Counts(), &fasLog)
 
 	// If the err is not nil and not an inactive schedule error (ignorable in this case), then record the event
 	if err != nil {
@@ -488,7 +493,7 @@ func (c *Controller) addFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool)
 	thread := fasThread{
 		cancel:     cancel,
 		generation: fas.Generation,
-		state:      map[string]any{},
+		state:      fasState{},
 	}
 
 	if lock {
