@@ -32,7 +32,7 @@ locals {
   network                       = lookup(var.cluster, "network", "default")
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "UNSPECIFIED")
-  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.32")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.33")
   windowsInitialNodeCount       = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType            = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
   autoscale                     = lookup(var.cluster, "autoscale", false)
@@ -40,7 +40,7 @@ locals {
   minNodeCount                  = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount                  = lookup(var.cluster, "maxNodeCount", "5")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
-  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
+  maintenanceExclusionEndTime = local.kubernetesVersion == "1.31" ? timeadd(timestamp(), "720h") : timeadd(timestamp(), "2640h")
 }
 
 data "google_container_engine_versions" "version" {
@@ -85,7 +85,6 @@ resource "google_container_cluster" "primary" {
   # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#example-usage---with-a-separately-managed-node-pool-recommended
   remove_default_node_pool = true
   initial_node_count       = 1
-
   release_channel {
     channel = local.releaseChannel
   }
