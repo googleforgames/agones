@@ -2230,6 +2230,18 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 								Env:   []corev1.EnvVar{{Name: grpcPortEnvVar, Value: "value"}, {Name: httpPortEnvVar, Value: "value"}},
 							},
 						},
+						InitContainers: []corev1.Container{
+							{
+								Name:  "init-container1",
+								Image: "init-container/image1",
+								Env:   []corev1.EnvVar{{Name: "one", Value: "value"}, {Name: "two", Value: "value"}},
+							},
+							{
+								Name:  "init-container1",
+								Image: "init-container/image2",
+								Env:   []corev1.EnvVar{{Name: grpcPortEnvVar, Value: "value"}, {Name: httpPortEnvVar, Value: "value"}},
+							},
+						},
 					},
 				},
 			},
@@ -2248,6 +2260,46 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 				assert.Contains(t, c.Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
 			}
 		}
+	})
+
+	t.Run("game server with init containers", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "6789"},
+			Spec: agonesv1.GameServerSpec{
+				Container: "container1",
+				Ports:     []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+
+						InitContainers: []corev1.Container{
+							{
+								Name:  "init-container1",
+								Image: "initcontainer/image",
+							},
+							{
+								Name:  "init-container2",
+								Image: "initcontainer/image2",
+							},
+						},
+						Containers: []corev1.Container{
+							{
+								Name:  "container1",
+								Image: "container/gameserver",
+							},
+						},
+					},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		pod, err := gs.Pod(agtesting.FakeAPIHooks{})
+		require.NoError(t, err)
+		c.addSDKServerEnvVars(gs, pod)
+		assert.Contains(t, pod.Spec.InitContainers[0].Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+		assert.Contains(t, pod.Spec.InitContainers[0].Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
 	})
 }
 
