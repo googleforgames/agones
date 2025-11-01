@@ -834,7 +834,7 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 // went wrong.
 func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string, objOrRef k8sruntime.Object) {
 	log.WithField("kind", objOrRef.GetObjectKind().GroupVersionKind().Kind).Info("Dumping Events:")
-	events, err := f.KubeClient.CoreV1().Events(namespace).Search(scheme.Scheme, objOrRef)
+	events, err := f.KubeClient.CoreV1().Events(namespace).SearchWithContext(context.Background(), scheme.Scheme, objOrRef)
 	require.NoError(t, err, "error searching for events")
 	for i := range events.Items {
 		event := events.Items[i]

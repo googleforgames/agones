@@ -148,7 +148,7 @@ func TestCppSimpleGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "cpp-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.21",
+							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.23",
 						},
 					},
 				},

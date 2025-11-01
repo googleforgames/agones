@@ -62,13 +62,25 @@ func NewFilteredGameServerAllocationPolicyInformer(client versioned.Interface, n
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).List(context.TODO(), options)
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(context.TODO(), options)
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(ctx, options)
 			},
 		},
 		&apismulticlusterv1.GameServerAllocationPolicy{},

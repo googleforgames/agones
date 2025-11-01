@@ -28,9 +28,9 @@ locals {
   network                       = lookup(var.cluster, "network", "default")
   subnetwork                    = lookup(var.cluster, "subnetwork", "")
   releaseChannel                = lookup(var.cluster, "releaseChannel", "REGULAR")
-  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.32")
+  kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.33")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
-  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
+  maintenanceExclusionEndTime = local.kubernetesVersion == "1.31" ? timeadd(timestamp(), "720h") : timeadd(timestamp(), "2640h")
   deletionProtection            = lookup(var.cluster, "deletionProtection", true)
 }
 
