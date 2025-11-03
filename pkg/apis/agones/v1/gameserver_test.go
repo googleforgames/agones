@@ -607,7 +607,13 @@ func TestGameServerValidate(t *testing.T) {
 			},
 			applyDefaults: false,
 			want: field.ErrorList{
-				field.Invalid(field.NewPath("spec", "template", "metadata", "labels"), longNameLen64, "name part must be no more than 63 characters"),
+				&field.Error{
+					Type:     field.ErrorTypeInvalid,
+					Field:    field.NewPath("spec", "template", "metadata", "labels").String(),
+					BadValue: longNameLen64,
+					Detail:   "name part must be no more than 63 characters",
+					Origin:   "labelKey",
+				},
 			},
 		},
 		{
