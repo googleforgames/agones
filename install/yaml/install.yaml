@@ -823,12 +823,12 @@ spec:
                                                    type: object
                                                    x-kubernetes-map-type: atomic
                                                  matchLabelKeys:
-                                                   description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                   description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                    items:
                                                      type: string
                                                    type: array
                                                  mismatchLabelKeys:
-                                                   description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                   description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                    items:
                                                      type: string
                                                    type: array
@@ -917,12 +917,12 @@ spec:
                                                type: object
                                                x-kubernetes-map-type: atomic
                                              matchLabelKeys:
-                                               description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                               description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                items:
                                                  type: string
                                                type: array
                                              mismatchLabelKeys:
-                                               description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                               description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                items:
                                                  type: string
                                                type: array
@@ -1010,12 +1010,12 @@ spec:
                                                    type: object
                                                    x-kubernetes-map-type: atomic
                                                  matchLabelKeys:
-                                                   description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                   description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                    items:
                                                      type: string
                                                    type: array
                                                  mismatchLabelKeys:
-                                                   description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                   description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                    items:
                                                      type: string
                                                    type: array
@@ -1104,12 +1104,12 @@ spec:
                                                type: object
                                                x-kubernetes-map-type: atomic
                                              matchLabelKeys:
-                                               description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                               description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                items:
                                                  type: string
                                                type: array
                                              mismatchLabelKeys:
-                                               description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                               description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                items:
                                                  type: string
                                                type: array
@@ -1268,7 +1268,7 @@ spec:
                                                  type: boolean
                                              type: object
                                            prefix:
-                                             description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                             description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                              type: string
                                            secretRef:
                                              description: The Secret to select from
@@ -1457,6 +1457,143 @@ spec:
                                                  - port
                                                type: object
                                            type: object
+                                         stopSignal:
+                                           description: |-
+                                             StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                         
+                                             Possible enum values:
+                                              - `"SIGABRT"`
+                                              - `"SIGALRM"`
+                                              - `"SIGBUS"`
+                                              - `"SIGCHLD"`
+                                              - `"SIGCLD"`
+                                              - `"SIGCONT"`
+                                              - `"SIGFPE"`
+                                              - `"SIGHUP"`
+                                              - `"SIGILL"`
+                                              - `"SIGINT"`
+                                              - `"SIGIO"`
+                                              - `"SIGIOT"`
+                                              - `"SIGKILL"`
+                                              - `"SIGPIPE"`
+                                              - `"SIGPOLL"`
+                                              - `"SIGPROF"`
+                                              - `"SIGPWR"`
+                                              - `"SIGQUIT"`
+                                              - `"SIGRTMAX"`
+                                              - `"SIGRTMAX-1"`
+                                              - `"SIGRTMAX-10"`
+                                              - `"SIGRTMAX-11"`
+                                              - `"SIGRTMAX-12"`
+                                              - `"SIGRTMAX-13"`
+                                              - `"SIGRTMAX-14"`
+                                              - `"SIGRTMAX-2"`
+                                              - `"SIGRTMAX-3"`
+                                              - `"SIGRTMAX-4"`
+                                              - `"SIGRTMAX-5"`
+                                              - `"SIGRTMAX-6"`
+                                              - `"SIGRTMAX-7"`
+                                              - `"SIGRTMAX-8"`
+                                              - `"SIGRTMAX-9"`
+                                              - `"SIGRTMIN"`
+                                              - `"SIGRTMIN+1"`
+                                              - `"SIGRTMIN+10"`
+                                              - `"SIGRTMIN+11"`
+                                              - `"SIGRTMIN+12"`
+                                              - `"SIGRTMIN+13"`
+                                              - `"SIGRTMIN+14"`
+                                              - `"SIGRTMIN+15"`
+                                              - `"SIGRTMIN+2"`
+                                              - `"SIGRTMIN+3"`
+                                              - `"SIGRTMIN+4"`
+                                              - `"SIGRTMIN+5"`
+                                              - `"SIGRTMIN+6"`
+                                              - `"SIGRTMIN+7"`
+                                              - `"SIGRTMIN+8"`
+                                              - `"SIGRTMIN+9"`
+                                              - `"SIGSEGV"`
+                                              - `"SIGSTKFLT"`
+                                              - `"SIGSTOP"`
+                                              - `"SIGSYS"`
+                                              - `"SIGTERM"`
+                                              - `"SIGTRAP"`
+                                              - `"SIGTSTP"`
+                                              - `"SIGTTIN"`
+                                              - `"SIGTTOU"`
+                                              - `"SIGURG"`
+                                              - `"SIGUSR1"`
+                                              - `"SIGUSR2"`
+                                              - `"SIGVTALRM"`
+                                              - `"SIGWINCH"`
+                                              - `"SIGXCPU"`
+                                              - `"SIGXFSZ"`
+                                           enum:
+                                             - SIGABRT
+                                             - SIGALRM
+                                             - SIGBUS
+                                             - SIGCHLD
+                                             - SIGCLD
+                                             - SIGCONT
+                                             - SIGFPE
+                                             - SIGHUP
+                                             - SIGILL
+                                             - SIGINT
+                                             - SIGIO
+                                             - SIGIOT
+                                             - SIGKILL
+                                             - SIGPIPE
+                                             - SIGPOLL
+                                             - SIGPROF
+                                             - SIGPWR
+                                             - SIGQUIT
+                                             - SIGRTMAX
+                                             - SIGRTMAX-1
+                                             - SIGRTMAX-10
+                                             - SIGRTMAX-11
+                                             - SIGRTMAX-12
+                                             - SIGRTMAX-13
+                                             - SIGRTMAX-14
+                                             - SIGRTMAX-2
+                                             - SIGRTMAX-3
+                                             - SIGRTMAX-4
+                                             - SIGRTMAX-5
+                                             - SIGRTMAX-6
+                                             - SIGRTMAX-7
+                                             - SIGRTMAX-8
+                                             - SIGRTMAX-9
+                                             - SIGRTMIN
+                                             - SIGRTMIN+1
+                                             - SIGRTMIN+10
+                                             - SIGRTMIN+11
+                                             - SIGRTMIN+12
+                                             - SIGRTMIN+13
+                                             - SIGRTMIN+14
+                                             - SIGRTMIN+15
+                                             - SIGRTMIN+2
+                                             - SIGRTMIN+3
+                                             - SIGRTMIN+4
+                                             - SIGRTMIN+5
+                                             - SIGRTMIN+6
+                                             - SIGRTMIN+7
+                                             - SIGRTMIN+8
+                                             - SIGRTMIN+9
+                                             - SIGSEGV
+                                             - SIGSTKFLT
+                                             - SIGSTOP
+                                             - SIGSYS
+                                             - SIGTERM
+                                             - SIGTRAP
+                                             - SIGTSTP
+                                             - SIGTTIN
+                                             - SIGTTOU
+                                             - SIGURG
+                                             - SIGUSR1
+                                             - SIGUSR2
+                                             - SIGVTALRM
+                                             - SIGWINCH
+                                             - SIGXCPU
+                                             - SIGXFSZ
+                                           type: string
                                        type: object
                                      livenessProbe:
                                        description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -2247,7 +2384,7 @@ spec:
                                                  type: boolean
                                              type: object
                                            prefix:
-                                             description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                             description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                              type: string
                                            secretRef:
                                              description: The Secret to select from
@@ -2436,6 +2573,143 @@ spec:
                                                  - port
                                                type: object
                                            type: object
+                                         stopSignal:
+                                           description: |-
+                                             StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                         
+                                             Possible enum values:
+                                              - `"SIGABRT"`
+                                              - `"SIGALRM"`
+                                              - `"SIGBUS"`
+                                              - `"SIGCHLD"`
+                                              - `"SIGCLD"`
+                                              - `"SIGCONT"`
+                                              - `"SIGFPE"`
+                                              - `"SIGHUP"`
+                                              - `"SIGILL"`
+                                              - `"SIGINT"`
+                                              - `"SIGIO"`
+                                              - `"SIGIOT"`
+                                              - `"SIGKILL"`
+                                              - `"SIGPIPE"`
+                                              - `"SIGPOLL"`
+                                              - `"SIGPROF"`
+                                              - `"SIGPWR"`
+                                              - `"SIGQUIT"`
+                                              - `"SIGRTMAX"`
+                                              - `"SIGRTMAX-1"`
+                                              - `"SIGRTMAX-10"`
+                                              - `"SIGRTMAX-11"`
+                                              - `"SIGRTMAX-12"`
+                                              - `"SIGRTMAX-13"`
+                                              - `"SIGRTMAX-14"`
+                                              - `"SIGRTMAX-2"`
+                                              - `"SIGRTMAX-3"`
+                                              - `"SIGRTMAX-4"`
+                                              - `"SIGRTMAX-5"`
+                                              - `"SIGRTMAX-6"`
+                                              - `"SIGRTMAX-7"`
+                                              - `"SIGRTMAX-8"`
+                                              - `"SIGRTMAX-9"`
+                                              - `"SIGRTMIN"`
+                                              - `"SIGRTMIN+1"`
+                                              - `"SIGRTMIN+10"`
+                                              - `"SIGRTMIN+11"`
+                                              - `"SIGRTMIN+12"`
+                                              - `"SIGRTMIN+13"`
+                                              - `"SIGRTMIN+14"`
+                                              - `"SIGRTMIN+15"`
+                                              - `"SIGRTMIN+2"`
+                                              - `"SIGRTMIN+3"`
+                                              - `"SIGRTMIN+4"`
+                                              - `"SIGRTMIN+5"`
+                                              - `"SIGRTMIN+6"`
+                                              - `"SIGRTMIN+7"`
+                                              - `"SIGRTMIN+8"`
+                                              - `"SIGRTMIN+9"`
+                                              - `"SIGSEGV"`
+                                              - `"SIGSTKFLT"`
+                                              - `"SIGSTOP"`
+                                              - `"SIGSYS"`
+                                              - `"SIGTERM"`
+                                              - `"SIGTRAP"`
+                                              - `"SIGTSTP"`
+                                              - `"SIGTTIN"`
+                                              - `"SIGTTOU"`
+                                              - `"SIGURG"`
+                                              - `"SIGUSR1"`
+                                              - `"SIGUSR2"`
+                                              - `"SIGVTALRM"`
+                                              - `"SIGWINCH"`
+                                              - `"SIGXCPU"`
+                                              - `"SIGXFSZ"`
+                                           enum:
+                                             - SIGABRT
+                                             - SIGALRM
+                                             - SIGBUS
+                                             - SIGCHLD
+                                             - SIGCLD
+                                             - SIGCONT
+                                             - SIGFPE
+                                             - SIGHUP
+                                             - SIGILL
+                                             - SIGINT
+                                             - SIGIO
+                                             - SIGIOT
+                                             - SIGKILL
+                                             - SIGPIPE
+                                             - SIGPOLL
+                                             - SIGPROF
+                                             - SIGPWR
+                                             - SIGQUIT
+                                             - SIGRTMAX
+                                             - SIGRTMAX-1
+                                             - SIGRTMAX-10
+                                             - SIGRTMAX-11
+                                             - SIGRTMAX-12
+                                             - SIGRTMAX-13
+                                             - SIGRTMAX-14
+                                             - SIGRTMAX-2
+                                             - SIGRTMAX-3
+                                             - SIGRTMAX-4
+                                             - SIGRTMAX-5
+                                             - SIGRTMAX-6
+                                             - SIGRTMAX-7
+                                             - SIGRTMAX-8
+                                             - SIGRTMAX-9
+                                             - SIGRTMIN
+                                             - SIGRTMIN+1
+                                             - SIGRTMIN+10
+                                             - SIGRTMIN+11
+                                             - SIGRTMIN+12
+                                             - SIGRTMIN+13
+                                             - SIGRTMIN+14
+                                             - SIGRTMIN+15
+                                             - SIGRTMIN+2
+                                             - SIGRTMIN+3
+                                             - SIGRTMIN+4
+                                             - SIGRTMIN+5
+                                             - SIGRTMIN+6
+                                             - SIGRTMIN+7
+                                             - SIGRTMIN+8
+                                             - SIGRTMIN+9
+                                             - SIGSEGV
+                                             - SIGSTKFLT
+                                             - SIGSTOP
+                                             - SIGSYS
+                                             - SIGTERM
+                                             - SIGTRAP
+                                             - SIGTSTP
+                                             - SIGTTIN
+                                             - SIGTTOU
+                                             - SIGURG
+                                             - SIGUSR1
+                                             - SIGUSR2
+                                             - SIGVTALRM
+                                             - SIGWINCH
+                                             - SIGXCPU
+                                             - SIGXFSZ
+                                           type: string
                                        type: object
                                      livenessProbe:
                                        description: Probes are not allowed for ephemeral containers.
@@ -3122,7 +3396,7 @@ spec:
                                    x-kubernetes-map-type: atomic
                                  type: array
                                initContainers:
-                                 description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
+                                 description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
                                  items:
                                    properties:
                                      args:
@@ -3229,7 +3503,7 @@ spec:
                                                  type: boolean
                                              type: object
                                            prefix:
-                                             description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                             description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                              type: string
                                            secretRef:
                                              description: The Secret to select from
@@ -3418,6 +3692,143 @@ spec:
                                                  - port
                                                type: object
                                            type: object
+                                         stopSignal:
+                                           description: |-
+                                             StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                         
+                                             Possible enum values:
+                                              - `"SIGABRT"`
+                                              - `"SIGALRM"`
+                                              - `"SIGBUS"`
+                                              - `"SIGCHLD"`
+                                              - `"SIGCLD"`
+                                              - `"SIGCONT"`
+                                              - `"SIGFPE"`
+                                              - `"SIGHUP"`
+                                              - `"SIGILL"`
+                                              - `"SIGINT"`
+                                              - `"SIGIO"`
+                                              - `"SIGIOT"`
+                                              - `"SIGKILL"`
+                                              - `"SIGPIPE"`
+                                              - `"SIGPOLL"`
+                                              - `"SIGPROF"`
+                                              - `"SIGPWR"`
+                                              - `"SIGQUIT"`
+                                              - `"SIGRTMAX"`
+                                              - `"SIGRTMAX-1"`
+                                              - `"SIGRTMAX-10"`
+                                              - `"SIGRTMAX-11"`
+                                              - `"SIGRTMAX-12"`
+                                              - `"SIGRTMAX-13"`
+                                              - `"SIGRTMAX-14"`
+                                              - `"SIGRTMAX-2"`
+                                              - `"SIGRTMAX-3"`
+                                              - `"SIGRTMAX-4"`
+                                              - `"SIGRTMAX-5"`
+                                              - `"SIGRTMAX-6"`
+                                              - `"SIGRTMAX-7"`
+                                              - `"SIGRTMAX-8"`
+                                              - `"SIGRTMAX-9"`
+                                              - `"SIGRTMIN"`
+                                              - `"SIGRTMIN+1"`
+                                              - `"SIGRTMIN+10"`
+                                              - `"SIGRTMIN+11"`
+                                              - `"SIGRTMIN+12"`
+                                              - `"SIGRTMIN+13"`
+                                              - `"SIGRTMIN+14"`
+                                              - `"SIGRTMIN+15"`
+                                              - `"SIGRTMIN+2"`
+                                              - `"SIGRTMIN+3"`
+                                              - `"SIGRTMIN+4"`
+                                              - `"SIGRTMIN+5"`
+                                              - `"SIGRTMIN+6"`
+                                              - `"SIGRTMIN+7"`
+                                              - `"SIGRTMIN+8"`
+                                              - `"SIGRTMIN+9"`
+                                              - `"SIGSEGV"`
+                                              - `"SIGSTKFLT"`
+                                              - `"SIGSTOP"`
+                                              - `"SIGSYS"`
+                                              - `"SIGTERM"`
+                                              - `"SIGTRAP"`
+                                              - `"SIGTSTP"`
+                                              - `"SIGTTIN"`
+                                              - `"SIGTTOU"`
+                                              - `"SIGURG"`
+                                              - `"SIGUSR1"`
+                                              - `"SIGUSR2"`
+                                              - `"SIGVTALRM"`
+                                              - `"SIGWINCH"`
+                                              - `"SIGXCPU"`
+                                              - `"SIGXFSZ"`
+                                           enum:
+                                             - SIGABRT
+                                             - SIGALRM
+                                             - SIGBUS
+                                             - SIGCHLD
+                                             - SIGCLD
+                                             - SIGCONT
+                                             - SIGFPE
+                                             - SIGHUP
+                                             - SIGILL
+                                             - SIGINT
+                                             - SIGIO
+                                             - SIGIOT
+                                             - SIGKILL
+                                             - SIGPIPE
+                                             - SIGPOLL
+                                             - SIGPROF
+                                             - SIGPWR
+                                             - SIGQUIT
+                                             - SIGRTMAX
+                                             - SIGRTMAX-1
+                                             - SIGRTMAX-10
+                                             - SIGRTMAX-11
+                                             - SIGRTMAX-12
+                                             - SIGRTMAX-13
+                                             - SIGRTMAX-14
+                                             - SIGRTMAX-2
+                                             - SIGRTMAX-3
+                                             - SIGRTMAX-4
+                                             - SIGRTMAX-5
+                                             - SIGRTMAX-6
+                                             - SIGRTMAX-7
+                                             - SIGRTMAX-8
+                                             - SIGRTMAX-9
+                                             - SIGRTMIN
+                                             - SIGRTMIN+1
+                                             - SIGRTMIN+10
+                                             - SIGRTMIN+11
+                                             - SIGRTMIN+12
+                                             - SIGRTMIN+13
+                                             - SIGRTMIN+14
+                                             - SIGRTMIN+15
+                                             - SIGRTMIN+2
+                                             - SIGRTMIN+3
+                                             - SIGRTMIN+4
+                                             - SIGRTMIN+5
+                                             - SIGRTMIN+6
+                                             - SIGRTMIN+7
+                                             - SIGRTMIN+8
+                                             - SIGRTMIN+9
+                                             - SIGSEGV
+                                             - SIGSTKFLT
+                                             - SIGSTOP
+                                             - SIGSYS
+                                             - SIGTERM
+                                             - SIGTRAP
+                                             - SIGTSTP
+                                             - SIGTTIN
+                                             - SIGTTOU
+                                             - SIGURG
+                                             - SIGUSR1
+                                             - SIGUSR2
+                                             - SIGVTALRM
+                                             - SIGWINCH
+                                             - SIGXCPU
+                                             - SIGXFSZ
+                                           type: string
                                        type: object
                                      livenessProbe:
                                        description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -4494,7 +4905,7 @@ spec:
                                        description: |-
                                          NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                          
-                                         If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                         If this value is nil, the behavior is equivalent to the Honor policy.
                          
                                          Possible enum values:
                                           - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -4507,7 +4918,7 @@ spec:
                                        description: |-
                                          NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                          
-                                         If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                         If this value is nil, the behavior is equivalent to the Ignore policy.
                          
                                          Possible enum values:
                                           - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -5235,7 +5646,7 @@ spec:
                          
                                          - Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails. - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present. - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
                          
-                                         The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath). The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+                                         The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33. The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
                                        properties:
                                          pullPolicy:
                                            description: |-
@@ -7154,12 +7565,12 @@ spec:
                                            type: object
                                            x-kubernetes-map-type: atomic
                                          matchLabelKeys:
-                                           description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                           description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                            items:
                                              type: string
                                            type: array
                                          mismatchLabelKeys:
-                                           description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                           description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                            items:
                                              type: string
                                            type: array
@@ -7248,12 +7659,12 @@ spec:
                                        type: object
                                        x-kubernetes-map-type: atomic
                                      matchLabelKeys:
-                                       description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                       description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                        items:
                                          type: string
                                        type: array
                                      mismatchLabelKeys:
-                                       description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                       description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                        items:
                                          type: string
                                        type: array
@@ -7341,12 +7752,12 @@ spec:
                                            type: object
                                            x-kubernetes-map-type: atomic
                                          matchLabelKeys:
-                                           description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                           description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                            items:
                                              type: string
                                            type: array
                                          mismatchLabelKeys:
-                                           description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                           description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                            items:
                                              type: string
                                            type: array
@@ -7435,12 +7846,12 @@ spec:
                                        type: object
                                        x-kubernetes-map-type: atomic
                                      matchLabelKeys:
-                                       description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                       description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                        items:
                                          type: string
                                        type: array
                                      mismatchLabelKeys:
-                                       description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                       description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                        items:
                                          type: string
                                        type: array
@@ -7599,7 +8010,7 @@ spec:
                                          type: boolean
                                      type: object
                                    prefix:
-                                     description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                     description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                      type: string
                                    secretRef:
                                      description: The Secret to select from
@@ -7788,6 +8199,143 @@ spec:
                                          - port
                                        type: object
                                    type: object
+                                 stopSignal:
+                                   description: |-
+                                     StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                 
+                                     Possible enum values:
+                                      - `"SIGABRT"`
+                                      - `"SIGALRM"`
+                                      - `"SIGBUS"`
+                                      - `"SIGCHLD"`
+                                      - `"SIGCLD"`
+                                      - `"SIGCONT"`
+                                      - `"SIGFPE"`
+                                      - `"SIGHUP"`
+                                      - `"SIGILL"`
+                                      - `"SIGINT"`
+                                      - `"SIGIO"`
+                                      - `"SIGIOT"`
+                                      - `"SIGKILL"`
+                                      - `"SIGPIPE"`
+                                      - `"SIGPOLL"`
+                                      - `"SIGPROF"`
+                                      - `"SIGPWR"`
+                                      - `"SIGQUIT"`
+                                      - `"SIGRTMAX"`
+                                      - `"SIGRTMAX-1"`
+                                      - `"SIGRTMAX-10"`
+                                      - `"SIGRTMAX-11"`
+                                      - `"SIGRTMAX-12"`
+                                      - `"SIGRTMAX-13"`
+                                      - `"SIGRTMAX-14"`
+                                      - `"SIGRTMAX-2"`
+                                      - `"SIGRTMAX-3"`
+                                      - `"SIGRTMAX-4"`
+                                      - `"SIGRTMAX-5"`
+                                      - `"SIGRTMAX-6"`
+                                      - `"SIGRTMAX-7"`
+                                      - `"SIGRTMAX-8"`
+                                      - `"SIGRTMAX-9"`
+                                      - `"SIGRTMIN"`
+                                      - `"SIGRTMIN+1"`
+                                      - `"SIGRTMIN+10"`
+                                      - `"SIGRTMIN+11"`
+                                      - `"SIGRTMIN+12"`
+                                      - `"SIGRTMIN+13"`
+                                      - `"SIGRTMIN+14"`
+                                      - `"SIGRTMIN+15"`
+                                      - `"SIGRTMIN+2"`
+                                      - `"SIGRTMIN+3"`
+                                      - `"SIGRTMIN+4"`
+                                      - `"SIGRTMIN+5"`
+                                      - `"SIGRTMIN+6"`
+                                      - `"SIGRTMIN+7"`
+                                      - `"SIGRTMIN+8"`
+                                      - `"SIGRTMIN+9"`
+                                      - `"SIGSEGV"`
+                                      - `"SIGSTKFLT"`
+                                      - `"SIGSTOP"`
+                                      - `"SIGSYS"`
+                                      - `"SIGTERM"`
+                                      - `"SIGTRAP"`
+                                      - `"SIGTSTP"`
+                                      - `"SIGTTIN"`
+                                      - `"SIGTTOU"`
+                                      - `"SIGURG"`
+                                      - `"SIGUSR1"`
+                                      - `"SIGUSR2"`
+                                      - `"SIGVTALRM"`
+                                      - `"SIGWINCH"`
+                                      - `"SIGXCPU"`
+                                      - `"SIGXFSZ"`
+                                   enum:
+                                     - SIGABRT
+                                     - SIGALRM
+                                     - SIGBUS
+                                     - SIGCHLD
+                                     - SIGCLD
+                                     - SIGCONT
+                                     - SIGFPE
+                                     - SIGHUP
+                                     - SIGILL
+                                     - SIGINT
+                                     - SIGIO
+                                     - SIGIOT
+                                     - SIGKILL
+                                     - SIGPIPE
+                                     - SIGPOLL
+                                     - SIGPROF
+                                     - SIGPWR
+                                     - SIGQUIT
+                                     - SIGRTMAX
+                                     - SIGRTMAX-1
+                                     - SIGRTMAX-10
+                                     - SIGRTMAX-11
+                                     - SIGRTMAX-12
+                                     - SIGRTMAX-13
+                                     - SIGRTMAX-14
+                                     - SIGRTMAX-2
+                                     - SIGRTMAX-3
+                                     - SIGRTMAX-4
+                                     - SIGRTMAX-5
+                                     - SIGRTMAX-6
+                                     - SIGRTMAX-7
+                                     - SIGRTMAX-8
+                                     - SIGRTMAX-9
+                                     - SIGRTMIN
+                                     - SIGRTMIN+1
+                                     - SIGRTMIN+10
+                                     - SIGRTMIN+11
+                                     - SIGRTMIN+12
+                                     - SIGRTMIN+13
+                                     - SIGRTMIN+14
+                                     - SIGRTMIN+15
+                                     - SIGRTMIN+2
+                                     - SIGRTMIN+3
+                                     - SIGRTMIN+4
+                                     - SIGRTMIN+5
+                                     - SIGRTMIN+6
+                                     - SIGRTMIN+7
+                                     - SIGRTMIN+8
+                                     - SIGRTMIN+9
+                                     - SIGSEGV
+                                     - SIGSTKFLT
+                                     - SIGSTOP
+                                     - SIGSYS
+                                     - SIGTERM
+                                     - SIGTRAP
+                                     - SIGTSTP
+                                     - SIGTTIN
+                                     - SIGTTOU
+                                     - SIGURG
+                                     - SIGUSR1
+                                     - SIGUSR2
+                                     - SIGVTALRM
+                                     - SIGWINCH
+                                     - SIGXCPU
+                                     - SIGXFSZ
+                                   type: string
                                type: object
                              livenessProbe:
                                description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -8578,7 +9126,7 @@ spec:
                                          type: boolean
                                      type: object
                                    prefix:
-                                     description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                     description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                      type: string
                                    secretRef:
                                      description: The Secret to select from
@@ -8767,6 +9315,143 @@ spec:
                                          - port
                                        type: object
                                    type: object
+                                 stopSignal:
+                                   description: |-
+                                     StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                 
+                                     Possible enum values:
+                                      - `"SIGABRT"`
+                                      - `"SIGALRM"`
+                                      - `"SIGBUS"`
+                                      - `"SIGCHLD"`
+                                      - `"SIGCLD"`
+                                      - `"SIGCONT"`
+                                      - `"SIGFPE"`
+                                      - `"SIGHUP"`
+                                      - `"SIGILL"`
+                                      - `"SIGINT"`
+                                      - `"SIGIO"`
+                                      - `"SIGIOT"`
+                                      - `"SIGKILL"`
+                                      - `"SIGPIPE"`
+                                      - `"SIGPOLL"`
+                                      - `"SIGPROF"`
+                                      - `"SIGPWR"`
+                                      - `"SIGQUIT"`
+                                      - `"SIGRTMAX"`
+                                      - `"SIGRTMAX-1"`
+                                      - `"SIGRTMAX-10"`
+                                      - `"SIGRTMAX-11"`
+                                      - `"SIGRTMAX-12"`
+                                      - `"SIGRTMAX-13"`
+                                      - `"SIGRTMAX-14"`
+                                      - `"SIGRTMAX-2"`
+                                      - `"SIGRTMAX-3"`
+                                      - `"SIGRTMAX-4"`
+                                      - `"SIGRTMAX-5"`
+                                      - `"SIGRTMAX-6"`
+                                      - `"SIGRTMAX-7"`
+                                      - `"SIGRTMAX-8"`
+                                      - `"SIGRTMAX-9"`
+                                      - `"SIGRTMIN"`
+                                      - `"SIGRTMIN+1"`
+                                      - `"SIGRTMIN+10"`
+                                      - `"SIGRTMIN+11"`
+                                      - `"SIGRTMIN+12"`
+                                      - `"SIGRTMIN+13"`
+                                      - `"SIGRTMIN+14"`
+                                      - `"SIGRTMIN+15"`
+                                      - `"SIGRTMIN+2"`
+                                      - `"SIGRTMIN+3"`
+                                      - `"SIGRTMIN+4"`
+                                      - `"SIGRTMIN+5"`
+                                      - `"SIGRTMIN+6"`
+                                      - `"SIGRTMIN+7"`
+                                      - `"SIGRTMIN+8"`
+                                      - `"SIGRTMIN+9"`
+                                      - `"SIGSEGV"`
+                                      - `"SIGSTKFLT"`
+                                      - `"SIGSTOP"`
+                                      - `"SIGSYS"`
+                                      - `"SIGTERM"`
+                                      - `"SIGTRAP"`
+                                      - `"SIGTSTP"`
+                                      - `"SIGTTIN"`
+                                      - `"SIGTTOU"`
+                                      - `"SIGURG"`
+                                      - `"SIGUSR1"`
+                                      - `"SIGUSR2"`
+                                      - `"SIGVTALRM"`
+                                      - `"SIGWINCH"`
+                                      - `"SIGXCPU"`
+                                      - `"SIGXFSZ"`
+                                   enum:
+                                     - SIGABRT
+                                     - SIGALRM
+                                     - SIGBUS
+                                     - SIGCHLD
+                                     - SIGCLD
+                                     - SIGCONT
+                                     - SIGFPE
+                                     - SIGHUP
+                                     - SIGILL
+                                     - SIGINT
+                                     - SIGIO
+                                     - SIGIOT
+                                     - SIGKILL
+                                     - SIGPIPE
+                                     - SIGPOLL
+                                     - SIGPROF
+                                     - SIGPWR
+                                     - SIGQUIT
+                                     - SIGRTMAX
+                                     - SIGRTMAX-1
+                                     - SIGRTMAX-10
+                                     - SIGRTMAX-11
+                                     - SIGRTMAX-12
+                                     - SIGRTMAX-13
+                                     - SIGRTMAX-14
+                                     - SIGRTMAX-2
+                                     - SIGRTMAX-3
+                                     - SIGRTMAX-4
+                                     - SIGRTMAX-5
+                                     - SIGRTMAX-6
+                                     - SIGRTMAX-7
+                                     - SIGRTMAX-8
+                                     - SIGRTMAX-9
+                                     - SIGRTMIN
+                                     - SIGRTMIN+1
+                                     - SIGRTMIN+10
+                                     - SIGRTMIN+11
+                                     - SIGRTMIN+12
+                                     - SIGRTMIN+13
+                                     - SIGRTMIN+14
+                                     - SIGRTMIN+15
+                                     - SIGRTMIN+2
+                                     - SIGRTMIN+3
+                                     - SIGRTMIN+4
+                                     - SIGRTMIN+5
+                                     - SIGRTMIN+6
+                                     - SIGRTMIN+7
+                                     - SIGRTMIN+8
+                                     - SIGRTMIN+9
+                                     - SIGSEGV
+                                     - SIGSTKFLT
+                                     - SIGSTOP
+                                     - SIGSYS
+                                     - SIGTERM
+                                     - SIGTRAP
+                                     - SIGTSTP
+                                     - SIGTTIN
+                                     - SIGTTOU
+                                     - SIGURG
+                                     - SIGUSR1
+                                     - SIGUSR2
+                                     - SIGVTALRM
+                                     - SIGWINCH
+                                     - SIGXCPU
+                                     - SIGXFSZ
+                                   type: string
                                type: object
                              livenessProbe:
                                description: Probes are not allowed for ephemeral containers.
@@ -9453,7 +10138,7 @@ spec:
                            x-kubernetes-map-type: atomic
                          type: array
                        initContainers:
-                         description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
+                         description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
                          items:
                            properties:
                              args:
@@ -9560,7 +10245,7 @@ spec:
                                          type: boolean
                                      type: object
                                    prefix:
-                                     description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                     description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                      type: string
                                    secretRef:
                                      description: The Secret to select from
@@ -9749,6 +10434,143 @@ spec:
                                          - port
                                        type: object
                                    type: object
+                                 stopSignal:
+                                   description: |-
+                                     StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                 
+                                     Possible enum values:
+                                      - `"SIGABRT"`
+                                      - `"SIGALRM"`
+                                      - `"SIGBUS"`
+                                      - `"SIGCHLD"`
+                                      - `"SIGCLD"`
+                                      - `"SIGCONT"`
+                                      - `"SIGFPE"`
+                                      - `"SIGHUP"`
+                                      - `"SIGILL"`
+                                      - `"SIGINT"`
+                                      - `"SIGIO"`
+                                      - `"SIGIOT"`
+                                      - `"SIGKILL"`
+                                      - `"SIGPIPE"`
+                                      - `"SIGPOLL"`
+                                      - `"SIGPROF"`
+                                      - `"SIGPWR"`
+                                      - `"SIGQUIT"`
+                                      - `"SIGRTMAX"`
+                                      - `"SIGRTMAX-1"`
+                                      - `"SIGRTMAX-10"`
+                                      - `"SIGRTMAX-11"`
+                                      - `"SIGRTMAX-12"`
+                                      - `"SIGRTMAX-13"`
+                                      - `"SIGRTMAX-14"`
+                                      - `"SIGRTMAX-2"`
+                                      - `"SIGRTMAX-3"`
+                                      - `"SIGRTMAX-4"`
+                                      - `"SIGRTMAX-5"`
+                                      - `"SIGRTMAX-6"`
+                                      - `"SIGRTMAX-7"`
+                                      - `"SIGRTMAX-8"`
+                                      - `"SIGRTMAX-9"`
+                                      - `"SIGRTMIN"`
+                                      - `"SIGRTMIN+1"`
+                                      - `"SIGRTMIN+10"`
+                                      - `"SIGRTMIN+11"`
+                                      - `"SIGRTMIN+12"`
+                                      - `"SIGRTMIN+13"`
+                                      - `"SIGRTMIN+14"`
+                                      - `"SIGRTMIN+15"`
+                                      - `"SIGRTMIN+2"`
+                                      - `"SIGRTMIN+3"`
+                                      - `"SIGRTMIN+4"`
+                                      - `"SIGRTMIN+5"`
+                                      - `"SIGRTMIN+6"`
+                                      - `"SIGRTMIN+7"`
+                                      - `"SIGRTMIN+8"`
+                                      - `"SIGRTMIN+9"`
+                                      - `"SIGSEGV"`
+                                      - `"SIGSTKFLT"`
+                                      - `"SIGSTOP"`
+                                      - `"SIGSYS"`
+                                      - `"SIGTERM"`
+                                      - `"SIGTRAP"`
+                                      - `"SIGTSTP"`
+                                      - `"SIGTTIN"`
+                                      - `"SIGTTOU"`
+                                      - `"SIGURG"`
+                                      - `"SIGUSR1"`
+                                      - `"SIGUSR2"`
+                                      - `"SIGVTALRM"`
+                                      - `"SIGWINCH"`
+                                      - `"SIGXCPU"`
+                                      - `"SIGXFSZ"`
+                                   enum:
+                                     - SIGABRT
+                                     - SIGALRM
+                                     - SIGBUS
+                                     - SIGCHLD
+                                     - SIGCLD
+                                     - SIGCONT
+                                     - SIGFPE
+                                     - SIGHUP
+                                     - SIGILL
+                                     - SIGINT
+                                     - SIGIO
+                                     - SIGIOT
+                                     - SIGKILL
+                                     - SIGPIPE
+                                     - SIGPOLL
+                                     - SIGPROF
+                                     - SIGPWR
+                                     - SIGQUIT
+                                     - SIGRTMAX
+                                     - SIGRTMAX-1
+                                     - SIGRTMAX-10
+                                     - SIGRTMAX-11
+                                     - SIGRTMAX-12
+                                     - SIGRTMAX-13
+                                     - SIGRTMAX-14
+                                     - SIGRTMAX-2
+                                     - SIGRTMAX-3
+                                     - SIGRTMAX-4
+                                     - SIGRTMAX-5
+                                     - SIGRTMAX-6
+                                     - SIGRTMAX-7
+                                     - SIGRTMAX-8
+                                     - SIGRTMAX-9
+                                     - SIGRTMIN
+                                     - SIGRTMIN+1
+                                     - SIGRTMIN+10
+                                     - SIGRTMIN+11
+                                     - SIGRTMIN+12
+                                     - SIGRTMIN+13
+                                     - SIGRTMIN+14
+                                     - SIGRTMIN+15
+                                     - SIGRTMIN+2
+                                     - SIGRTMIN+3
+                                     - SIGRTMIN+4
+                                     - SIGRTMIN+5
+                                     - SIGRTMIN+6
+                                     - SIGRTMIN+7
+                                     - SIGRTMIN+8
+                                     - SIGRTMIN+9
+                                     - SIGSEGV
+                                     - SIGSTKFLT
+                                     - SIGSTOP
+                                     - SIGSYS
+                                     - SIGTERM
+                                     - SIGTRAP
+                                     - SIGTSTP
+                                     - SIGTTIN
+                                     - SIGTTOU
+                                     - SIGURG
+                                     - SIGUSR1
+                                     - SIGUSR2
+                                     - SIGVTALRM
+                                     - SIGWINCH
+                                     - SIGXCPU
+                                     - SIGXFSZ
+                                   type: string
                                type: object
                              livenessProbe:
                                description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -10825,7 +11647,7 @@ spec:
                                description: |-
                                  NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                  
-                                 If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                 If this value is nil, the behavior is equivalent to the Honor policy.
                  
                                  Possible enum values:
                                   - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -10838,7 +11660,7 @@ spec:
                                description: |-
                                  NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                  
-                                 If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                 If this value is nil, the behavior is equivalent to the Ignore policy.
                  
                                  Possible enum values:
                                   - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -11566,7 +12388,7 @@ spec:
                  
                                  - Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails. - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present. - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
                  
-                                 The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath). The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+                                 The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33. The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
                                properties:
                                  pullPolicy:
                                    description: |-
@@ -13085,12 +13907,12 @@ spec:
                                                     type: object
                                                     x-kubernetes-map-type: atomic
                                                   matchLabelKeys:
-                                                    description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                    description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                     items:
                                                       type: string
                                                     type: array
                                                   mismatchLabelKeys:
-                                                    description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                    description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                     items:
                                                       type: string
                                                     type: array
@@ -13179,12 +14001,12 @@ spec:
                                                 type: object
                                                 x-kubernetes-map-type: atomic
                                               matchLabelKeys:
-                                                description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                 items:
                                                   type: string
                                                 type: array
                                               mismatchLabelKeys:
-                                                description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                 items:
                                                   type: string
                                                 type: array
@@ -13272,12 +14094,12 @@ spec:
                                                     type: object
                                                     x-kubernetes-map-type: atomic
                                                   matchLabelKeys:
-                                                    description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                    description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                     items:
                                                       type: string
                                                     type: array
                                                   mismatchLabelKeys:
-                                                    description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                    description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                     items:
                                                       type: string
                                                     type: array
@@ -13366,12 +14188,12 @@ spec:
                                                 type: object
                                                 x-kubernetes-map-type: atomic
                                               matchLabelKeys:
-                                                description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                description: MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set.
                                                 items:
                                                   type: string
                                                 type: array
                                               mismatchLabelKeys:
-                                                description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set. This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
+                                                description: MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
                                                 items:
                                                   type: string
                                                 type: array
@@ -13530,7 +14352,7 @@ spec:
                                                   type: boolean
                                               type: object
                                             prefix:
-                                              description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                              description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                               type: string
                                             secretRef:
                                               description: The Secret to select from
@@ -13719,6 +14541,143 @@ spec:
                                                   - port
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            description: |-
+                                              StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                          
+                                              Possible enum values:
+                                               - `"SIGABRT"`
+                                               - `"SIGALRM"`
+                                               - `"SIGBUS"`
+                                               - `"SIGCHLD"`
+                                               - `"SIGCLD"`
+                                               - `"SIGCONT"`
+                                               - `"SIGFPE"`
+                                               - `"SIGHUP"`
+                                               - `"SIGILL"`
+                                               - `"SIGINT"`
+                                               - `"SIGIO"`
+                                               - `"SIGIOT"`
+                                               - `"SIGKILL"`
+                                               - `"SIGPIPE"`
+                                               - `"SIGPOLL"`
+                                               - `"SIGPROF"`
+                                               - `"SIGPWR"`
+                                               - `"SIGQUIT"`
+                                               - `"SIGRTMAX"`
+                                               - `"SIGRTMAX-1"`
+                                               - `"SIGRTMAX-10"`
+                                               - `"SIGRTMAX-11"`
+                                               - `"SIGRTMAX-12"`
+                                               - `"SIGRTMAX-13"`
+                                               - `"SIGRTMAX-14"`
+                                               - `"SIGRTMAX-2"`
+                                               - `"SIGRTMAX-3"`
+                                               - `"SIGRTMAX-4"`
+                                               - `"SIGRTMAX-5"`
+                                               - `"SIGRTMAX-6"`
+                                               - `"SIGRTMAX-7"`
+                                               - `"SIGRTMAX-8"`
+                                               - `"SIGRTMAX-9"`
+                                               - `"SIGRTMIN"`
+                                               - `"SIGRTMIN+1"`
+                                               - `"SIGRTMIN+10"`
+                                               - `"SIGRTMIN+11"`
+                                               - `"SIGRTMIN+12"`
+                                               - `"SIGRTMIN+13"`
+                                               - `"SIGRTMIN+14"`
+                                               - `"SIGRTMIN+15"`
+                                               - `"SIGRTMIN+2"`
+                                               - `"SIGRTMIN+3"`
+                                               - `"SIGRTMIN+4"`
+                                               - `"SIGRTMIN+5"`
+                                               - `"SIGRTMIN+6"`
+                                               - `"SIGRTMIN+7"`
+                                               - `"SIGRTMIN+8"`
+                                               - `"SIGRTMIN+9"`
+                                               - `"SIGSEGV"`
+                                               - `"SIGSTKFLT"`
+                                               - `"SIGSTOP"`
+                                               - `"SIGSYS"`
+                                               - `"SIGTERM"`
+                                               - `"SIGTRAP"`
+                                               - `"SIGTSTP"`
+                                               - `"SIGTTIN"`
+                                               - `"SIGTTOU"`
+                                               - `"SIGURG"`
+                                               - `"SIGUSR1"`
+                                               - `"SIGUSR2"`
+                                               - `"SIGVTALRM"`
+                                               - `"SIGWINCH"`
+                                               - `"SIGXCPU"`
+                                               - `"SIGXFSZ"`
+                                            enum:
+                                              - SIGABRT
+                                              - SIGALRM
+                                              - SIGBUS
+                                              - SIGCHLD
+                                              - SIGCLD
+                                              - SIGCONT
+                                              - SIGFPE
+                                              - SIGHUP
+                                              - SIGILL
+                                              - SIGINT
+                                              - SIGIO
+                                              - SIGIOT
+                                              - SIGKILL
+                                              - SIGPIPE
+                                              - SIGPOLL
+                                              - SIGPROF
+                                              - SIGPWR
+                                              - SIGQUIT
+                                              - SIGRTMAX
+                                              - SIGRTMAX-1
+                                              - SIGRTMAX-10
+                                              - SIGRTMAX-11
+                                              - SIGRTMAX-12
+                                              - SIGRTMAX-13
+                                              - SIGRTMAX-14
+                                              - SIGRTMAX-2
+                                              - SIGRTMAX-3
+                                              - SIGRTMAX-4
+                                              - SIGRTMAX-5
+                                              - SIGRTMAX-6
+                                              - SIGRTMAX-7
+                                              - SIGRTMAX-8
+                                              - SIGRTMAX-9
+                                              - SIGRTMIN
+                                              - SIGRTMIN+1
+                                              - SIGRTMIN+10
+                                              - SIGRTMIN+11
+                                              - SIGRTMIN+12
+                                              - SIGRTMIN+13
+                                              - SIGRTMIN+14
+                                              - SIGRTMIN+15
+                                              - SIGRTMIN+2
+                                              - SIGRTMIN+3
+                                              - SIGRTMIN+4
+                                              - SIGRTMIN+5
+                                              - SIGRTMIN+6
+                                              - SIGRTMIN+7
+                                              - SIGRTMIN+8
+                                              - SIGRTMIN+9
+                                              - SIGSEGV
+                                              - SIGSTKFLT
+                                              - SIGSTOP
+                                              - SIGSYS
+                                              - SIGTERM
+                                              - SIGTRAP
+                                              - SIGTSTP
+                                              - SIGTTIN
+                                              - SIGTTOU
+                                              - SIGURG
+                                              - SIGUSR1
+                                              - SIGUSR2
+                                              - SIGVTALRM
+                                              - SIGWINCH
+                                              - SIGXCPU
+                                              - SIGXFSZ
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -14509,7 +15468,7 @@ spec:
                                                   type: boolean
                                               type: object
                                             prefix:
-                                              description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                              description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                               type: string
                                             secretRef:
                                               description: The Secret to select from
@@ -14698,6 +15657,143 @@ spec:
                                                   - port
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            description: |-
+                                              StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                          
+                                              Possible enum values:
+                                               - `"SIGABRT"`
+                                               - `"SIGALRM"`
+                                               - `"SIGBUS"`
+                                               - `"SIGCHLD"`
+                                               - `"SIGCLD"`
+                                               - `"SIGCONT"`
+                                               - `"SIGFPE"`
+                                               - `"SIGHUP"`
+                                               - `"SIGILL"`
+                                               - `"SIGINT"`
+                                               - `"SIGIO"`
+                                               - `"SIGIOT"`
+                                               - `"SIGKILL"`
+                                               - `"SIGPIPE"`
+                                               - `"SIGPOLL"`
+                                               - `"SIGPROF"`
+                                               - `"SIGPWR"`
+                                               - `"SIGQUIT"`
+                                               - `"SIGRTMAX"`
+                                               - `"SIGRTMAX-1"`
+                                               - `"SIGRTMAX-10"`
+                                               - `"SIGRTMAX-11"`
+                                               - `"SIGRTMAX-12"`
+                                               - `"SIGRTMAX-13"`
+                                               - `"SIGRTMAX-14"`
+                                               - `"SIGRTMAX-2"`
+                                               - `"SIGRTMAX-3"`
+                                               - `"SIGRTMAX-4"`
+                                               - `"SIGRTMAX-5"`
+                                               - `"SIGRTMAX-6"`
+                                               - `"SIGRTMAX-7"`
+                                               - `"SIGRTMAX-8"`
+                                               - `"SIGRTMAX-9"`
+                                               - `"SIGRTMIN"`
+                                               - `"SIGRTMIN+1"`
+                                               - `"SIGRTMIN+10"`
+                                               - `"SIGRTMIN+11"`
+                                               - `"SIGRTMIN+12"`
+                                               - `"SIGRTMIN+13"`
+                                               - `"SIGRTMIN+14"`
+                                               - `"SIGRTMIN+15"`
+                                               - `"SIGRTMIN+2"`
+                                               - `"SIGRTMIN+3"`
+                                               - `"SIGRTMIN+4"`
+                                               - `"SIGRTMIN+5"`
+                                               - `"SIGRTMIN+6"`
+                                               - `"SIGRTMIN+7"`
+                                               - `"SIGRTMIN+8"`
+                                               - `"SIGRTMIN+9"`
+                                               - `"SIGSEGV"`
+                                               - `"SIGSTKFLT"`
+                                               - `"SIGSTOP"`
+                                               - `"SIGSYS"`
+                                               - `"SIGTERM"`
+                                               - `"SIGTRAP"`
+                                               - `"SIGTSTP"`
+                                               - `"SIGTTIN"`
+                                               - `"SIGTTOU"`
+                                               - `"SIGURG"`
+                                               - `"SIGUSR1"`
+                                               - `"SIGUSR2"`
+                                               - `"SIGVTALRM"`
+                                               - `"SIGWINCH"`
+                                               - `"SIGXCPU"`
+                                               - `"SIGXFSZ"`
+                                            enum:
+                                              - SIGABRT
+                                              - SIGALRM
+                                              - SIGBUS
+                                              - SIGCHLD
+                                              - SIGCLD
+                                              - SIGCONT
+                                              - SIGFPE
+                                              - SIGHUP
+                                              - SIGILL
+                                              - SIGINT
+                                              - SIGIO
+                                              - SIGIOT
+                                              - SIGKILL
+                                              - SIGPIPE
+                                              - SIGPOLL
+                                              - SIGPROF
+                                              - SIGPWR
+                                              - SIGQUIT
+                                              - SIGRTMAX
+                                              - SIGRTMAX-1
+                                              - SIGRTMAX-10
+                                              - SIGRTMAX-11
+                                              - SIGRTMAX-12
+                                              - SIGRTMAX-13
+                                              - SIGRTMAX-14
+                                              - SIGRTMAX-2
+                                              - SIGRTMAX-3
+                                              - SIGRTMAX-4
+                                              - SIGRTMAX-5
+                                              - SIGRTMAX-6
+                                              - SIGRTMAX-7
+                                              - SIGRTMAX-8
+                                              - SIGRTMAX-9
+                                              - SIGRTMIN
+                                              - SIGRTMIN+1
+                                              - SIGRTMIN+10
+                                              - SIGRTMIN+11
+                                              - SIGRTMIN+12
+                                              - SIGRTMIN+13
+                                              - SIGRTMIN+14
+                                              - SIGRTMIN+15
+                                              - SIGRTMIN+2
+                                              - SIGRTMIN+3
+                                              - SIGRTMIN+4
+                                              - SIGRTMIN+5
+                                              - SIGRTMIN+6
+                                              - SIGRTMIN+7
+                                              - SIGRTMIN+8
+                                              - SIGRTMIN+9
+                                              - SIGSEGV
+                                              - SIGSTKFLT
+                                              - SIGSTOP
+                                              - SIGSYS
+                                              - SIGTERM
+                                              - SIGTRAP
+                                              - SIGTSTP
+                                              - SIGTTIN
+                                              - SIGTTOU
+                                              - SIGURG
+                                              - SIGUSR1
+                                              - SIGUSR2
+                                              - SIGVTALRM
+                                              - SIGWINCH
+                                              - SIGXCPU
+                                              - SIGXFSZ
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         description: Probes are not allowed for ephemeral containers.
@@ -15384,7 +16480,7 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   type: array
                                 initContainers:
-                                  description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
+                                  description: "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
                                   items:
                                     properties:
                                       args:
@@ -15491,7 +16587,7 @@ spec:
                                                   type: boolean
                                               type: object
                                             prefix:
-                                              description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
+                                              description: Optional text to prepend to the name of each environment variable. Must be a C_IDENTIFIER.
                                               type: string
                                             secretRef:
                                               description: The Secret to select from
@@ -15680,6 +16776,143 @@ spec:
                                                   - port
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            description: |-
+                                              StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name
+                          
+                                              Possible enum values:
+                                               - `"SIGABRT"`
+                                               - `"SIGALRM"`
+                                               - `"SIGBUS"`
+                                               - `"SIGCHLD"`
+                                               - `"SIGCLD"`
+                                               - `"SIGCONT"`
+                                               - `"SIGFPE"`
+                                               - `"SIGHUP"`
+                                               - `"SIGILL"`
+                                               - `"SIGINT"`
+                                               - `"SIGIO"`
+                                               - `"SIGIOT"`
+                                               - `"SIGKILL"`
+                                               - `"SIGPIPE"`
+                                               - `"SIGPOLL"`
+                                               - `"SIGPROF"`
+                                               - `"SIGPWR"`
+                                               - `"SIGQUIT"`
+                                               - `"SIGRTMAX"`
+                                               - `"SIGRTMAX-1"`
+                                               - `"SIGRTMAX-10"`
+                                               - `"SIGRTMAX-11"`
+                                               - `"SIGRTMAX-12"`
+                                               - `"SIGRTMAX-13"`
+                                               - `"SIGRTMAX-14"`
+                                               - `"SIGRTMAX-2"`
+                                               - `"SIGRTMAX-3"`
+                                               - `"SIGRTMAX-4"`
+                                               - `"SIGRTMAX-5"`
+                                               - `"SIGRTMAX-6"`
+                                               - `"SIGRTMAX-7"`
+                                               - `"SIGRTMAX-8"`
+                                               - `"SIGRTMAX-9"`
+                                               - `"SIGRTMIN"`
+                                               - `"SIGRTMIN+1"`
+                                               - `"SIGRTMIN+10"`
+                                               - `"SIGRTMIN+11"`
+                                               - `"SIGRTMIN+12"`
+                                               - `"SIGRTMIN+13"`
+                                               - `"SIGRTMIN+14"`
+                                               - `"SIGRTMIN+15"`
+                                               - `"SIGRTMIN+2"`
+                                               - `"SIGRTMIN+3"`
+                                               - `"SIGRTMIN+4"`
+                                               - `"SIGRTMIN+5"`
+                                               - `"SIGRTMIN+6"`
+                                               - `"SIGRTMIN+7"`
+                                               - `"SIGRTMIN+8"`
+                                               - `"SIGRTMIN+9"`
+                                               - `"SIGSEGV"`
+                                               - `"SIGSTKFLT"`
+                                               - `"SIGSTOP"`
+                                               - `"SIGSYS"`
+                                               - `"SIGTERM"`
+                                               - `"SIGTRAP"`
+                                               - `"SIGTSTP"`
+                                               - `"SIGTTIN"`
+                                               - `"SIGTTOU"`
+                                               - `"SIGURG"`
+                                               - `"SIGUSR1"`
+                                               - `"SIGUSR2"`
+                                               - `"SIGVTALRM"`
+                                               - `"SIGWINCH"`
+                                               - `"SIGXCPU"`
+                                               - `"SIGXFSZ"`
+                                            enum:
+                                              - SIGABRT
+                                              - SIGALRM
+                                              - SIGBUS
+                                              - SIGCHLD
+                                              - SIGCLD
+                                              - SIGCONT
+                                              - SIGFPE
+                                              - SIGHUP
+                                              - SIGILL
+                                              - SIGINT
+                                              - SIGIO
+                                              - SIGIOT
+                                              - SIGKILL
+                                              - SIGPIPE
+                                              - SIGPOLL
+                                              - SIGPROF
+                                              - SIGPWR
+                                              - SIGQUIT
+                                              - SIGRTMAX
+                                              - SIGRTMAX-1
+                                              - SIGRTMAX-10
+                                              - SIGRTMAX-11
+                                              - SIGRTMAX-12
+                                              - SIGRTMAX-13
+                                              - SIGRTMAX-14
+                                              - SIGRTMAX-2
+                                              - SIGRTMAX-3
+                                              - SIGRTMAX-4
+                                              - SIGRTMAX-5
+                                              - SIGRTMAX-6
+                                              - SIGRTMAX-7
+                                              - SIGRTMAX-8
+                                              - SIGRTMAX-9
+                                              - SIGRTMIN
+                                              - SIGRTMIN+1
+                                              - SIGRTMIN+10
+                                              - SIGRTMIN+11
+                                              - SIGRTMIN+12
+                                              - SIGRTMIN+13
+                                              - SIGRTMIN+14
+                                              - SIGRTMIN+15
+                                              - SIGRTMIN+2
+                                              - SIGRTMIN+3
+                                              - SIGRTMIN+4
+                                              - SIGRTMIN+5
+                                              - SIGRTMIN+6
+                                              - SIGRTMIN+7
+                                              - SIGRTMIN+8
+                                              - SIGRTMIN+9
+                                              - SIGSEGV
+                                              - SIGSTKFLT
+                                              - SIGSTOP
+                                              - SIGSYS
+                                              - SIGTERM
+                                              - SIGTRAP
+                                              - SIGTSTP
+                                              - SIGTTIN
+                                              - SIGTTOU
+                                              - SIGURG
+                                              - SIGUSR1
+                                              - SIGUSR2
+                                              - SIGVTALRM
+                                              - SIGWINCH
+                                              - SIGXCPU
+                                              - SIGXFSZ
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         description: "Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes"
@@ -16756,7 +17989,7 @@ spec:
                                         description: |-
                                           NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
                           
-                                          If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                          If this value is nil, the behavior is equivalent to the Honor policy.
                           
                                           Possible enum values:
                                            - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -16769,7 +18002,7 @@ spec:
                                         description: |-
                                           NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
                           
-                                          If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+                                          If this value is nil, the behavior is equivalent to the Ignore policy.
                           
                                           Possible enum values:
                                            - `"Honor"` means use this scheduling directive when calculating pod topology spread skew.
@@ -17497,7 +18730,7 @@ spec:
                           
                                           - Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails. - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present. - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
                           
-                                          The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath). The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+                                          The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33. The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
                                         properties:
                                           pullPolicy:
                                             description: |-
