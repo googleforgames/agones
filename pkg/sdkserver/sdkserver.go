@@ -945,7 +945,25 @@ func (s *SDKServer) UpdateCounter(_ context.Context, in *beta.UpdateCounterReque
 
 	// Queue up the Update for later batch processing by updateCounters.
 	s.workerqueue.Enqueue(cache.ExplicitKey(updateCounters))
-	return &beta.Counter{}, nil
+	return projectCounterState(name, batchCounter), nil
+}
+
+// projectCounterState calculates the final expected Counter state after applying batched updates.
+func projectCounterState(name string, batchCounter counterUpdateRequest) *beta.Counter {
+	currentCapacity := batchCounter.counter.Capacity
+	if batchCounter.capacitySet != nil {
+		currentCapacity = *batchCounter.capacitySet
+	}
+	currentCount := batchCounter.counter.Count
+	if batchCounter.countSet != nil {
+		currentCount = *batchCounter.countSet
+	}
+	currentCount += batchCounter.diff
+	return &beta.Counter{
+		Name:     name,
+		Count:    currentCount,
+		Capacity: currentCapacity,
+	}
 }
 
 // updateCounter updates the Counters in the GameServer's Status with the batched update requests.
