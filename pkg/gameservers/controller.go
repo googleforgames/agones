@@ -832,29 +832,41 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 }
 
 func (c *Controller) addSDKServerEnvVars(gs *agonesv1.GameServer, pod *corev1.Pod) {
+	sdkEnvVars := sdkEnvironmentVariables(gs)
+	if sdkEnvVars == nil {
+		// If a gameserver was created before 1.1 when we started defaulting the grpc and http ports,
+		// don't change any container spec.
+		return
+	}
+
+	for i := range pod.Spec.InitContainers {
+		c := &pod.Spec.InitContainers[i]
+		if c.Name != sdkserverSidecarName {
+			addEnvVarsToContainer(c, sdkEnvVars)
+			pod.Spec.InitContainers[i] = *c
+		}
+	}
+
 	for i := range pod.Spec.Containers {
 		c := &pod.Spec.Containers[i]
 		if c.Name != sdkserverSidecarName {
-			sdkEnvVars := sdkEnvironmentVariables(gs)
-			if sdkEnvVars == nil {
-				// If a gameserver was created before 1.1 when we started defaulting the grpc and http ports,
-				// don't change the container spec.
-				continue
-			}
-
-			// Filter out environment variables that have reserved names.
-			// From https://github.com/golang/go/wiki/SliceTricks#filtering-without-allocating
-			env := c.Env[:0]
-			for _, e := range c.Env {
-				if !reservedEnvironmentVariableName(e.Name) {
-					env = append(env, e)
-				}
-			}
-			env = append(env, sdkEnvVars...)
-			c.Env = env
+			addEnvVarsToContainer(c, sdkEnvVars)
 			pod.Spec.Containers[i] = *c
 		}
 	}
+}
+
+func addEnvVarsToContainer(c *corev1.Container, sdkEnvVars []corev1.EnvVar) {
+	// Filter out environment variables that have reserved names.
+	// From https://github.com/golang/go/wiki/SliceTricks#filtering-without-allocating
+	env := c.Env[:0]
+	for _, e := range c.Env {
+		if !reservedEnvironmentVariableName(e.Name) {
+			env = append(env, e)
+		}
+	}
+	env = append(env, sdkEnvVars...)
+	c.Env = env
 }
 
 func reservedEnvironmentVariableName(name string) bool {
