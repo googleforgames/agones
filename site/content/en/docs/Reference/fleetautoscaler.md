@@ -56,6 +56,8 @@ spec:
 
 ## Counter and List Autoscaling
 
+{{< beta title="Counters and Lists" gate="CountsAndLists" >}}
+
 A Counter based autoscaler can be used to autoscale `GameServers` based on a Count and Capacity set on each of the 
 GameServers in a Fleet to ensure there is always a buffer of available capacity available.
 
@@ -247,6 +249,8 @@ It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logi
 {{% feature publishVersion="1.54.0" %}}
 
 ## Wasm Autoscaling
+
+{{< alpha title="Wasm Autoscaler" gate="WasmAutoscaler" >}}
 
 A Wasm-based `FleetAutoscaler` can be used to implement custom scaling logic using WebAssembly modules. This
 provides a flexible and secure way to run custom autoscaling algorithms without requiring external services. Wasm
