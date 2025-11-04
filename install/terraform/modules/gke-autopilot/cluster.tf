@@ -30,7 +30,7 @@ locals {
   releaseChannel                = lookup(var.cluster, "releaseChannel", "REGULAR")
   kubernetesVersion             = lookup(var.cluster, "kubernetesVersion", "1.33")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
-  maintenanceExclusionEndTime = local.kubernetesVersion == "1.31" ? timeadd(timestamp(), "720h") : timeadd(timestamp(), "2640h")
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
   deletionProtection            = lookup(var.cluster, "deletionProtection", true)
 }
 
