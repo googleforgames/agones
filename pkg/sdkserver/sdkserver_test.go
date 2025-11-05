@@ -1276,10 +1276,10 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			requests: []*beta.UpdateCounterRequest{
 				{CounterUpdateRequest: &beta.CounterUpdateRequest{
 					Name:      "starfish",
-					CountDiff: 15,
+					CountDiff: 7,
 				}},
 			},
-			want:       agonesv1.CounterStatus{Count: int64(25), Capacity: int64(100)},
+			want:       agonesv1.CounterStatus{Count: int64(17), Capacity: int64(100)},
 			updateErrs: []bool{false},
 			updated:    true,
 		},
