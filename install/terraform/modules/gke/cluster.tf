@@ -40,7 +40,7 @@ locals {
   minNodeCount                  = lookup(var.cluster, "minNodeCount", "1")
   maxNodeCount                  = lookup(var.cluster, "maxNodeCount", "5")
   maintenanceExclusionStartTime = lookup(var.cluster, "maintenanceExclusionStartTime", null)
-  maintenanceExclusionEndTime = local.kubernetesVersion == "1.31" ? timeadd(timestamp(), "720h") : timeadd(timestamp(), "2640h")
+  maintenanceExclusionEndTime   = lookup(var.cluster, "maintenanceExclusionEndTime", null)
 }
 
 data "google_container_engine_versions" "version" {
