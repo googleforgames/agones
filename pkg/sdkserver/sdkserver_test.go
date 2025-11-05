@@ -1130,6 +1130,7 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 		"redfish":  {Count: int64(10), Capacity: int64(100)},
 		"bluefish": {Count: int64(10), Capacity: int64(100)},
 		"fivefish": {Count: int64(10), Capacity: int64(100)},
+		"starfish": {Count: int64(10), Capacity: int64(100)},
 	}
 
 	fixtures := map[string]struct {
@@ -1270,6 +1271,18 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 			updateErrs: []bool{false},
 			updated:    true,
 		},
+		"projected state returned": {
+			counterName: "starfish",
+			requests: []*beta.UpdateCounterRequest{
+				{CounterUpdateRequest: &beta.CounterUpdateRequest{
+					Name:      "starfish",
+					CountDiff: 15,
+				}},
+			},
+			want:       agonesv1.CounterStatus{Count: int64(25), Capacity: int64(100)},
+			updateErrs: []bool{false},
+			updated:    true,
+		},
 	}
 
 	for test, testCase := range fixtures {
@@ -1328,11 +1341,15 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 
 			// Update the Counter
 			for i, req := range testCase.requests {
-				_, err = sc.UpdateCounter(context.Background(), req)
+				resp, err := sc.UpdateCounter(context.Background(), req)
 				if testCase.updateErrs[i] {
 					assert.Error(t, err)
 				} else {
 					assert.NoError(t, err)
+					if test == "projected state returned" {
+						assert.Equal(t, testCase.want.Count, resp.Count, "projected Count mismatch")
+						assert.Equal(t, testCase.want.Capacity, resp.Capacity, "projected Capacity mismatch")
+					}
 				}
 			}
 
