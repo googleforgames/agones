@@ -314,29 +314,6 @@ change the driver version through the `MINIKUBE_DRIVER` variable. See the
 [local-includes](#set-local-make-targets-and-variables-with-local-includes) on how to change this permanently on
 your development machine.
 
-#### Running e2e tests with LoadBalancer support (MetalLB)
-
-Minikube does not natively support LoadBalancer services, which are required for some Agones e2e tests. To enable LoadBalancer support locally, you must install and configure [MetalLB](https://metallb.universe.tf/) in your Minikube cluster:
-
-1. Run the following Makefile targets to install and configure MetalLB:
-   ```sh
-   make minikube-metallb-helm-install
-   make minikube-metallb-configure
-   ```
-   This will install MetalLB via Helm and configure an IPAddressPool for LoadBalancer services.
-
-2. When installing Agones, set the following variables to use LoadBalancer service type for the Ping and Allocator services:
-   ```sh
-   make minikube-install PING_SERVICE_TYPE=LoadBalancer ALLOCATOR_SERVICE_TYPE=LoadBalancer
-   ```
-   This ensures that Agones services use MetalLB-provided LoadBalancer IPs.
-
-Once MetalLB is installed and Agones is configured with LoadBalancer services, you can run e2e tests locally:
-```sh
-make minikube-test-e2e
-```
-This setup bypasses the Minikube limitation around LoadBalancer and allows full e2e test coverage locally.
-
 ### Running a Test Kind cluster
  This will setup a [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) cluster named agones by default.
 
@@ -391,29 +368,6 @@ kind create cluster --name agones --config <your-config.yaml>
 This will ensure enough pod capacity for e2e tests.
 
 If you are having performance issues, check out these docs [here](https://kind.sigs.k8s.io/docs/user/quick-start/#creating-a-cluster)
-
-#### Running e2e tests with LoadBalancer support (MetalLB)
-
-KIND does not natively support LoadBalancer services, which are required for some Agones e2e tests. To enable LoadBalancer support locally, you must install and configure [MetalLB](https://metallb.universe.tf/) in your KIND cluster:
-
-1. Run the following Makefile targets to install and configure MetalLB:
-   ```sh
-   make kind-metallb-helm-install
-   make kind-metallb-configure
-   ```
-   This will install MetalLB via Helm and configure an IPAddressPool for LoadBalancer services.
-
-2. When installing Agones, set the following variables to use LoadBalancer service type for the Ping and Allocator services:
-   ```sh
-   make kind-install PING_SERVICE_TYPE=LoadBalancer ALLOCATOR_SERVICE_TYPE=LoadBalancer
-   ```
-   This ensures that Agones services use MetalLB-provided LoadBalancer IPs.
-
-Once MetalLB is installed and Agones is configured with LoadBalancer services, you can run e2e tests locally:
-```sh
-make kind-test-e2e
-```
-This setup bypasses the KIND limitation around LoadBalancer and allows full e2e test coverage locally.
 
 ### Running a Custom Test Environment
 

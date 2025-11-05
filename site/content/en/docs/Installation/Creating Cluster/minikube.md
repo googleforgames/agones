@@ -76,7 +76,7 @@ If you are unable to do so, the following workarounds are available, and may wor
 
 ## Setting up LoadBalancer Support with MetalLB
 
-By default, Minikube doesn't provide LoadBalancer functionality, which means services of type `LoadBalancer` will remain in a "Pending" state. For Agones, LoadBalancer services are often used for the allocator and ping services to provide external access. To enable LoadBalancer support in Minikube, you need to install MetalLB.
+By default, Minikube doesn't provide LoadBalancer's that are exteranally available without some form of tunneling such as `minikube tunnel`, which means services of type `LoadBalancer` will remain in a "Pending" state. For Agones, LoadBalancer services are often used for the allocator and ping services to provide external access. If you want an external IP for those services without a need to tunnel, you need to install MetalLB.
 
 ### Installing MetalLB
 
