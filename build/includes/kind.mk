@@ -57,7 +57,7 @@ kind-shell: $(ensure-build-image)
 # you should build-images and kind-push first.
 kind-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
+		IMAGE_PULL_POLICY=IfNotPresent
 
 # pushes the current dev version of agones to the kind single node cluster.
 kind-push:
