@@ -14,6 +14,8 @@
 
 MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
+PING_SERVICE_TYPE ?= LoadBalancer
+ALLOCATOR_SERVICE_TYPE ?= LoadBalancer
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -29,7 +31,7 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 # of the right version.
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image)
-	$(MINIKUBE) start --kubernetes-version v1.33.5 -p $(MINIKUBE_PROFILE) --driver $(MINIKUBE_DRIVER)
+	$(MINIKUBE) start --kubernetes-version v1.33.5 -p $(MINIKUBE_PROFILE) --driver $(MINIKUBE_DRIVER) --nodes $(MINIKUBE_NODES)
 	$(MAKE) minikube-metallb-helm-install
 	$(MAKE) minikube-metallb-configure
 
@@ -72,7 +74,7 @@ minikube-push:
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=LoadBalancer ALLOCATOR_SERVICE_TYPE=LoadBalancer
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
 
 minikube-uninstall: $(ensure-build-image)
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
