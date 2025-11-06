@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+PING_SERVICE_TYPE ?= LoadBalancer
+ALLOCATOR_SERVICE_TYPE ?= LoadBalancer
 
 #   _  ___           _
 #  | |/ (_)_ __   __| |
@@ -55,7 +57,7 @@ kind-shell: $(ensure-build-image)
 # you should build-images and kind-push first.
 kind-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=LoadBalancer ALLOCATOR_SERVICE_TYPE=LoadBalancer
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
 
 # pushes the current dev version of agones to the kind single node cluster.
 kind-push:
