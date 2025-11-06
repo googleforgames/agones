@@ -14,8 +14,6 @@
 
 MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
-PING_SERVICE_TYPE ?= LoadBalancer
-ALLOCATOR_SERVICE_TYPE ?= LoadBalancer
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -72,9 +70,12 @@ minikube-push:
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
-minikube-install:
+minikube-install: PING_SERVICE_TYPE := LoadBalancer
+minikube-install: ALLOCATOR_SERVICE_TYPE := LoadBalancer
+minikube-install: 
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) \
+		ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
 
 minikube-uninstall: $(ensure-build-image)
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
