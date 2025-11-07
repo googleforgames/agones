@@ -1079,7 +1079,7 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 	}
 	listMaxCapacity, err := s.gsListsMaxItems(ctx)
 	if err != nil {
-		return nil, errors.Errorf(err.Error())
+		return nil, errors.Errorf("List max capacity value not found")
 	}
 	if in.List.Capacity < 0 || in.List.Capacity > listMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,%d]. Found Capacity: %d", listMaxCapacity, in.List.Capacity)
@@ -1534,15 +1534,21 @@ func (s *SDKServer) gsListsMaxItems(ctx context.Context) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to list GameServers for fleet %s: %w", "fleet-example", err)
 	}
-	for _, gs := range gsList.Items {
+
+	for i := range gsList.Items {
+		// Get a pointer to the listed item (only for accessing the name)
+		listedGS := &gsList.Items[i]
+
+		// Fetch the current GameServer resource
 		gs, err := s.gameServerGetter.GameServers(s.namespace).Get(
 			ctx,
-			gs.Name,
+			listedGS.Name, // Use the name from the listed item
 			metav1.GetOptions{},
 		)
 		if err != nil {
-			return 0, fmt.Errorf("failed to get GameServer %s: %w", gs.Name, err)
+			return 0, fmt.Errorf("failed to get GameServer %s: %w", listedGS.Name, err)
 		}
+
 		if playersList, found := gs.Spec.Lists["players"]; found {
 			return playersList.Capacity, nil
 		}
