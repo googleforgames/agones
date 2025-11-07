@@ -51,7 +51,6 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -1078,9 +1077,12 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 	if !in.UpdateMask.IsValid(in.List.ProtoReflect().Interface()) {
 		return nil, errors.Errorf("invalid argument. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
 	}
-
-	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
-		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
+	listMaxCapacity, err := s.gsListsMaxItems(ctx)
+	if err != nil {
+		return nil, errors.Errorf(err.Error())
+	}
+	if in.List.Capacity < 0 || in.List.Capacity > listMaxCapacity {
+		return nil, errors.Errorf("out of range. Capacity must be within range [0,%d]. Found Capacity: %d", listMaxCapacity, in.List.Capacity)
 	}
 
 	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.List.Name})
@@ -1518,4 +1520,32 @@ func (s *SDKServer) gsListUpdatesLen() int {
 	s.gsUpdateMutex.RLock()
 	defer s.gsUpdateMutex.RUnlock()
 	return len(s.gsListUpdates)
+}
+
+func (s *SDKServer) gsListsMaxItems(ctx context.Context) (int64, error) {
+
+	labelSelector := fmt.Sprintf("%s=%s", agonesv1.FleetNameLabel, "fleet-example")
+	gsList, err := s.gameServerGetter.GameServers(s.namespace).List(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: labelSelector,
+		},
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to list GameServers for fleet %s: %w", "fleet-example", err)
+	}
+	for _, gs := range gsList.Items {
+		gs, err := s.gameServerGetter.GameServers(s.namespace).Get(
+			ctx,
+			gs.Name,
+			metav1.GetOptions{},
+		)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get GameServer %s: %w", gs.Name, err)
+		}
+		if playersList, found := gs.Spec.Lists["players"]; found {
+			return playersList.Capacity, nil
+		}
+	}
+	return 0, nil
 }
