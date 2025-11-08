@@ -28,7 +28,7 @@ RUN gem install fpm && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.24.4
+ENV GO_VERSION=1.24.6
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -50,7 +50,7 @@ RUN go install golang.org/x/tools/cmd/goimports@latest && \
     go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.32.5
+ENV KUBERNETES_VER 1.33.5
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://dl.k8s.io/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
@@ -63,7 +63,7 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
  git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
-ENV HELM_VER 3.10.3
+ENV HELM_VER 3.18.4
 ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -82,6 +82,11 @@ RUN apt-get update && \
 # install gotestsum test runner
 RUN go install gotest.tools/gotestsum@latest
 
+# install extism
+RUN curl -s https://get.extism.org/cli | sh -s -- -v v1.6.2 -y && \
+    extism lib install
+
+
 #
 #  \ \      / /__| |__  ___(_) |_ ___
 #   \ \ /\ / / _ \ '_ \/ __| | __/ _ \
@@ -89,7 +94,7 @@ RUN go install gotest.tools/gotestsum@latest
 #     \_/\_/ \___|_.__/|___/_|\__\___|
 #
 
-ENV HUGO_VER 0.146.0
+ENV HUGO_VER 0.147.0
 RUN mkdir /tmp/hugo && \
     wget -q -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
     tar -zxvf /tmp/hugo/hugo.tar.gz -C /tmp/hugo/ && \
@@ -116,7 +121,7 @@ RUN mkdir -p /go/src/github.com/ahmetb && \
 
 # html checker
 RUN mkdir /tmp/htmltest && \
-    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.17.0/htmltest_0.17.0_linux_amd64.tar.gz && \
     tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
     mv /tmp/htmltest/htmltest /usr/local/bin && \
     rm -r /tmp/htmltest

@@ -1,5 +1,142 @@
 # Changelog
 
+# [v1.53.0](https://github.com/googleforgames/agones/tree/v1.53.0) (2025-10-21)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.52.0...v1.53.0)
+
+**Breaking changes**
+- feat(autoscaling): CRDs for Wasm autoscaler policy by @markmandel in https://github.com/googleforgames/agones/pull/4281
+
+**Implemented enhancements**
+- feat: add processor proto  by @lacroixthomas in https://github.com/googleforgames/agones/pull/4227
+- Feat: Add new binary processor by @lacroixthomas in https://github.com/googleforgames/agones/pull/4222
+- Update Helm option for spec.strategy.type for controller and extensio… by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4244
+- WasmAutoscaler feature gate and prep build image by @markmandel in https://github.com/googleforgames/agones/pull/4243
+- feat: use gameservers.lists.maxItems instead of a hardcoded limit by @miai10 in https://github.com/googleforgames/agones/pull/4246
+- Feat: update error fields from processor proto by @lacroixthomas in https://github.com/googleforgames/agones/pull/4266
+- Wasm Autoscaler: Example by @markmandel in https://github.com/googleforgames/agones/pull/4260
+- Feat: implement rust sdk (counter and list) by @lacroixthomas in https://github.com/googleforgames/agones/pull/4247
+- Fleet autoscaler threads maintain state by @markmandel in https://github.com/googleforgames/agones/pull/4277
+- Feat: implement processor client by @lacroixthomas in https://github.com/googleforgames/agones/pull/4265
+- Add Wasm autoscaler policy support to FleetAutoscaler CRDs YAML by @markmandel in https://github.com/googleforgames/agones/pull/4298
+- Implement Wasm autoscaler policy controller logic by @markmandel in https://github.com/googleforgames/agones/pull/4299
+- Feat: integrate processor on allocator by @lacroixthomas in https://github.com/googleforgames/agones/pull/4302
+- Feat: integrate processor on extensions by @lacroixthomas in https://github.com/googleforgames/agones/pull/4301
+
+**Fixed bugs**
+- Fix: patch flaky tests from submit-upgrade-test-cloud-build by @lacroixthomas in https://github.com/googleforgames/agones/pull/4236
+- Fix: Add missing permission for helm uninstall in upgrade test cleanup by @lacroixthomas in https://github.com/googleforgames/agones/pull/4250
+- Prepend sidecars to existing init containers by @markmandel in https://github.com/googleforgames/agones/pull/4278
+- fix: broken websocket connection after upgrading github.com/grpc-ecosystem/grpc-gateway/v2 by @swermin in https://github.com/googleforgames/agones/pull/4270
+- flakey: add resource requirements to SuperTuxKart e2e test by @markmandel in https://github.com/googleforgames/agones/pull/4280
+- Fix: update link to quilkin by @lacroixthomas in https://github.com/googleforgames/agones/pull/4288
+- Update Add and Remove List Value in SDK Server by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4279
+
+**Other**
+- Preparation for Release v1.52.0 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4234
+- Updates agones-bot dependencies by @igooch in https://github.com/googleforgames/agones/pull/4232
+- Update all tests to use the latest Helm version by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4238
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.3.0 in /examples/crd-client by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4229
+- Handle missing upgrade-test-runner pod to avoid log collection errors by @0xaravindh in https://github.com/googleforgames/agones/pull/4224
+- e2e: add webhook autoscaler test with fleet metadata  by @0xaravindh in https://github.com/googleforgames/agones/pull/4251
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.4.0 in /test/upgrade by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4254
+- Updates the upgrade test to print any fatal error messages to the job pod termination log by @igooch in https://github.com/googleforgames/agones/pull/4252
+- Pause Single Cluster Upgrade work until stable. by @markmandel in https://github.com/googleforgames/agones/pull/4257
+- Replace bitname/kubectl with alpine/kubectl by @markmandel in https://github.com/googleforgames/agones/pull/4268
+- Upgrade Golang to 1.24.6 and update related dependencies by @0xaravindh in https://github.com/googleforgames/agones/pull/4262
+- flaky: TestControllerAllocator by @markmandel in https://github.com/googleforgames/agones/pull/4269
+- Release v1.52.0 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4272
+- Preparation for Release v1.53.0 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4273
+- Updates the build scripts to allow for a patch release by @igooch in https://github.com/googleforgames/agones/pull/4291
+- Post Release-1.52.2 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4296
+- Add Patch Release Template by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4300
+- fix(ci): Fix all the links in CI by @markmandel in https://github.com/googleforgames/agones/pull/4303
+- docs: clarify FleetAutoscaler webhook response structure by @markmandel in https://github.com/googleforgames/agones/pull/4297
+- Updates Rust version by @igooch in https://github.com/googleforgames/agones/pull/4306
+- npm audit fix by @igooch in https://github.com/googleforgames/agones/pull/4305
+- Updates release templates by @igooch in https://github.com/googleforgames/agones/pull/4307
+
+## [v1.52.0](https://github.com/googleforgames/agones/tree/v1.52.0) (2025-09-09)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.51.0...v1.52.0)
+
+**Implemented enhancements:**
+- feat: add processor proto  by @lacroixthomas in https://github.com/googleforgames/agones/pull/4227
+- Feat: Add new binary processor by @lacroixthomas in https://github.com/googleforgames/agones/pull/4222
+- Update Helm option for spec.strategy.type for controller and extensio… by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4244
+- WasmAutoscaler feature gate and prep build image by @markmandel in https://github.com/googleforgames/agones/pull/4243
+- feat: use gameservers.lists.maxItems instead of a hardcoded limit by @miai10 in https://github.com/googleforgames/agones/pull/4246
+- Feat: update error fields from processor proto by @lacroixthomas in https://github.com/googleforgames/agones/pull/4266
+- Wasm Autoscaler: Example by @markmandel in https://github.com/googleforgames/agones/pull/4260
+
+**Fixed bugs:**
+- Fix: patch flaky tests from submit-upgrade-test-cloud-build by @lacroixthomas in https://github.com/googleforgames/agones/pull/4236
+- Fix: Add missing permission for helm uninstall in upgrade test cleanup by @lacroixthomas in https://github.com/googleforgames/agones/pull/4250
+
+**Other:**
+- Preparation for Release v1.52.0 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4234
+- Updates agones-bot dependencies by @igooch in https://github.com/googleforgames/agones/pull/4232
+- Update all tests to use the latest Helm version by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4238
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.3.0 in /examples/crd-client by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4229
+- Handle missing upgrade-test-runner pod to avoid log collection errors by @0xaravindh in https://github.com/googleforgames/agones/pull/4224
+- e2e: add webhook autoscaler test with fleet metadata  by @0xaravindh in https://github.com/googleforgames/agones/pull/4251
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.4.0 in /test/upgrade by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4254
+- Updates the upgrade test to print any fatal error messages to the job pod termination log by @igooch in https://github.com/googleforgames/agones/pull/4252
+- Pause Single Cluster Upgrade work until stable. by @markmandel in https://github.com/googleforgames/agones/pull/4257
+- Replace bitname/kubectl with alpine/kubectl by @markmandel in https://github.com/googleforgames/agones/pull/4268
+- Upgrade Golang to 1.24.6 and update related dependencies by @0xaravindh in https://github.com/googleforgames/agones/pull/4262
+- flaky: TestControllerAllocator by @markmandel in https://github.com/googleforgames/agones/pull/4269
+
+## [v1.51.0](https://github.com/googleforgames/agones/tree/v1.51.0) (2025-07-29)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.50.0...v1.51.0)
+
+**Implemented enhancements:**
+- Feat: Add dev feature flag for Processor Allocator by @lacroixthomas in https://github.com/googleforgames/agones/pull/4221
+- feat: promote ScheduledAutoscaler to beta by @lacroixthomas in https://github.com/googleforgames/agones/pull/4226
+- Adds support for lists in the Unreal SDK #4029 by @keith-miller in https://github.com/googleforgames/agones/pull/4216
+
+**Fixed bugs:**
+- Controller for Pod in Succeeded state. by @markmandel in https://github.com/googleforgames/agones/pull/4201
+- Changed the sidecar requests rate limiter from exponential to a constant one by @miai10 in https://github.com/googleforgames/agones/pull/4186
+- Mocked GCE metadata to fix the Stackdriver local test failure by @0xaravindh in https://github.com/googleforgames/agones/pull/4215
+- Fix: Adding a retry mechanism in case the addMoreGameServers function call fails. by @txuna in https://github.com/googleforgames/agones/pull/4214
+- Remove former agones collaborator from github action by @igooch in https://github.com/googleforgames/agones/pull/4228
+
+**Other:**
+- Preparation for Release v1.51.0 by @0xaravindh in https://github.com/googleforgames/agones/pull/4209
+- Add tests for Prometheus metrics endpoint and validation by @0xaravindh in https://github.com/googleforgames/agones/pull/4185
+- fleetautoscaler.md references metadata incorrectly by @KAllan357 in https://github.com/googleforgames/agones/pull/4217
+- Add logs reporting to submit-upgrade-test-cloud-build for better visibility by @0xaravindh in https://github.com/googleforgames/agones/pull/4165
+- Bump github.com/go-viper/mapstructure/v2 from 2.2.1 to 2.3.0 in /examples/custom-controller by @dependabot[bot] in https://github.com/googleforgames/agones/pull/4211
+- Update region to asia-east1 for 1.33 cluster in E2E tests by @0xaravindh in https://github.com/googleforgames/agones/pull/4231
+
+## [v1.50.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-06-17)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.49.0...v1.50.0)
+
+**Breaking changes:**
+- Update supported Kubernetes versions to 1.31, 1.32, 1.33 by @0xaravindh in https://github.com/googleforgames/agones/pull/4199
+
+**Implemented enhancements:**
+- Feat: allow push-chart to custom helm registry by @lacroixthomas in https://github.com/googleforgames/agones/pull/4172
+- Specify exit code in simple-game-server CRASH by @markmandel in https://github.com/googleforgames/agones/pull/4196
+- Promote FeatureRollingUpdateFix to Beta by @0xaravindh in https://github.com/googleforgames/agones/pull/4205
+
+**Fixed bugs:**
+- Updated version mapping and post-release step by @kamaljeeti in https://github.com/googleforgames/agones/pull/4191
+
+**Other:**
+- Preparation for Release v1.50.0 by @kamaljeeti in https://github.com/googleforgames/agones/pull/4177
+- Log Chain ID in Events When Applying ChainPolicy in FleetAutoscaler by @0xaravindh in https://github.com/googleforgames/agones/pull/4131
+- Update release template by @kamaljeeti in https://github.com/googleforgames/agones/pull/4181
+- Enhance logging and error handling in computeDesiredFleetSize, including Chain policies by @0xaravindh in https://github.com/googleforgames/agones/pull/4179
+- Update best practices for multi-cluster allocation by @kamaljeeti in https://github.com/googleforgames/agones/pull/4157
+- fix: exclude InactiveScheduleError for error logging by @indexjoseph in https://github.com/googleforgames/agones/pull/4183
+- Updated goimports formatting by @markmandel in https://github.com/googleforgames/agones/pull/4195
+- Upgrade Golang to 1.24.4 and update related dependencies and Dockerfiles by @0xaravindh in https://github.com/googleforgames/agones/pull/4204
+- Created performance test cluster for 1.32 by @0xaravindh in https://github.com/googleforgames/agones/pull/4202
+
 ## [v1.49.0](https://github.com/googleforgames/agones/tree/v1.49.0) (2025-05-06)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.48.0...v1.49.0)

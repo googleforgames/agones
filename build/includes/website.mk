@@ -37,10 +37,10 @@ site-static: ensure-build-image
 	# for some reason, this only work locally
 	# postcss-cli@8.3.1 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list postcss-cli || npm install postcss-cli@8.3.0"
+		bash -c "npm list postcss-cli || npm install postcss-cli@11.0.0"
 	# autoprefixer 10.0.0 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
+		bash -c "npm list autoprefixer || npm install autoprefixer@10.4.20"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
         "$(git_safe) && $(ENV) hugo --config=config.toml $(ARGS)"
 
@@ -118,7 +118,7 @@ feature-shortcode-update: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/feature-shortcode-update/main.go -version=$(version)
 
-# update SDKS/Install version
+# update SDKS/Install version. Specify the release stage ('before', 'after', or 'patch').
 sdk-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/sdk-update-version/main.go -release-stage=$(release_stage) -version=$(version)
@@ -129,10 +129,11 @@ del-data-proofer-ignore: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go run build/scripts/remove-data-proofer-ignore/main.go -file=$(FILENAME)
 
-# update release version and replicate data between dev and prod in site/config.toml
+# update release version and replicate data between dev and prod in site/config.toml for
+# release_stage=minor or release_stage=patch
 site-config-update-version: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) \
-		go run build/scripts/site-config-update-version/main.go
+		go run build/scripts/site-config-update-version/main.go -release-stage=$(release_stage)
 
 # Delete old release version in site/layouts/partials/navbar.html.
 update-navbar-version: FILENAME ?= ""

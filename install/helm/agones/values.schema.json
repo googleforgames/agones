@@ -370,6 +370,14 @@
             "allocator"
           ]
         },
+        "sdkServer": {
+          "type": "object",
+          "properties": {
+            "requestsRateLimit": {
+              "type": "string"
+            }
+          }
+        },
         "controller": {
           "type": "object",
           "properties": {
@@ -475,6 +483,9 @@
             },
             "tlsKey": {
               "type": "string"
+            },
+            "updateStrategy": {
+              "type": "object"
             },
             "pdb": {
               "type": "object",
@@ -1250,6 +1261,9 @@
             "allocationBatchWaitTime": {
               "type": "string"
             },
+            "updateStrategy": {
+              "type": "object"
+            },
             "pdb": {
               "type": "object",
               "properties": {
@@ -1551,13 +1565,25 @@
         },
         "podPreserveUnknownFields": {
           "type": "boolean"
+        },
+        "lists": {
+          "type": "object",
+          "properties": {
+            "maxItems": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "maxItems"
+          ]
         }
       },
       "required": [
         "namespaces",
         "minPort",
         "maxPort",
-        "podPreserveUnknownFields"
+        "podPreserveUnknownFields",
+        "lists"
       ]
     },
     "helm": {

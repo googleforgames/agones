@@ -100,8 +100,13 @@ FHttpRequestRef UAgonesSubsystem::BuildAgonesRequest(const FString Path, const F
 
 UAgonesSubsystem* UAgonesSubsystem::Get(const UObject* WorldContext)
 {
+	UGameInstance* GameInstance{ nullptr };
 	auto World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull);
-	const UGameInstance* GameInstance = World ? GameInstance = World->GetGameInstance() : Cast<UGameInstance>(WorldContext->GetOuter());
+	if (World)
+	{
+		GameInstance = World->GetGameInstance();
+	}
+
 	return GameInstance ? GameInstance->GetSubsystem<UAgonesSubsystem>() : nullptr;
 }
 
@@ -661,6 +666,101 @@ void UAgonesSubsystem::GetConnectedPlayers(
 			}
 			
 			SuccessDelegate.ExecuteIfBound(FConnectedPlayersResponse(JsonObject));
+		});
+	Request->ProcessRequest();
+}
+
+void UAgonesSubsystem::GetList(const FString& Key, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s"), *Key);
+	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Get, "");
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+			TSharedPtr<FJsonObject> JsonObject;
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound(FList(JsonObject));
+		});
+	Request->ProcessRequest();
+}
+
+void UAgonesSubsystem::UpdateList(const FString& Key, const FList& List, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	FString Json;
+	if (!FJsonObjectConverter::UStructToJsonObjectString(List, Json))
+	{
+		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serialize request")});
+		return;
+	}
+
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s"), *Key);
+	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Patch, Json);
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+			TSharedPtr<FJsonObject> JsonObject;
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound(FList(JsonObject));
+		});
+	Request->ProcessRequest();
+}
+
+void UAgonesSubsystem::AddListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const FListValue ListValue = {Value};
+	FString Json;
+	if (!FJsonObjectConverter::UStructToJsonObjectString(ListValue, Json))
+	{
+		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serialize request")});
+		return;
+	}
+
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s:addValue"), *Key);
+	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Post, Json);
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+			TSharedPtr<FJsonObject> JsonObject;
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound(FList(JsonObject));
+		});
+	Request->ProcessRequest();
+}
+
+void UAgonesSubsystem::RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+{
+	const FListValue ListValue = {Value};
+	FString Json;
+	if (!FJsonObjectConverter::UStructToJsonObjectString(ListValue, Json))
+	{
+		ErrorDelegate.ExecuteIfBound({TEXT("Failed to serialize request")});
+		return;
+	}
+
+	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s:removeValue"), *Key);
+	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Post, Json);
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+			TSharedPtr<FJsonObject> JsonObject;
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
+			{
+				return;
+			}
+
+			SuccessDelegate.ExecuteIfBound(FList(JsonObject));
 		});
 	Request->ProcessRequest();
 }

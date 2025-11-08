@@ -36,7 +36,11 @@ spec:
       heritage: {{ .Release.Service }}
   replicas: {{ $replicas }}
   strategy:
+{{- if .Values.agones.controller.updateStrategy }}
+{{ toYaml .Values.agones.controller.updateStrategy | indent 4 }}
+{{- else }}
     type: Recreate
+{{- end }}
   template:
     metadata:
       annotations:
@@ -139,6 +143,8 @@ spec:
           value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
         - name: SIDECAR_RUN_AS_USER
           value: "1000"
+        - name: SIDECAR_REQUESTS_RATE_LIMIT
+          value: {{ .Values.agones.sdkServer.requestsRateLimit | quote }}
         - name: SDK_SERVICE_ACCOUNT
           value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
         - name: PROMETHEUS_EXPORTER

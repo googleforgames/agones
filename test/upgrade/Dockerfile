@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.24.4-alpine AS builder
+FROM golang:1.24.6-alpine AS builder
 
 # install curl
 RUN apk update && \
@@ -22,13 +22,13 @@ RUN apk update && \
 WORKDIR /usr/local
 
 # install kubectl
-ENV KUBECTL_VER=1.32.5
+ENV KUBECTL_VER=1.33.5
 RUN curl -LO https://dl.k8s.io/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
 # install Helm package manager
-ENV HELM_VER=3.16.3
+ENV HELM_VER=3.18.4
 ENV HELM_URL=https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \

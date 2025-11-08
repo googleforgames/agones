@@ -54,7 +54,7 @@ spec:
             secretName: autoscalersecret
       containers:
         - name: autoscaler-webhook
-          image: us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.18
+          image: us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.20
           imagePullPolicy: Always
           volumeMounts:
             - mountPath: /home/service/certs
@@ -78,3 +78,5 @@ spec:
               value: '0.3'
             - name: SCALE_FACTOR
               value: '2'
+            - name: FIXED_REPLICAS
+              value: "false"

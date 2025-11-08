@@ -607,7 +607,13 @@ func TestGameServerValidate(t *testing.T) {
 			},
 			applyDefaults: false,
 			want: field.ErrorList{
-				field.Invalid(field.NewPath("spec", "template", "metadata", "labels"), longNameLen64, "name part must be no more than 63 characters"),
+				&field.Error{
+					Type:     field.ErrorTypeInvalid,
+					Field:    field.NewPath("spec", "template", "metadata", "labels").String(),
+					BadValue: longNameLen64,
+					Detail:   "name part must be no more than 63 characters",
+					Origin:   "labelKey",
+				},
 			},
 		},
 		{
@@ -1426,6 +1432,36 @@ func TestGameServerPodWithInitSidecarNoErrors(t *testing.T) {
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, pod.Spec.RestartPolicy, corev1.RestartPolicyNever)
+}
+
+func TestGameServerPodWithInitSidecarPrependsToExistingInitContainers(t *testing.T) {
+	t.Parallel()
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureSidecarContainers)+"=true"))
+
+	fixture := defaultGameServer()
+	// Add existing init containers to the template
+	existingInitContainer1 := corev1.Container{Name: "existing-init-1", Image: "existing/init1"}
+	existingInitContainer2 := corev1.Container{Name: "existing-init-2", Image: "existing/init2"}
+	fixture.Spec.Template.Spec.InitContainers = []corev1.Container{existingInitContainer1, existingInitContainer2}
+	fixture.ApplyDefaults()
+
+	sidecar1 := corev1.Container{Name: "sidecar-1", Image: "container/sidecar1"}
+	sidecar2 := corev1.Container{Name: "sidecar-2", Image: "container/sidecar2"}
+	pod, err := fixture.Pod(fakeAPIHooks{}, sidecar1, sidecar2)
+	require.NoError(t, err)
+
+	// Verify that sidecars are placed at the beginning of InitContainers
+	assert.Len(t, pod.Spec.InitContainers, 4, "Should have four init containers")
+	assert.Equal(t, "sidecar-1", pod.Spec.InitContainers[0].Name, "First sidecar should be at index 0")
+	assert.Equal(t, "sidecar-2", pod.Spec.InitContainers[1].Name, "Second sidecar should be at index 1")
+	assert.Equal(t, "existing-init-1", pod.Spec.InitContainers[2].Name, "First existing init container should be at index 2")
+	assert.Equal(t, "existing-init-2", pod.Spec.InitContainers[3].Name, "Second existing init container should be at index 3")
+
+	// Verify restart policies
+	assert.Equal(t, corev1.ContainerRestartPolicyAlways, *pod.Spec.InitContainers[0].RestartPolicy)
+	assert.Equal(t, corev1.ContainerRestartPolicyAlways, *pod.Spec.InitContainers[1].RestartPolicy)
 }
 
 func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {

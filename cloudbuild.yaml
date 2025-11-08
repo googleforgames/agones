@@ -241,6 +241,7 @@ steps:
     args: [push]
     waitFor:
       - push-images
+    timeout: 5400s  # 1.5h
 
   # Wait for us to be the oldest ongoing build before we run upgrade and e2e tests
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -270,146 +271,12 @@ steps:
   # Run the upgrade tests parallel, fail this step if any of the tests fail
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: submit-upgrade-test-cloud-build
-    dir: test/upgrade
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        #!/usr/bin/env bash
-        set -e
-        set -o pipefail
-        export KUBECONFIG="/root/.kube/config"
-        mkdir -p /go/src/agones.dev/ /root/.kube/
-        ln -s /workspace /go/src/agones.dev/agones
-        cd /go/src/agones.dev/agones/test/upgrade
-
-        pids=()
-        typeset -A waitPids    # Associative array for mapping `kubectl wait job` pid -> `kubectl wait job` output log name
-        tmpdir=$(mktemp -d)
-        trap 'rm -rf -- "$tmpdir"' EXIT SIGTERM
-
-        # Update image tags to include the current build version.
-        DevVersion="${_BASE_VERSION}-dev-$(git rev-parse --short=7 HEAD)"
-        export DevVersion
-        sed "s/\${DevVersion}/${DevVersion}/" upgradeTest.yaml > "${tmpdir}"/upgradeTest.yaml
-        sed "s/\${DevVersion}/${DevVersion}/" versionMap.yaml > "${tmpdir}"/versionMap.yaml
-
-        # Kill all currently running child processes on exit or if a non-zero signal is seen
-        trap 'echo Cleaning up any remaining running pids: $(jobs -p) ; kill $(jobs -p) 2> /dev/null || :' EXIT SIGTERM
-
-        cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.33]=us-central1 [1.32]=us-west1 [1.31]=us-east1 )
-
-        for cloudProduct in "${cloudProducts[@]}"
-        do
-          for version in "${!versionsAndRegions[@]}"
-          do
-            region=${versionsAndRegions[$version]}
-            if [ "$cloudProduct" = generic ]
-            then
-              testCluster="standard-upgrade-test-cluster-${version//./-}"
-            else
-              testCluster="gke-autopilot-upgrade-test-cluster-${version//./-}"
-            fi
-            testClusterLocation="${region}"
-
-            gcloud container clusters get-credentials "$testCluster" --region="$testClusterLocation" --project="$PROJECT_ID"
-
-            if [ "$cloudProduct" = gke-autopilot ] ; then
-              # For autopilot clusters use evictable "balloon" pods to keep a buffer in node pool autoscaling.
-              kubectl apply -f evictablePods.yaml
-            fi
-
-            # Clean up any existing job / namespace / apiservice from previous run
-            echo Checking if resources from a previous build of upgrade-test-runner exist and need to be cleaned up on cluster "${testCluster}".
-            if kubectl get jobs | grep upgrade-test-runner ; then
-              echo Deleting job from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl delete job upgrade-test-runner
-              kubectl wait --for=delete pod -l job-name=upgrade-test-runner --timeout=5m
-            fi
-
-            # Check if there are any dangling game servers.
-            if kubectl get gs | grep ".*"; then
-              # Remove any finalizers so that dangling game servers can be manually deleted.
-              kubectl get gs -o=custom-columns=:.metadata.name --no-headers | xargs kubectl patch gs -p '{"metadata":{"finalizers":[]}}' --type=merge
-              sleep 5
-              echo Deleting game servers from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl delete gs -l app=sdk-client-test
-            fi
-
-            if kubectl get po -l app=sdk-client-test | grep ".*"; then
-              echo Deleting pods from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl delete po -l app=sdk-client-test
-              kubectl wait --for=delete pod -l app=sdk-client-test --timeout=5m
-            fi
-
-            # The v1.allocation.agones.dev apiservice does not get removed automatically and will prevent the namespace from terminating.
-            if kubectl get apiservice | grep v1.allocation.agones.dev ; then
-                echo Deleting v1.allocation.agones.dev from previous run of upgrade-test-runner on cluster "${testCluster}".
-                kubectl delete apiservice v1.allocation.agones.dev
-            fi
-
-            if kubectl get namespace | grep agones-system ; then
-              echo Deleting agones-system namespace from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl delete namespace agones-system
-              kubectl wait --for=delete ns agones-system --timeout=5m
-            fi
-
-            if kubectl get crds | grep agones ; then
-              echo Deleting crds from previous run of upgrade-test-runner on cluster "${testCluster}".
-              kubectl get crds -o=custom-columns=:.metadata.name | grep agones | xargs kubectl delete crd
-            fi
-
-            echo kubectl apply -f permissions.yaml on cluster "${testCluster}"
-            kubectl apply -f permissions.yaml
-            echo kubectl apply -f versionMap.yaml on cluster "${testCluster}"
-            kubectl apply -f "${tmpdir}"/versionMap.yaml
-            echo kubectl apply -f gameserverTemplate.yaml on cluster "${testCluster}"
-            kubectl apply -f gameserverTemplate.yaml
-
-            echo kubectl apply -f upgradeTest.yaml on cluster "${testCluster}"
-            kubectl apply -f "${tmpdir}"/upgradeTest.yaml
-
-            # We need to wait for job pod to be created and ready before we can wait on the job itself.
-            # TODO: Once all test clusters are at Kubernetes Version >= 1.31 use `kubectl wait --for=create` instead of sleep.
-            # kubectl wait --for=create pod -l job-name=upgrade-test-runner --timeout=1m
-            sleep 10s
-            kubectl wait --for=condition=ready pod -l job-name=upgrade-test-runner --timeout=5m
-
-            echo Wait for job upgrade-test-runner to complete or fail on cluster "${testCluster}"
-            kubectl wait job/upgrade-test-runner --timeout=30m --for jsonpath='{.status.conditions[*].status}'=True -o jsonpath='{.status.conditions[*].type}' | tee "${tmpdir}"/"${testCluster}".log &
-            waitPid=$!
-            pids+=( "$waitPid" )
-            waitPids[$waitPid]="${tmpdir}"/"${testCluster}".log
-          done
-        done
-
-        for pid in "${pids[@]}"; do
-          # This block executes when the process exits and pid status==0
-          if wait $pid; then
-            outputLog="${waitPids[$pid]}"
-            # wait for output to finish writing to file
-            until [ -s "$outputLog" ]; do sleep 1; done
-            output=$(<"${outputLog}")
-            echo  "${outputLog}": "${output}"
-
-            # "Complete" is successful job run.
-            # Version 1.31 has "SuccessCriteriaMet" as the first completion status returned, or "FailureTarget" in case of failure.
-            if [ "$output" == "Complete" ] || [ "$output" == "SuccessCriteriaMet" ] ; then
-              continue
-            else
-              exit 1
-            fi
-          # This block executes when the process exits and pid status!=0
-          else
-            status=$?
-            outputLog="${waitPids[$pid]}"
-            echo "One of the upgrade tests pid $pid from cluster log $outputLog exited with a non-zero status ${status}."
-            exit $status
-          fi
-        done
-        echo "End of Upgrade Tests"
-
+    script: |
+      #!/usr/bin/env bash
+      timeout 30m ./build/e2e_upgrade_test.sh ${_BASE_VERSION} ${PROJECT_ID} || echo "=== upgrade tests failed ==="
+    env:
+      - _BASE_VERSION=$_BASE_VERSION
+      - PROJECT_ID=$PROJECT_ID
     waitFor:
       - wait-to-become-leader
       - push-upgrade-test
@@ -437,15 +304,15 @@ steps:
         set -o pipefail
         pids=()
         cloudProducts=("generic" "gke-autopilot")
-        declare -A versionsAndRegions=( [1.31]=us-east1 [1.32]=us-west1 [1.33]=europe-west1 )
+        declare -A versionsAndRegions=( [1.32]=us-west1 [1.33]=asia-east1 [1.34]=europe-west1 )
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=true&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=true&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&Example=true"
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=true&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=false&AutopilotPassthroughPort=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&WasmAutoscaler=true&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
-        declare -A featureWithGateByVersion=( [1.31]="${featureWithGate}" [1.32]="${featureWithGate}" [1.33]="${featureWithGate}")
+        declare -A featureWithGateByVersion=( [1.32]="${featureWithGate}" [1.33]="${featureWithGate}" [1.34]="${featureWithGate}")
 
         for cloudProduct in ${cloudProducts[@]}
         do
@@ -557,7 +424,7 @@ steps:
         done
 
 substitutions:
-  _BASE_VERSION: 1.50.0
+  _BASE_VERSION: 1.54.0
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
@@ -573,6 +440,7 @@ images:
   - ${_REGISTRY}/agones-sdk
   - ${_REGISTRY}/agones-ping
   - ${_REGISTRY}/agones-allocator
+  - ${_REGISTRY}/agones-processor
 logsBucket: gs://agones-build-logs
 options:
   machineType: E2_HIGHCPU_32

@@ -21,14 +21,14 @@ steps:
     script: rm *
 
   #
-  # Shallow clone of Agones/main branch from the main repository
+  # Shallow clone of the release-{x.y.z} branch from the Agones repository.
   #
   - name: gcr.io/cloud-builders/git
     id: clone
     args:
       - clone
       - --depth=1
-      - --branch=main
+      - --branch=${_BRANCH_NAME}
       - https://github.com/googleforgames/agones.git
       - .
 
@@ -44,15 +44,6 @@ steps:
   - name: gcr.io/cloud-builders/docker:24.0.6
     id: build-make-docker
     args: [build, -f, Dockerfile.build, -t, make-docker, .]
-
-  #
-  # pull the main build image if it exists
-  #
-  - name: make-docker
-    id: pull-build-image
-    dir: build
-    env: ['REGISTRY=us-docker.pkg.dev/${PROJECT_ID}/ci']
-    args: [pull-build-image]
 
   #
   # Ensure example images exists
@@ -71,5 +62,7 @@ steps:
   - name: make-docker
     id: release-deploy-site
     dir: build
+    env:
+      - VERSION=${_VERSION}
     args: [release-deploy-site]
 timeout: 5400s

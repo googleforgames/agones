@@ -176,6 +176,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.affinity`                             | Controller [affinity][affinity] settings for pod assignment                                                                                                                                                                         | `{}`    |
 | `agones.controller.labels`                               | [Labels][labels] added to the Agones controller pods                                                                                                                                                                                | `{}`    |
 | `agones.controller.annotations`                          | [Annotations][annotations] added to the Agones controller pods                                                                                                                                                                      | `{}`    |
+| `agones.controller.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the controller deployment                                                                                                 | `{}`           |
 | `agones.controller.numWorkers`                           | Number of workers to spin per resource type                                                                                                                                                                                         | `100`   |
 | `agones.controller.apiServerQPS`                         | Maximum sustained queries per second that controller should be making against API Server                                                                                                                                            | `400`   |
 | `agones.controller.apiServerQPSBurst`                    | Maximum burst queries per second that controller should be making against API Server                                                                                                                                                | `500`   |
@@ -197,6 +198,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.maxDeletionParallelism`               | Maximum number of parallelizing deletion calls in GSS                                                                                                                                                                               | `64`    |
 | `agones.controller.maxGameServerDeletionsPerBatch`       | Maximum number of GameServer deletion calls per batch                                                                                                                                                                               | `64`    |
 | `agones.controller.maxPodPendingCount`                   | Maximum number of pending pods per game server set                                                                                                                                                                                  | `5000`  |
+
+### SDK Server
+
+| Parameter                                                | Description                                                                                                                                                                                                                         | Default        |
+|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
+| `agones.sdkServer.requestsRateLimit`                | The GameServer sidecar requests rate limit                                                                                                                                                                                          | `500ms` |
 
 ### Ping Service
 
@@ -323,6 +330,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.extensions.affinity`                             | Extensions [affinity][affinity] settings for pod assignment                                                                                                                                                                       | `{}`    |
 | `agones.extensions.labels`                               | [Labels][labels] added to the Agones extensions pods                                                                                                                                                                              | `{}`    |
 | `agones.extensions.annotations`                          | [Annotations][annotations] added to the Agones extensions pods                                                                                                                                                                    | `{}`    |
+| `agones.extensions.updateStrategy`                             | The [strategy](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy) to apply to the extensions deployment                                                                                                 | `{}`           |
 | `agones.extensions.numWorkers`                           | Number of workers to spin per resource type                                                                                                                                                                                       | `100`   |
 | `agones.extensions.apiServerQPS`                         | Maximum sustained queries per second that extensions should be making against API Server                                                                                                                                          | `400`   |
 | `agones.extensions.apiServerQPSBurst`                    | Maximum burst queries per second that extensions should be making against API Server                                                                                                                                              | `500`   |
@@ -352,6 +360,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                  | Maximum port to use for dynamic port allocation                                                                                         | `8000`        |
 | `gameservers.additionalPortRanges`     | Port ranges from which to do named dynamic port allocation. Example: <br /> additionalPortRanges: <br />&nbsp;&nbsp;game: [9000, 10000] | `{}`          |
 | `gameservers.podPreserveUnknownFields` | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition                    | `false`       |
+| `gameservers.lists.maxItems`           | The maximum number of items that can be specified for a list.                                                                           | `1000`        |
+
 
 ### Helm Installation
 

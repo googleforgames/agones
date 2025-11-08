@@ -46,15 +46,21 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Health: agonesv1.Health{
-				PeriodSeconds:       60,
-				InitialDelaySeconds: 30,
+				InitialDelaySeconds: 120,
+				PeriodSeconds:       10,
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:  "supertuxkart",
-							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.18",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.19",
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+									corev1.ResourceCPU:    resource.MustParse("500m"),
+								},
+							},
 							Env: []corev1.EnvVar{
 								{
 									Name:  "ENABLE_PLAYER_TRACKING",
@@ -79,8 +85,12 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 		pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(context.Background(), readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 		framework.LogEvents(t, log, pod.ObjectMeta.Namespace, pod)
+
+		// Get container logs
+		log.Info("Game Server Container Logs:")
+		framework.LogPodContainers(t, pod)
 	}
-	require.NoError(t, err)
+	require.NoError(t, err, "Ready game server timed out")
 
 	// Assert that the GameServer is in the expected state
 	require.Equal(t, agonesv1.GameServerStateReady, readyGs.Status.State)
@@ -138,7 +148,7 @@ func TestCppSimpleGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "cpp-simple",
-							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.21",
+							Image: "us-docker.pkg.dev/agones-images/examples/cpp-simple-server:0.23",
 						},
 					},
 				},
@@ -222,7 +232,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.4",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.5",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("700Mi"),

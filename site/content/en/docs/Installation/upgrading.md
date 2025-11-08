@@ -58,6 +58,12 @@ for the period of your upgrade, as there will be a short period in which Agones 
 Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
 and the feature is currently in `Beta`. Please continue to use the multi-cluster strategy for
 production critical upgrades. Feedback on this `Beta` feature is welcome and appreciated.
+
+**Due to an inability to reliably test this functionality, work on in-place upgrades on hiatus and has been removed
+from the continuous integration pipeline until such time
+that it can be entered back in a stable state.**
+
+We recommend testing thoroughly before applying to production.
 {{< /alert >}}
 
 For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant

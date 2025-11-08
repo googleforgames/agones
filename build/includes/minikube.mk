@@ -13,6 +13,7 @@
 # limitations under the License.
 
 MINIKUBE_DRIVER ?= docker
+MINIKUBE_NODES ?= 1
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -28,7 +29,22 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 # of the right version.
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image)
-	$(MINIKUBE) start --kubernetes-version v1.32.5 -p $(MINIKUBE_PROFILE) --driver $(MINIKUBE_DRIVER)
+	$(MINIKUBE) start --kubernetes-version v1.33.5 -p $(MINIKUBE_PROFILE) --driver $(MINIKUBE_DRIVER) --nodes $(MINIKUBE_NODES)
+	$(MAKE) minikube-metallb-helm-install
+	$(MAKE) minikube-metallb-configure
+
+# minikube-metallb-helm-install installs metallb via helm
+minikube-metallb-helm-install:
+	helm repo add metallb https://metallb.github.io/metallb
+	helm repo update
+	helm install metallb metallb/metallb --namespace metallb-system --create-namespace --version 0.13.12 --wait --timeout 5m
+
+# minikube-metallb-configure configures metallb with an ip address range based on the minikube ip
+minikube-metallb-configure:
+	MINIKUBE_IP=$$($(MINIKUBE) ip -p $(MINIKUBE_PROFILE)); \
+	NETWORK_PREFIX=$$(echo "$$MINIKUBE_IP" | cut -d '.' -f 1-3); \
+	METALLB_IP_RANGE="$$NETWORK_PREFIX.50-$$NETWORK_PREFIX.250"; \
+	sed "s|__RANGE__|$${METALLB_IP_RANGE}|g" $(build_path)/metallb-config.yaml.tpl | kubectl apply -f -
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
@@ -43,18 +59,23 @@ minikube-push:
 	$(MINIKUBE) image load $(ping_amd64_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image load $(allocator_amd64_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image load $(extensions_amd64_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(processor_amd64_tag) -p $(MINIKUBE_PROFILE)
 
 	$(MINIKUBE) image tag $(sidecar_linux_amd64_tag) $(sidecar_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(controller_amd64_tag) $(controller_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(ping_amd64_tag) $(ping_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(allocator_amd64_tag) $(allocator_tag) -p $(MINIKUBE_PROFILE)
 	$(MINIKUBE) image tag $(extensions_amd64_tag) $(extensions_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(processor_amd64_tag) $(processor_tag) -p $(MINIKUBE_PROFILE)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
-minikube-install:
+minikube-install: PING_SERVICE_TYPE := LoadBalancer
+minikube-install: ALLOCATOR_SERVICE_TYPE := LoadBalancer
+minikube-install: 
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) \
+		ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
 
 minikube-uninstall: $(ensure-build-image)
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
