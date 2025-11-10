@@ -120,6 +120,51 @@ PublicDependencyModuleNames.AddRange(
         "Agones",
     });
 ```
+{{% feature expiryVersion="1.54.0" %}}
+- Add component in header
+```c++
+#include "AgonesComponent.h"
+
+UPROPERTY(EditAnywhere, BlueprintReadWrite)
+UAgonesComponent* AgonesSDK;
+```
+- Initialize component in GameMode
+```c++
+#include "AgonesComponent.h"
+#include "Classes.h"
+
+ATestGameMode::ATestGameMode()
+{
+	AgonesSDK = CreateDefaultSubobject<UAgonesComponent>(TEXT("AgonesSDK"));
+}
+```
+
+- Use the Agones component to call PlayerReady
+```c++
+void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
+{
+  // Empty brances are for callbacks on success and errror.
+  AgonesSDK->PlayerConnect("netspeak-player", {}, {});
+}
+```
+
+#### Using Blueprints (UE5)
+- Add Component to your Blueprint GameMode
+![component](../../../../images/unreal5_bp_component.png)
+- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
+
+- Accessing other functionality of Agones can be done via adding a node in Blueprints.
+![actions](../../../../images/unreal5_bp_actions.png)
+
+#### Using Blueprints (UE4)
+- Add Component to your Blueprint GameMode
+![component](../../../../images/unreal_bp_component.png)
+- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
+
+- Accessing other functionality of Agones can be done via adding a node in Blueprints.
+![actions](../../../../images/unreal_bp_actions.png)
+{{% /feature %}}
+{{% feature publishVersion="1.54.0" %}}
 - Add subsystem in header
 ```c++
 #include "AgonesSubsystem.h"
@@ -141,6 +186,7 @@ void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 #### Using Blueprints
 - Accessing Agones functionality can be done via Blueprints.
 ![usage](../../../../images/unreal_bp_usage.png)
+{{% /feature %}}
 
 ## Configuration Options
 
@@ -150,7 +196,9 @@ A number of options can be altered via config files in Unreal these are supplied
 [/Script/Agones.AgonesComponent]
 HttpPort=1337
 HealthRateSeconds=5.0
+{{% feature publishVersion="1.54.0" %}}
 bDisableAutoHealthPing=false
+{{% /feature %}}
 bDisableAutoConnect=true
 ```
 
