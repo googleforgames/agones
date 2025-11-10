@@ -1090,7 +1090,7 @@ func (s *SDKServer) UpdateList(ctx context.Context, in *beta.UpdateListRequest) 
 		}
 	}
 	if in.List.Capacity < 0 || in.List.Capacity > GameServerListMaxCapacity {
-		return nil, errors.Errorf("out of range. Capacity must be within range [0,%d]. Found Capacity: %d", GameServerListMaxCapacity, in.List.Capacity)
+		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
 	list, err := s.GetList(ctx, &beta.GetListRequest{Name: in.List.Name})

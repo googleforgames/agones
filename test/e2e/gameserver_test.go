@@ -1603,6 +1603,9 @@ func TestLists(t *testing.T) {
 	gs := framework.DefaultGameServer(framework.Namespace)
 
 	gs.Spec.Lists = make(map[string]agonesv1.ListStatus)
+	gs.Spec.Lists["players"] = agonesv1.ListStatus{
+		Capacity: 1000,
+	}
 	gs.Spec.Lists["games"] = agonesv1.ListStatus{
 		Values:   []string{"game1", "game2"},
 		Capacity: 50,
