@@ -118,7 +118,7 @@ class AGONES_API UAgonesSubsystem : public UGameInstanceSubsystem
 
 public:
 	/**
-	 * \brief Retrive subsystem component from game instance. Subsystem exist only on server builds! See ShouldCreateSubsystem. 
+	 * \brief Retrieve subsystem component from game instance. Subsystem exist only on server builds! See ShouldCreateSubsystem. 
 	 * \param WorldContext - context of the world
 	 */
 	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext"), DisplayName = "Get Agones Subsystem", Category = "Agones | Utility")
