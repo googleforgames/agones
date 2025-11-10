@@ -68,7 +68,7 @@ var (
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
 	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
 	// ErrGameServerUpdateConflict is returned when the game server selected for applying the allocation cannot be updated
-	ErrGameServerUpdateConflict = errors.New("Could not update the selected GameServer")
+	ErrGameServerUpdateConflict = errors.New("could not update the selected GameServer")
 )
 
 const (
@@ -602,7 +602,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 							// we should wait for it to get updated with fresh info.
 							c.allocationCache.AddGameServer(gs)
 						}
-						res.err = goErrors.Join(ErrGameServerUpdateConflict, err)
+						res.err = fmt.Errorf("%w: %v", ErrGameServerUpdateConflict, err)
 					} else {
 						// put the GameServer back into the cache, so it's immediately around for re-allocation
 						c.allocationCache.AddGameServer(gs)
