@@ -37,7 +37,7 @@ minikube-test-cluster: $(ensure-build-image)
 minikube-metallb-helm-install:
 	helm repo add metallb https://metallb.github.io/metallb
 	helm repo update
-	helm install metallb metallb/metallb --namespace metallb-system --create-namespace --version 0.13.12 --wait --timeout 5m
+	helm upgrade metallb metallb/metallb --install --namespace metallb-system --create-namespace --version 0.15.2 --wait --timeout 5m
 
 # minikube-metallb-configure configures metallb with an ip address range based on the minikube ip
 minikube-metallb-configure:
