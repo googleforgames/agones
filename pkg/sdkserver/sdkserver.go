@@ -959,6 +959,12 @@ func projectCounterState(name string, batchCounter counterUpdateRequest) *beta.C
 		currentCount = *batchCounter.countSet
 	}
 	currentCount += batchCounter.diff
+	if currentCount < 0 {
+		currentCount = 0
+	}
+	if currentCount > currentCapacity {
+		currentCount = currentCapacity
+	}
 	return &beta.Counter{
 		Name:     name,
 		Count:    currentCount,

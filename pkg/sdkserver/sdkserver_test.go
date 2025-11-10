@@ -1346,10 +1346,9 @@ func TestSDKServerUpdateCounter(t *testing.T) {
 					assert.Error(t, err)
 				} else {
 					assert.NoError(t, err)
-					if test == "projected state returned" {
-						assert.Equal(t, testCase.want.Count, resp.Count, "projected Count mismatch")
-						assert.Equal(t, testCase.want.Capacity, resp.Capacity, "projected Capacity mismatch")
-					}
+					assert.Equal(t, testCase.want.Count, resp.Count)
+					assert.Equal(t, testCase.want.Capacity, resp.Capacity)
+
 				}
 			}
 
