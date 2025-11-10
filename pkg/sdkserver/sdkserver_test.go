@@ -1764,7 +1764,6 @@ func TestSDKServerUpdateList(t *testing.T) {
 		},
 	}
 	// Maximum capacity for the game server list.
-	// This value is **hardcoded** and dictates the absolute upper limit
 	// of game server items the system can manage at once.
 	GameServerListMaxCapacity = int64(1000)
 	// nolint:dupl  // Linter errors on lines are duplicate of TestSDKServerAddListValue, TestSDKServerRemoveListValue

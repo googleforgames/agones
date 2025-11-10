@@ -791,9 +791,13 @@ type patchRemoveNoValue struct {
 // DefaultGameServer provides a default GameServer fixture, based on parameters
 // passed to the Test Framework.
 func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "game-server", Namespace: namespace},
+	fmt.Println("Framework name", namespace)
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "game-server", Namespace: namespace, Labels: map[string]string{agonesv1.FleetNameLabel: "fleet-example"}},
 		Spec: agonesv1.GameServerSpec{
 			Container: "game-server",
+			Lists: map[string]agonesv1.ListStatus{
+				"players": {Capacity: int64(1000)},
+			},
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
 				Name:          "udp-port",
