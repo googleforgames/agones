@@ -108,7 +108,7 @@ private:
 };
 
 /**
- * \brief UAgonesSubsystem is the Unreal Component to call to the Agones SDK.
+ * \brief UAgonesSubsystem object that helps interact with the Agones SDK.
  * See - https://agones.dev/ for more information.
  */
 UCLASS(Config = Game, defaultconfig)
@@ -137,7 +137,7 @@ public:
 	float HealthRateSeconds = 10.f;
 
 	/**
-	 * \brief bDisableAutoHealthPing will stop call to HealhPing() during initialization
+	 * \brief bDisableAutoHealthPing will stop call to HealthPing() during initialization
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	bool bDisableAutoHealthPing;
@@ -160,7 +160,7 @@ public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 	/**
-	* \brief Initialize is a built in subsystem function for initilization of subsystem.
+	* \brief Initialize is a built in subsystem function for initialization of subsystem.
 	* \param Collection can help initialize subsystem dependencies
 	*/
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
