@@ -744,10 +744,9 @@ func defaultAutoscalerWebhook(namespace string, fixedReplicasEnabled string) (*c
 				{
 					Name:            "webhook",
 					Image:           "us-docker.pkg.dev/agones-images/examples/autoscaler-webhook:0.20",
-					ImagePullPolicy: corev1.PullAlways,
+					ImagePullPolicy: corev1.PullIfNotPresent,
 					Ports: []corev1.ContainerPort{{
 						ContainerPort: 8000,
-						Name:          "autoscaler",
 					}},
 					Env: []corev1.EnvVar{
 						{
@@ -771,7 +770,7 @@ func defaultAutoscalerWebhook(namespace string, fixedReplicasEnabled string) (*c
 			Ports: []corev1.ServicePort{{
 				Name:       "newport",
 				Port:       8000,
-				TargetPort: intstr.IntOrString{StrVal: "autoscaler"},
+				TargetPort: intstr.FromInt(8000),
 			}},
 		},
 	}
