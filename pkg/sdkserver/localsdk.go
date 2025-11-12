@@ -36,7 +36,6 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/runtime"
 )
 
@@ -741,7 +740,14 @@ func (l *LocalSDKServer) UpdateList(_ context.Context, in *beta.UpdateListReques
 		return nil, errors.Errorf("invalid argument. Field Mask Path(s): %v are invalid for List. Use valid field name(s): %v", in.UpdateMask.GetPaths(), in.List.ProtoReflect().Descriptor().Fields())
 	}
 
-	if in.List.Capacity < 0 || in.List.Capacity > apiserver.ListMaxCapacity {
+	if GameServerListMaxCapacity == 0 {
+		err := l.GsLocalListsMaxItems()
+		if err != nil {
+			return nil, fmt.Errorf("%v", err)
+		}
+	}
+
+	if in.List.Capacity < 0 || in.List.Capacity > GameServerListMaxCapacity {
 		return nil, errors.Errorf("out of range. Capacity must be within range [0,1000]. Found Capacity: %d", in.List.Capacity)
 	}
 
@@ -918,5 +924,18 @@ func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 		l.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
 		l.logger.Logger.SetLevel(logrus.InfoLevel)
 	}
+	return nil
+}
+
+// GsLocalListsMaxItems retrieves or sets the maximum number of items allowed
+// in any GameServer list for the local SDK.
+func (l *LocalSDKServer) GsLocalListsMaxItems() error {
+
+	if playersList, found := l.gs.Status.Lists["players"]; found {
+		GameServerListMaxCapacity = playersList.Capacity
+	} else {
+		return fmt.Errorf("no players for list")
+	}
+
 	return nil
 }

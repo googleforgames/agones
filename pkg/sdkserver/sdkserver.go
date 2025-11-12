@@ -32,6 +32,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -1535,7 +1536,22 @@ func (s *SDKServer) gsListUpdatesLen() int {
 // It returns the capacity of the first GameServer found that defines the list.
 func (s *SDKServer) GsListsMaxItems(ctx context.Context) error {
 
-	labelSelector := fmt.Sprintf("%s=%s", agonesv1.FleetNameLabel, "fleet-example")
+	var labelsName string
+	if s.namespace == "default" {
+		labelsName = "fleet-example"
+	} else {
+		gs, _ := s.gameServerGetter.GameServers(s.namespace).Get(
+			ctx,
+			s.gameServerName,
+			metav1.GetOptions{},
+		)
+		labelsName = gs.ObjectMeta.Labels[agonesv1.FleetNameLabel]
+	}
+	selector := labels.Set{
+		agonesv1.FleetNameLabel: labelsName,
+	}
+
+	labelSelector := selector.String()
 	gsList, err := s.gameServerGetter.GameServers(s.namespace).List(
 		ctx,
 		metav1.ListOptions{
