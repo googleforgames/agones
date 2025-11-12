@@ -677,7 +677,7 @@ void UAgonesSubsystem::GetList(const FString& Key, FListDelegate SuccessDelegate
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -702,7 +702,7 @@ void UAgonesSubsystem::UpdateList(const FString& Key, const FList& List, FListDe
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -728,7 +728,7 @@ void UAgonesSubsystem::AddListValue(const FString& Key, const FString& Value, FL
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -754,7 +754,7 @@ void UAgonesSubsystem::RemoveListValue(const FString& Key, const FString& Value,
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
