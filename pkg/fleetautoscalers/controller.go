@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -65,6 +66,7 @@ import (
 // strategies.
 type fasState struct {
 	wasmPlugin *extism.Plugin
+	httpClient *http.Client
 }
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
@@ -79,6 +81,9 @@ func (ft *fasThread) close(ctx context.Context) {
 	ft.cancel()
 	if ft.state.wasmPlugin != nil {
 		_ = ft.state.wasmPlugin.Close(ctx)
+	}
+	if ft.state.httpClient != nil {
+		ft.state.httpClient.CloseIdleConnections()
 	}
 }
 
@@ -236,7 +241,7 @@ func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler
 	return loggerForFleetAutoscaler(fas, c.baseLogger)
 }
 
-// creationMutationHandler is the handler for the mutating webhook that sets the
+// creationMutationHandler is the handler for the mutating webhook that sets
 // the default values on the FleetAutoscaler
 func (ext *Extensions) mutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object

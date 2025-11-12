@@ -744,36 +744,130 @@ func TestCreateURL(t *testing.T) {
 	}
 }
 
-func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
-	url := "testurl"
+func TestBuildURLFromConfiguration(t *testing.T) {
+	t.Parallel()
+
+	testURL := "testurl"
+	emptyURL := ""
+	validURL := "http://example.com/webhook"
+	invalidURL := "ht!tp://invalid url"
+	customPort := int32(9090)
+	invalidCABundle := []byte("invalid-ca-bundle")
 
 	type expected struct {
-		url string
-		err string
+		url       string
+		err       string
+		clientSet bool
 	}
 
-	var testCases = []struct {
-		description   string
-		webhookPolicy *autoscalingv1.URLConfiguration
-		expected      expected
+	testCases := []struct {
+		description string
+		state       *fasState
+		config      *autoscalingv1.URLConfiguration
+		expected    expected
 	}{
+		// Error cases
 		{
-			description: "No namespace provided, default should be used",
-			webhookPolicy: &autoscalingv1.URLConfiguration{
+			description: "Error: Both URL and Service provided",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL: &validURL,
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
-					Namespace: "",
-					Path:      &url,
+					Namespace: "default",
 				},
 			},
 			expected: expected{
-				url: "http://service1.default.svc:8000/testurl",
-				err: "",
+				err: "service and URL cannot be used simultaneously",
 			},
 		},
 		{
-			description: "No url provided, empty string should be used",
-			webhookPolicy: &autoscalingv1.URLConfiguration{
+			description: "Error: Empty URL string",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL: &emptyURL,
+			},
+			expected: expected{
+				err: "URL was not provided",
+			},
+		},
+		{
+			description: "Error: Neither URL nor Service provided",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL:     nil,
+				Service: nil,
+			},
+			expected: expected{
+				err: "service was not provided, either URL or Service must be provided",
+			},
+		},
+		{
+			description: "Error: Service name empty",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				Service: &admregv1.ServiceReference{
+					Name:      "",
+					Namespace: "default",
+				},
+			},
+			expected: expected{
+				err: "service name was not provided",
+			},
+		},
+		{
+			description: "Error: Invalid URL format",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL: &invalidURL,
+			},
+			expected: expected{
+				err: "parse",
+			},
+		},
+		// Valid URL cases
+		{
+			description: "Valid URL without CABundle",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL: &validURL,
+			},
+			expected: expected{
+				url:       validURL,
+				clientSet: true,
+			},
+		},
+		{
+			description: "Error: Invalid CABundle",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				URL:      &validURL,
+				CABundle: invalidCABundle,
+			},
+			expected: expected{
+				err: "no certs were appended from caBundle",
+			},
+		},
+		// Service configuration cases
+		{
+			description: "Service: No namespace provided, default should be used",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				Service: &admregv1.ServiceReference{
+					Name:      "service1",
+					Namespace: "",
+					Path:      &testURL,
+				},
+			},
+			expected: expected{
+				url:       "http://service1.default.svc:8000/testurl",
+				clientSet: true,
+			},
+		},
+		{
+			description: "Service: No path provided, empty string should be used",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
 				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "test",
@@ -781,21 +875,59 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 				},
 			},
 			expected: expected{
-				url: "http://service1.test.svc:8000",
-				err: "",
+				url:       "http://service1.test.svc:8000",
+				clientSet: true,
+			},
+		},
+		{
+			description: "Service: Custom port specified",
+			state:       &fasState{},
+			config: &autoscalingv1.URLConfiguration{
+				Service: &admregv1.ServiceReference{
+					Name:      "service1",
+					Namespace: "custom",
+					Path:      &testURL,
+					Port:      &customPort,
+				},
+			},
+			expected: expected{
+				url:       "http://service1.custom.svc:9090/testurl",
+				clientSet: true,
+			},
+		},
+		{
+			description: "HTTP client reused when already initialized",
+			state: &fasState{
+				httpClient: &http.Client{},
+			},
+			config: &autoscalingv1.URLConfiguration{
+				Service: &admregv1.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+				},
+			},
+			expected: expected{
+				url:       "http://service1.default.svc:8000",
+				clientSet: true,
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			url, err := buildURLFromWebhookPolicy(tc.webhookPolicy)
+			url, err := buildURLFromConfiguration(tc.state, tc.config)
 
-			if tc.expected.err != "" && assert.NotNil(t, err) {
-				assert.Equal(t, tc.expected.err, err.Error())
+			if tc.expected.err != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tc.expected.err)
 			} else {
 				assert.Nil(t, err)
+				assert.NotNil(t, url)
 				assert.Equal(t, tc.expected.url, url.String())
+
+				if tc.expected.clientSet {
+					assert.NotNil(t, tc.state.httpClient, "HTTP client should be initialized")
+				}
 			}
 		})
 	}
