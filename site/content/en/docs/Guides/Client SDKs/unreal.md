@@ -120,6 +120,7 @@ PublicDependencyModuleNames.AddRange(
         "Agones",
     });
 ```
+{{% feature expiryVersion="1.54.0" %}}
 - Add component in header
 ```c++
 #include "AgonesComponent.h"
@@ -162,6 +163,30 @@ void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 
 - Accessing other functionality of Agones can be done via adding a node in Blueprints.
 ![actions](../../../../images/unreal_bp_actions.png)
+{{% /feature %}}
+{{% feature publishVersion="1.54.0" %}}
+- Add subsystem in header
+```c++
+#include "AgonesSubsystem.h"
+```
+
+- Use the Agones subsystem to call PlayerReady
+```c++
+void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
+{
+  UAgonesSubsystem* AgonesSDK = UAgonesSubsystem::Get(this);
+  if (AgonesSDK) // Check for nullptr is a must.
+  {
+    // Empty brances are for callbacks on success and errror.
+    AgonesSDK->PlayerConnect("netspeak-player", {}, {});
+  }
+}
+```
+
+#### Using Blueprints
+- Accessing Agones functionality can be done via Blueprints.
+![usage](../../../../images/unreal_bp_usage.png)
+{{% /feature %}}
 
 ## Configuration Options
 
@@ -171,6 +196,9 @@ A number of options can be altered via config files in Unreal these are supplied
 [/Script/Agones.AgonesComponent]
 HttpPort=1337
 HealthRateSeconds=5.0
+{{% feature publishVersion="1.54.0" %}}
+bDisableAutoHealthPing=false
+{{% /feature %}}
 bDisableAutoConnect=true
 ```
 
