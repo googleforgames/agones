@@ -602,7 +602,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 							// we should wait for it to get updated with fresh info.
 							c.allocationCache.AddGameServer(gs)
 						}
-						res.err = fmt.Errorf("%w: %v", ErrGameServerUpdateConflict, err)
+						res.err = ErrGameServerUpdateConflict
 					} else {
 						// put the GameServer back into the cache, so it's immediately around for re-allocation
 						c.allocationCache.AddGameServer(gs)
