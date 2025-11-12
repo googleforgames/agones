@@ -496,7 +496,8 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	_, err := a.allocate(ctx, gsa.DeepCopy())
 	log.WithError(err).Info("allocate (private): failed allocation")
 	require.NotEqual(t, ErrNoGameServer, err)
-	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.True(t, errors.Is(err, ErrGameServerUpdateConflict))
+	require.EqualError(t, err, "could not update the selected GameServer")
 
 	// make sure we aren't in the same batch!
 	time.Sleep(2 * a.batchWaitTime)
@@ -511,7 +512,8 @@ func TestAllocatorAllocateOnGameServerUpdateError(t *testing.T) {
 	log.WithField("result", result).WithError(err).Info("Allocate (public): failed allocation")
 	require.Nil(t, result)
 	require.NotEqual(t, ErrNoGameServer, err)
-	require.EqualError(t, err, "error updating allocated gameserver: failed to update")
+	require.True(t, errors.Is(err, ErrGameServerUpdateConflict))
+	require.EqualError(t, err, "could not update the selected GameServer")
 }
 
 func TestAllocatorRunLocalAllocations(t *testing.T) {
@@ -966,7 +968,8 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		r = <-r.request.response
 
 		assert.True(t, updated)
-		assert.EqualError(t, r.err, "error updating allocated gameserver: something went wrong")
+		assert.True(t, errors.Is(r.err, ErrGameServerUpdateConflict))
+		assert.EqualError(t, r.err, "could not update the selected GameServer")
 		assert.Equal(t, gs1, r.gs)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 
