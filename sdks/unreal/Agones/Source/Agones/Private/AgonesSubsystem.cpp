@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "AgonesComponent.h"
+#include "AgonesSubsystem.h"
 
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
@@ -21,6 +23,7 @@
 #include "Policies/CondensedJsonPrintPolicy.h"
 #include "TimerManager.h"
 #include "IWebSocket.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "WebSocketsModule.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogAgones, Log, Log);
@@ -34,48 +37,13 @@ typedef ANSICHAR UTF8FromType;
 template <typename CharType = TCHAR, typename PrintPolicy = TCondensedJsonPrintPolicy<TCHAR>>
 bool JsonObjectToJsonString(const TSharedRef<FJsonObject>& JsonObject, FString& OutJson, int32 Indent = 0)
 {
-    TSharedRef<TJsonWriter<CharType, PrintPolicy>> JsonWriter = TJsonWriterFactory<CharType, PrintPolicy>::Create(&OutJson, Indent);
+	TSharedRef<TJsonWriter<CharType, PrintPolicy>> JsonWriter = TJsonWriterFactory<CharType, PrintPolicy>::Create(&OutJson, Indent);
 	bool bSuccess = FJsonSerializer::Serialize(JsonObject, JsonWriter);
 	JsonWriter->Close();
 	return bSuccess;
 }
 
-UAgonesComponent::UAgonesComponent()
-{
-	PrimaryComponentTick.bCanEverTick = false;
-}
-
-void UAgonesComponent::BeginPlay()
-{
-	Super::BeginPlay();
-	HealthPing(HealthRateSeconds);
-
-	if (bDisableAutoConnect)
-	{
-		return;
-	}
-	Connect();
-}
-
-void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-
-	const UWorld* World = GetWorld();
-	if (World != nullptr)
-	{
-		World->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
-		World->GetTimerManager().ClearTimer(HealthTimerHandler);
-	    World->GetTimerManager().ClearTimer(EnsureWebSocketTimerHandler);
-	}
-
-    if (WatchWebSocket != nullptr && WatchWebSocket->IsConnected())
-    {
-        WatchWebSocket->Close();
-    }
-}
-
-void UAgonesComponent::UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	TSharedRef<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 
@@ -113,7 +81,7 @@ void UAgonesComponent::UpdateCounter(const FString& Key, const int64* Count, con
 	Request->ProcessRequest();
 }
 
-FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
+FHttpRequestRef UAgonesSubsystem::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
 {
 	FHttpModule* Http = &FHttpModule::Get();
 	FHttpRequestRef Request = Http->CreateRequest();
@@ -130,7 +98,61 @@ FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const F
 	return Request;
 }
 
-void UAgonesComponent::HealthPing(const float RateSeconds)
+UAgonesSubsystem* UAgonesSubsystem::Get(const UObject* WorldContext)
+{
+	UGameInstance* GameInstance{ nullptr };
+	auto World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull);
+	if (World)
+	{
+		GameInstance = World->GetGameInstance();
+	}
+
+	return GameInstance ? GameInstance->GetSubsystem<UAgonesSubsystem>() : nullptr;
+}
+
+bool UAgonesSubsystem::ShouldCreateSubsystem(UObject *Outer) const 
+{
+	return UE_SERVER;
+}
+
+void UAgonesSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	const FTickerDelegate TickDelegate = FTickerDelegate::CreateUObject(this, &UAgonesSubsystem::Tick);
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(TickDelegate);
+	TimerManager = MakeUnique<FTimerManager>();
+
+	if (!bDisableAutoHealthPing) 
+	{
+		HealthPing(HealthRateSeconds);
+	}
+
+	if (!bDisableAutoConnect)
+	{
+		Connect();
+	}
+}
+
+void UAgonesSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
+
+	if (WatchWebSocket != nullptr && WatchWebSocket->IsConnected())
+	{
+		WatchWebSocket->Close();
+	}
+}
+
+bool UAgonesSubsystem::Tick(float DeltaTime)
+{
+	TimerManager->Tick(DeltaTime);
+	return true;
+}
+
+void UAgonesSubsystem::HealthPing(const float RateSeconds)
 {
 	if (RateSeconds <= 0.0f)
 	{
@@ -138,29 +160,29 @@ void UAgonesComponent::HealthPing(const float RateSeconds)
 	}
 
 	FTimerDelegate TimerDel;
-	TimerDel.BindUObject(this, &UAgonesComponent::Health, FHealthDelegate(), FAgonesErrorDelegate());
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimerHandler);
-	GetWorld()->GetTimerManager().SetTimer(HealthTimerHandler, TimerDel, RateSeconds, true);
+	TimerDel.BindUObject(this, &UAgonesSubsystem::Health, FHealthDelegate(), FAgonesErrorDelegate());
+	GetTimerManager()->ClearTimer(HealthTimerHandler);
+	GetTimerManager()->SetTimer(HealthTimerHandler, TimerDel, RateSeconds, true);
 }
 
-void UAgonesComponent::Connect()
+void UAgonesSubsystem::Connect()
 {
 	FGameServerDelegate SuccessDel;
 	SuccessDel.BindUFunction(this, FName("ConnectSuccess"));
 	FTimerDelegate ConnectDel;
-	ConnectDel.BindUObject(this, &UAgonesComponent::GameServer, SuccessDel, FAgonesErrorDelegate());
-	GetWorld()->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(ConnectDelTimerHandle, ConnectDel, 5.f, true);
+	ConnectDel.BindUObject(this, &UAgonesSubsystem::GameServer, SuccessDel, FAgonesErrorDelegate());
+	GetTimerManager()->ClearTimer(ConnectDelTimerHandle);
+	GetTimerManager()->SetTimer(ConnectDelTimerHandle, ConnectDel, 5.f, true);
 }
 
-void UAgonesComponent::ConnectSuccess(const FGameServerResponse GameServerResponse)
+void UAgonesSubsystem::ConnectSuccess(const FGameServerResponse GameServerResponse)
 {
-	GetWorld()->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
+	GetTimerManager()->ClearTimer(ConnectDelTimerHandle);
 	Ready({}, {});
 	ConnectedDelegate.Broadcast(GameServerResponse);
 }
 
-void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::Ready(const FReadyDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("ready");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
@@ -175,13 +197,13 @@ void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgones
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::GameServer(const FGameServerDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::GameServer(const FGameServerDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("gameserver", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -192,91 +214,91 @@ void UAgonesComponent::GameServer(const FGameServerDelegate SuccessDelegate, con
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::EnsureWebSocketConnection()
+void UAgonesSubsystem::EnsureWebSocketConnection()
 {
-    if (WatchWebSocket == nullptr)
-    {
-        if (!FModuleManager::LoadModulePtr<FWebSocketsModule>(TEXT("WebSockets")))
-        {
-            return;
-        }
+	if (WatchWebSocket == nullptr)
+	{
+		if (!FModuleManager::LoadModulePtr<FWebSocketsModule>(TEXT("WebSockets")))
+		{
+			return;
+		}
 
-        TMap<FString, FString> Headers;
+		TMap<FString, FString> Headers;
 
-        // Make up a WebSocket-Key value. It can be anything!
-        Headers.Add(TEXT("Sec-WebSocket-Key"), FGuid::NewGuid().ToString(EGuidFormats::Short));
-        Headers.Add(TEXT("Sec-WebSocket-Version"), TEXT("13"));
-        Headers.Add(TEXT("User-Agent"), TEXT("X-UnrealEngine-Agent"));
+		// Make up a WebSocket-Key value. It can be anything!
+		Headers.Add(TEXT("Sec-WebSocket-Key"), FGuid::NewGuid().ToString(EGuidFormats::Short));
+		Headers.Add(TEXT("Sec-WebSocket-Version"), TEXT("13"));
+		Headers.Add(TEXT("User-Agent"), TEXT("X-UnrealEngine-Agent"));
 
-        // Unreal WebSockets are not able to do DNS resolution for localhost for some reason
-        // so this is using the IPv4 Loopback Address instead.
-        WatchWebSocket = FWebSocketsModule::Get().CreateWebSocket(
-            FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"),
-            	static_cast<FStringFormatOrderedArguments>(
-                    TArray<FStringFormatArg, TFixedAllocator<1>>{
-                         FStringFormatArg(HttpPort)
-                    }
-                )
-            ),
-            TEXT("")
-        );
+		// Unreal WebSockets are not able to do DNS resolution for localhost for some reason
+		// so this is using the IPv4 Loopback Address instead.
+		WatchWebSocket = FWebSocketsModule::Get().CreateWebSocket(
+			FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"),
+				static_cast<FStringFormatOrderedArguments>(
+					TArray<FStringFormatArg, TFixedAllocator<1>>{
+						 FStringFormatArg(HttpPort)
+					}
+				)
+			),
+			TEXT("")
+		);
 
-        WatchWebSocket->OnRawMessage().AddUObject(this, &UAgonesComponent::HandleWatchMessage);
-    }
+		WatchWebSocket->OnRawMessage().AddUObject(this, &UAgonesSubsystem::HandleWatchMessage);
+	}
 
-    if (WatchWebSocket != nullptr)
-    {
-        if (!WatchWebSocket->IsConnected())
-        {
-            WatchWebSocket->Connect();
-        }
+	if (WatchWebSocket != nullptr)
+	{
+		if (!WatchWebSocket->IsConnected())
+		{
+			WatchWebSocket->Connect();
+		}
 
-        // Only start the timer if there is a websocket to check.
-        // This timer has nothing to do with health and only matters if the agent is somehow
-        // restarted, which would be a failure condition in normal operation.
-        if (!EnsureWebSocketTimerHandler.IsValid())
-        {
-            FTimerDelegate TimerDel;
-            TimerDel.BindUObject(this, &UAgonesComponent::EnsureWebSocketConnection);
-            GetWorld()->GetTimerManager().SetTimer(
-                EnsureWebSocketTimerHandler, TimerDel, 15.0f, true);
-        }
-    }
+		// Only start the timer if there is a websocket to check.
+		// This timer has nothing to do with health and only matters if the agent is somehow
+		// restarted, which would be a failure condition in normal operation.
+		if (!EnsureWebSocketTimerHandler.IsValid())
+		{
+			FTimerDelegate TimerDel;
+			TimerDel.BindUObject(this, &UAgonesSubsystem::EnsureWebSocketConnection);
+			GetTimerManager()->SetTimer(
+				EnsureWebSocketTimerHandler, TimerDel, 15.0f, true);
+		}
+	}
 }
 
-void UAgonesComponent::WatchGameServer(const FGameServerDelegate WatchDelegate)
+void UAgonesSubsystem::WatchGameServer(const FGameServerDelegate WatchDelegate)
 {
-    WatchGameServerCallbacks.Add(WatchDelegate);
-    EnsureWebSocketConnection();
+	WatchGameServerCallbacks.Add(WatchDelegate);
+	EnsureWebSocketConnection();
 }
 
- void UAgonesComponent::DeserializeAndBroadcastWatch(FString const& JsonString)
+ void UAgonesSubsystem::DeserializeAndBroadcastWatch(FString const& JsonString)
 {
-    TSharedRef<TJsonReader<TCHAR>> const JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonString);
+	TSharedRef<TJsonReader<TCHAR>> const JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonString);
 
-    TSharedPtr<FJsonObject> JsonObject;
-    const TSharedPtr<FJsonObject>* ResultObject = nullptr;
+	TSharedPtr<FJsonObject> JsonObject;
+	const TSharedPtr<FJsonObject>* ResultObject = nullptr;
 
-    if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) ||
-        !JsonObject.IsValid() ||
-        !JsonObject->TryGetObjectField(TEXT("result"), ResultObject) ||
-        !ResultObject->IsValid())
-    {
-        UE_LOG(LogAgones, Error, TEXT("Failed to parse json: %s"), *JsonString);
-        return;
-    }
+	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) ||
+		!JsonObject.IsValid() ||
+		!JsonObject->TryGetObjectField(TEXT("result"), ResultObject) ||
+		!ResultObject->IsValid())
+	{
+		UE_LOG(LogAgones, Error, TEXT("Failed to parse json: %s"), *JsonString);
+		return;
+	}
 
-    FGameServerResponse const Result = FGameServerResponse(*ResultObject);
-    for (FGameServerDelegate const& Callback : WatchGameServerCallbacks)
-    {
-        if (Callback.IsBound())
-        {
-            Callback.Execute(Result);
-        }
-    }
+	FGameServerResponse const Result = FGameServerResponse(*ResultObject);
+	for (FGameServerDelegate const& Callback : WatchGameServerCallbacks)
+	{
+		if (Callback.IsBound())
+		{
+			Callback.Execute(Result);
+		}
+	}
 }
 
-void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
+void UAgonesSubsystem::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
 {
 	if (BytesRemaining <= 0 && (WatchMessageBuffer.Num() == 0))
 	{
@@ -296,7 +318,7 @@ void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T 
 	WatchMessageBuffer.Empty();
 }
 
-void UAgonesComponent::SetLabel(
+void UAgonesSubsystem::SetLabel(
 	const FString& Key, const FString& Value, const FSetLabelDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FKeyValuePair Label = {Key, Value};
@@ -326,7 +348,7 @@ void UAgonesComponent::SetLabel(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::Health(const FHealthDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::Health(const FHealthDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("health");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
@@ -341,7 +363,7 @@ void UAgonesComponent::Health(const FHealthDelegate SuccessDelegate, const FAgon
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::Shutdown(const FShutdownDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("shutdown");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
@@ -356,7 +378,7 @@ void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const F
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::SetAnnotation(
+void UAgonesSubsystem::SetAnnotation(
 	const FString& Key, const FString& Value, const FSetAnnotationDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FKeyValuePair Label = {Key, Value};
@@ -365,11 +387,11 @@ void UAgonesComponent::SetAnnotation(
 	{
 		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"),
 			static_cast<FStringFormatOrderedArguments>(
-    			TArray<FStringFormatArg, TFixedAllocator<2>>{
-    				FStringFormatArg(Key),
-    				FStringFormatArg(Value)
-    			}
-    		)
+				TArray<FStringFormatArg, TFixedAllocator<2>>{
+					FStringFormatArg(Key),
+					FStringFormatArg(Value)
+				}
+			)
 		)});
 		return;
 	}
@@ -387,7 +409,7 @@ void UAgonesComponent::SetAnnotation(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::Allocate(const FAllocateDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("allocate");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
@@ -402,7 +424,7 @@ void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const F
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::Reserve(
+void UAgonesSubsystem::Reserve(
 	const int64 Seconds, const FReserveDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FDuration Duration = {Seconds};
@@ -426,7 +448,7 @@ void UAgonesComponent::Reserve(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::PlayerConnect(
+void UAgonesSubsystem::PlayerConnect(
 	const FString PlayerId, const FPlayerConnectDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FAgonesPlayer Player = {PlayerId};
@@ -444,7 +466,7 @@ void UAgonesComponent::PlayerConnect(
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -455,7 +477,7 @@ void UAgonesComponent::PlayerConnect(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::PlayerDisconnect(
+void UAgonesSubsystem::PlayerDisconnect(
 	const FString PlayerId, const FPlayerDisconnectDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FAgonesPlayer Player = {PlayerId};
@@ -473,7 +495,7 @@ void UAgonesComponent::PlayerDisconnect(
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -484,7 +506,7 @@ void UAgonesComponent::PlayerDisconnect(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::SetPlayerCapacity(
+void UAgonesSubsystem::SetPlayerCapacity(
 	const int64 Count, const FSetPlayerCapacityDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FPlayerCapacity PlayerCapacity = {Count};
@@ -508,7 +530,7 @@ void UAgonesComponent::SetPlayerCapacity(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::GetCounter(FString Key, FGetCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::GetCounter(FString Key, FGetCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest(FString::Format(TEXT("v1beta1/counters/{0}"), {Key}), FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
@@ -525,7 +547,7 @@ void UAgonesComponent::GetCounter(FString Key, FGetCounterDelegate SuccessDelega
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::IncrementCounter(FString Key, int64 Amount, FIncrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::IncrementCounter(FString Key, int64 Amount, FIncrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
 		{
@@ -534,7 +556,7 @@ void UAgonesComponent::IncrementCounter(FString Key, int64 Amount, FIncrementCou
 	UpdateCounter(Key, nullptr, nullptr, &Amount, UpdateSuccessDelegate, ErrorDelegate);
 }
 
-void UAgonesComponent::DecrementCounter(FString Key, int64 Amount, FDecrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::DecrementCounter(FString Key, int64 Amount, FDecrementCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const int64 NegativeAmount = -Amount;
 	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
@@ -544,7 +566,7 @@ void UAgonesComponent::DecrementCounter(FString Key, int64 Amount, FDecrementCou
 	UpdateCounter(Key, nullptr, nullptr, &NegativeAmount, UpdateSuccessDelegate, ErrorDelegate);
 }
 
-void UAgonesComponent::SetCounterCount(FString Key, int64 Count, FSetCounterCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::SetCounterCount(FString Key, int64 Count, FSetCounterCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&)
 		{
@@ -553,7 +575,7 @@ void UAgonesComponent::SetCounterCount(FString Key, int64 Count, FSetCounterCoun
 	UpdateCounter(Key, &Count, nullptr, nullptr, UpdateSuccessDelegate, ErrorDelegate);
 }
 
-void UAgonesComponent::SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::SetCounterCapacity(FString Key, int64 Capacity, FSetCounterCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const auto UpdateSuccessDelegate = FUpdateCounterDelegate::CreateLambda([SuccessDelegate](const FEmptyResponse&) 
 		{
@@ -562,13 +584,18 @@ void UAgonesComponent::SetCounterCapacity(FString Key, int64 Capacity, FSetCount
 	UpdateCounter(Key, nullptr, &Capacity, nullptr, UpdateSuccessDelegate, ErrorDelegate);
 }
 
-void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+FTimerManager* UAgonesSubsystem::GetTimerManager() const
+{
+	return TimerManager.Get();
+}
+
+void UAgonesSubsystem::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -579,13 +606,13 @@ void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDeleg
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::GetPlayerCount(FGetPlayerCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::GetPlayerCount(FGetPlayerCountDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/count", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -596,7 +623,7 @@ void UAgonesComponent::GetPlayerCount(FGetPlayerCountDelegate SuccessDelegate, F
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::IsPlayerConnected(
+void UAgonesSubsystem::IsPlayerConnected(
 	const FString PlayerId, const FIsPlayerConnectedDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest(
@@ -614,7 +641,7 @@ void UAgonesComponent::IsPlayerConnected(
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			TSharedPtr<FJsonObject> JsonObject;
-            
+			
 			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
 				return;
@@ -625,7 +652,7 @@ void UAgonesComponent::IsPlayerConnected(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::GetConnectedPlayers(
+void UAgonesSubsystem::GetConnectedPlayers(
 	const FGetConnectedPlayersDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/connected/{0}", FHttpVerb::Get, "");
@@ -643,7 +670,7 @@ void UAgonesComponent::GetConnectedPlayers(
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::GetList(const FString& Key, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::GetList(const FString& Key, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const FString Path = FString::Printf(TEXT("v1beta1/lists/%s"), *Key);
 	const FHttpRequestRef Request = BuildAgonesRequest(Path, FHttpVerb::Get, "");
@@ -661,7 +688,7 @@ void UAgonesComponent::GetList(const FString& Key, FListDelegate SuccessDelegate
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::UpdateList(const FString& Key, const FList& List, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::UpdateList(const FString& Key, const FList& List, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	FString Json;
 	if (!FJsonObjectConverter::UStructToJsonObjectString(List, Json))
@@ -686,7 +713,7 @@ void UAgonesComponent::UpdateList(const FString& Key, const FList& List, FListDe
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::AddListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::AddListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const FListValue ListValue = {Value};
 	FString Json;
@@ -712,7 +739,7 @@ void UAgonesComponent::AddListValue(const FString& Key, const FString& Value, FL
 	Request->ProcessRequest();
 }
 
-void UAgonesComponent::RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
+void UAgonesSubsystem::RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate)
 {
 	const FListValue ListValue = {Value};
 	FString Json;
@@ -738,7 +765,7 @@ void UAgonesComponent::RemoveListValue(const FString& Key, const FString& Value,
 	Request->ProcessRequest();
 }
 
-bool UAgonesComponent::IsValidResponse(const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
+bool UAgonesSubsystem::IsValidResponse(const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
 {
 	if (!bSucceeded)
 	{
@@ -753,8 +780,8 @@ bool UAgonesComponent::IsValidResponse(const bool bSucceeded, const FHttpRespons
 				static_cast<FStringFormatOrderedArguments>(
 					TArray<FStringFormatArg, TFixedAllocator<1>>{
 						FStringFormatArg(FString::FromInt(HttpResponse->GetResponseCode()))
-                    })
-                )
+					})
+				)
 			}
 		);
 		return false;
@@ -763,7 +790,7 @@ bool UAgonesComponent::IsValidResponse(const bool bSucceeded, const FHttpRespons
 	return true;
 }
 
-bool UAgonesComponent::IsValidJsonResponse(TSharedPtr<FJsonObject>& JsonObject, const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
+bool UAgonesSubsystem::IsValidJsonResponse(TSharedPtr<FJsonObject>& JsonObject, const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
 {
 	if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 	{
@@ -779,8 +806,8 @@ bool UAgonesComponent::IsValidJsonResponse(TSharedPtr<FJsonObject>& JsonObject, 
 			static_cast<FStringFormatOrderedArguments>(
 				TArray<FStringFormatArg, TFixedAllocator<1>>{
 					FStringFormatArg(Json)
-                })
-            )
+				})
+			)
 		});
 		return false;
 	}

@@ -17,10 +17,13 @@
 #include "Classes.h"
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
+#include "Containers/Ticker.h"
 #include "Interfaces/IHttpRequest.h"
 #include "IWebSocket.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "TimerManager.h"
 
-#include "AgonesComponent.generated.h"
+#include "AgonesSubsystem.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FAgonesErrorDelegate, const FAgonesError&, Error);
 
@@ -105,16 +108,21 @@ private:
 };
 
 /**
- * \brief UAgonesComponent is the Unreal Component to call to the Agones SDK.
+ * \brief UAgonesSubsystem object that helps interact with the Agones SDK.
  * See - https://agones.dev/ for more information.
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Config = Game, defaultconfig)
-class AGONES_API UAgonesComponent final : public UActorComponent
+UCLASS(Config = Game, defaultconfig)
+class AGONES_API UAgonesSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
 public:
-	UAgonesComponent();
+	/**
+	 * \brief Retrieve subsystem component from game instance. Subsystem exist only on server builds! See ShouldCreateSubsystem. 
+	 * \param WorldContext - context of the world
+	 */
+	UFUNCTION(BlueprintPure, meta = (WorldContext = "WorldContext"), DisplayName = "Get Agones Subsystem", Category = "Agones | Utility")
+	static UAgonesSubsystem* Get(const UObject* WorldContext);
 
 	/**
 	 * \brief HttpPort is the default Agones HTTP port to use.
@@ -125,13 +133,19 @@ public:
 	/**
 	 * \brief HealthRateSeconds is the frequency to send Health calls. Value of 0 will disable auto health calls.
 	 */
-	UPROPERTY(EditAnywhere, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	float HealthRateSeconds = 10.f;
 
 	/**
-	 * \brief bDisableAutoConnect will stop the component auto connecting (calling GamesServer and Ready).
+	 * \brief bDisableAutoHealthPing will stop call to HealthPing() during initialization
 	 */
-	UPROPERTY(EditAnywhere, Category = Agones, Config)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
+	bool bDisableAutoHealthPing;
+
+	/**
+	 * \brief bDisableAutoConnect will stop auto connecting (calling GamesServer and Ready) during initialization.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Agones, Config)
 	bool bDisableAutoConnect;
 
 	/**
@@ -141,15 +155,25 @@ public:
 	FConnectedDelegate ConnectedDelegate;
 
 	/**
-	 * \brief BeginPlay is a built in UE4 function that is called as the component is created.
+	 * \brief ShouldCreateSubsystem is a built in subsystem function that is called before Initialize.
 	 */
-	virtual void BeginPlay() override;
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 	/**
-	 * \brief EndPlay is a built in UE4 function that is called as the component is destroyed.
-	 * \param EndPlayReason reason for Ending Play.
-	 */
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	* \brief Initialize is a built in subsystem function for initialization of subsystem.
+	* \param Collection can help initialize subsystem dependencies
+	*/
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+	/**
+	* \brief Deinitialize is a built in subsystem function called during destruction of GameInstance.
+	*/
+	virtual void Deinitialize() override;
+
+	/**
+	* \brief Tick is a built in ticker function called every frame.
+	*/
+	bool Tick(float DeltaTime);
 
 	/**
 	 * \brief HealthPing loops calling the Health endpoint.
@@ -395,6 +419,8 @@ public:
 	void RemoveListValue(const FString& Key, const FString& Value, FListDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 	
 private:
+	FTimerManager* GetTimerManager() const;
+
 	DECLARE_DELEGATE_OneParam(FUpdateCounterDelegate, const FEmptyResponse&);
 	void UpdateCounter(const FString& Key, const int64* Count, const int64* Capacity, const int64* CountDiff, FUpdateCounterDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
@@ -407,11 +433,15 @@ private:
 
 	void EnsureWebSocketConnection();
 
+	FTSTicker::FDelegateHandle TickHandle;
+
 	FTimerHandle ConnectDelTimerHandle;
 
 	FTimerHandle HealthTimerHandler;
 
 	FTimerHandle EnsureWebSocketTimerHandler;
+
+	TUniquePtr<FTimerManager> TimerManager;
 
 	TSharedPtr<IWebSocket> WatchWebSocket;
 
