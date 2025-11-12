@@ -471,7 +471,7 @@ struct FCounterResponse
 	explicit FCounterResponse(const TSharedPtr<FJsonObject> JsonObject)
 	{
 		JsonObject->TryGetNumberField(TEXT("count"), Count);
-        JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
+		JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
 	}
 };
 
