@@ -24,7 +24,6 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
-	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"gomodules.xyz/jsonpatch/v2"
@@ -403,6 +402,14 @@ func (gss *GameServerSpec) applySdkServerDefaults() {
 func (gss *GameServerSpec) applyContainerDefaults() {
 	if len(gss.Template.Spec.Containers) == 1 {
 		gss.Container = gss.Template.Spec.Containers[0].Name
+	}
+}
+
+// applySpecListDefaults applies the List Capacity
+func (gss *GameServerSpec) applySpecListDefaults() {
+	if gss.Lists == nil {
+		gss.Lists = make(map[string]ListStatus)
+		gss.Lists["players"] = ListStatus{Capacity: 1000} // Add to the map
 	}
 }
 
@@ -1022,7 +1029,13 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 
 // UpdateListCapacity updates the ListStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
-	if capacity < 0 || capacity > apiserver.ListMaxCapacity {
+
+	gs.Spec.applySpecListDefaults()
+	var ListMaxCapacity int64
+	if playersList, found := gs.Spec.Lists["players"]; found {
+		ListMaxCapacity = playersList.Capacity
+	}
+	if capacity < 0 || capacity > ListMaxCapacity {
 		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {
