@@ -1779,7 +1779,9 @@ func TestSDKServerUpdateList(t *testing.T) {
 			expectedUpdatesQueueLen: 0,
 		},
 	}
-
+	// Maximum capacity for the game server list.
+	// of game server items the system can manage at once.
+	GameServerListMaxCapacity = int64(1000)
 	// nolint:dupl  // Linter errors on lines are duplicate of TestSDKServerAddListValue, TestSDKServerRemoveListValue
 	for test, testCase := range fixtures {
 		t.Run(test, func(t *testing.T) {
