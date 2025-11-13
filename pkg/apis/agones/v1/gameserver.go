@@ -39,6 +39,10 @@ import (
 type GameServerState string
 
 const (
+	ListMaxCapacity = int64(1000)
+)
+
+const (
 	// GameServerStatePortAllocation is for when a dynamically allocating GameServer
 	// is being created, an open port needs to be allocated
 	GameServerStatePortAllocation GameServerState = "PortAllocation"
@@ -402,14 +406,6 @@ func (gss *GameServerSpec) applySdkServerDefaults() {
 func (gss *GameServerSpec) applyContainerDefaults() {
 	if len(gss.Template.Spec.Containers) == 1 {
 		gss.Container = gss.Template.Spec.Containers[0].Name
-	}
-}
-
-// applySpecListDefaults applies the List Capacity
-func (gss *GameServerSpec) applySpecListDefaults() {
-	if gss.Lists == nil {
-		gss.Lists = make(map[string]ListStatus)
-		gss.Lists["players"] = ListStatus{Capacity: 1000} // Add to the map
 	}
 }
 
@@ -1030,11 +1026,6 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 // UpdateListCapacity updates the ListStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
 
-	gs.Spec.applySpecListDefaults()
-	var ListMaxCapacity int64
-	if playersList, found := gs.Spec.Lists["players"]; found {
-		ListMaxCapacity = playersList.Capacity
-	}
 	if capacity < 0 || capacity > ListMaxCapacity {
 		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
 	}
