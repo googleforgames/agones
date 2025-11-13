@@ -39,6 +39,7 @@ import (
 type GameServerState string
 
 const (
+	// ListMaxCapacity is the maximum capacity for List in the gamerserver spec and status CRDs.
 	ListMaxCapacity = int64(1000)
 )
 
