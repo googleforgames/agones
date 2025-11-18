@@ -32,7 +32,7 @@ The current set of `alpha` and `beta` feature gates:
 |----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
 | [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                     | `CountsAndLists`                   | Enabled  | `Beta`   | 1.41.0 |
 | [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                           | `DisableResyncOnSDKServer`         | Enabled  | `Stable` | 1.49.0 |
-| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                               | `AutopilotPassthroughPort`         | Enabled  | `Beta`   | 1.43.0 |
+| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                               | `AutopilotPassthroughPort`         | Enabled  | `Stable` | 1.54.0 |
 | [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386) | `GKEAutopilotExtendedDurationPods` | Enabled  | `Beta`   | 1.44.0 |
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |

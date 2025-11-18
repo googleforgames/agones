@@ -207,20 +207,6 @@ func TestValidateGameServer(t *testing.T) {
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
-				{
-					Name:          "passthrough-tcp",
-					PortPolicy:    agonesv1.Passthrough,
-					Range:         agonesv1.DefaultPortRange,
-					ContainerPort: 1234,
-					Protocol:      corev1.ProtocolTCP,
-				},
-				{
-					Name:          "passthrough-udp",
-					PortPolicy:    agonesv1.Passthrough,
-					Range:         agonesv1.DefaultPortRange,
-					ContainerPort: 1234,
-					Protocol:      corev1.ProtocolUDP,
-				},
 			},
 			safeToEvict: agonesv1.EvictionSafeOnUpgrade,
 			scheduling:  apis.Distributed,
@@ -228,8 +214,6 @@ func TestValidateGameServer(t *testing.T) {
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(3).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(4).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "eviction", "safe"), "OnUpgrade", "eviction.safe OnUpgrade not supported on GKE Autopilot"),
 			},
 		},
@@ -272,7 +256,6 @@ func TestValidateGameServer(t *testing.T) {
 				field.Invalid(field.NewPath("spec", "scheduling"), "Distributed", "scheduling strategy must be Packed on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(1).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
 				field.Invalid(field.NewPath("spec", "ports").Index(2).Child("portPolicy"), "Static", "portPolicy must be Dynamic or None on GKE Autopilot"),
-				field.Invalid(field.NewPath("spec", "ports").Index(3).Child("portPolicy"), "Passthrough", "portPolicy must be Dynamic or None on GKE Autopilot"),
 			},
 		},
 	} {
@@ -280,7 +263,7 @@ func TestValidateGameServer(t *testing.T) {
 			// PortPolicy None is behind a feature flag
 			runtime.FeatureTestMutex.Lock()
 			defer runtime.FeatureTestMutex.Unlock()
-			require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s="+tc.passthroughFlag, runtime.FeaturePortPolicyNone, runtime.FeatureAutopilotPassthroughPort)))
+			require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeaturePortPolicyNone)))
 
 			causes := (&gkeAutopilot{useExtendedDurationPods: tc.edPods}).ValidateGameServerSpec(&agonesv1.GameServerSpec{
 				Ports:      tc.ports,
@@ -342,7 +325,7 @@ func TestSetPassthroughLabel(t *testing.T) {
 		features string
 	}{
 		"gameserver with with Passthrough port policy adds label to pod": {
-			features: fmt.Sprintf("%s=true", runtime.FeatureAutopilotPassthroughPort),
+			features: "",
 
 			pod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -368,7 +351,7 @@ func TestSetPassthroughLabel(t *testing.T) {
 			},
 		},
 		"gameserver with  Static port policy does not add label to pod": {
-			features: fmt.Sprintf("%s=true", runtime.FeatureAutopilotPassthroughPort),
+			features: "",
 
 			pod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -380,30 +363,6 @@ func TestSetPassthroughLabel(t *testing.T) {
 				{
 					Name:          "awesome-udp",
 					PortPolicy:    agonesv1.Static,
-					ContainerPort: 1234,
-					Protocol:      corev1.ProtocolUDP,
-				},
-			},
-			wantPod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{},
-					Labels:      map[string]string{},
-				},
-			},
-		},
-		"gameserver, no feature gate, with Passthrough port policy does not add label to pod": {
-			features: fmt.Sprintf("%s=false", runtime.FeatureAutopilotPassthroughPort),
-
-			pod: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{},
-					Labels:      map[string]string{},
-				},
-			},
-			ports: []agonesv1.GameServerPort{
-				{
-					Name:          "awesome-udp",
-					PortPolicy:    agonesv1.Passthrough,
 					ContainerPort: 1234,
 					Protocol:      corev1.ProtocolUDP,
 				},
