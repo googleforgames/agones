@@ -747,6 +747,7 @@ func defaultAutoscalerWebhook(namespace string, fixedReplicasEnabled string) (*c
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					Ports: []corev1.ContainerPort{{
 						ContainerPort: 8000,
+						Name:          "autoscaler",
 					}},
 					Env: []corev1.EnvVar{
 						{
@@ -770,7 +771,7 @@ func defaultAutoscalerWebhook(namespace string, fixedReplicasEnabled string) (*c
 			Ports: []corev1.ServicePort{{
 				Name:       "newport",
 				Port:       8000,
-				TargetPort: intstr.FromInt(8000),
+				TargetPort: intstr.FromString("autoscaler"),
 			}},
 		},
 	}
