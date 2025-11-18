@@ -198,11 +198,11 @@ struct FCounter
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Agones")
-	int32 Count = 0;
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	int64 Count = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Agones")
-	int32 Capacity = 0;
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	int64 Capacity = 0;
 
 	FCounter()
 	{
@@ -232,7 +232,7 @@ struct FStatus
 	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TArray<FPort> Ports;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Agones")
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TMap<FString, FCounter> Counters;
 
 	FStatus()
