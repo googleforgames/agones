@@ -275,10 +275,10 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		return nil, err
 	}
 
-	switch {
-	case goErrors.Is(err, ErrNoGameServer), goErrors.Is(err, ErrGameServerUpdateConflict):
+	switch err {
+	case ErrNoGameServer, ErrGameServerUpdateConflict:
 		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
-	case goErrors.Is(err, ErrConflictInGameServerSelection):
+	case ErrConflictInGameServerSelection:
 		gsa.Status.State = allocationv1.GameServerAllocationContention
 	default:
 		gsa.ObjectMeta.Name = gs.ObjectMeta.Name
