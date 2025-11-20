@@ -22,6 +22,7 @@ Table of Contents
      * [Common Development Flows](#common-development-flows)
      * [Set Local Make Targets and Variables with `local-includes`](#set-local-make-targets-and-variables-with-local-includes)
      * [Running Individual End-to-End Tests](#running-individual-end-to-end-tests)
+     * [Remote Debugging with Minikube](#remote-debugging-with-minikube)
   * [Make Variable Reference](#make-variable-reference)
      * [VERSION](#version)
      * [REGISTRY](#registry)
@@ -444,6 +445,170 @@ go test -race -run ^TestCreateConnect$
 #### Troubleshooting
 If you run into cluster connection issues, this can usually be resolved by running any kind of authenticated `kubectl`
 command from within `make shell` or locally, to refresh your authentication token.
+
+### Remote Debugging with Minikube
+
+This section covers how to set up remote debugging for Agones services running in a Minikube cluster, allowing you to debug with breakpoints and step-through debugging from your IDE
+
+#### Overview
+
+Remote debugging allows you to:
+- Set breakpoints in Agones service code (allocator, controller, extensions, processor)
+- Step through code execution in real-time
+- Inspect variables and application state
+- Debug issues that only occur in a Kubernetes environment
+
+The debugging workflow uses [Delve](https://github.com/go-delve/delve) (the Go debugger) to create debug-enabled images that expose a debug port for remote connection
+
+#### Prerequisites
+
+Before starting, ensure you have:
+- A running Minikube cluster (`make minikube-test-cluster`)
+- VS Code with the Go extension installed
+- Docker installed and configured
+- Basic familiarity with VS Code debugging
+
+#### Debug Workflow Overview
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Build Debug   │    │   Push & Deploy  │    │   Port Forward  │
+│     Image       │───▶│   to Minikube    │───▶│   & Debug       │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+        │                       │                       │
+        ▼                       ▼                       ▼
+  • Add Delve              • Push debug            • kubectl port-forward
+  • Compile with            image to cluster         :2346 (debug port)
+    debug flags            • Install with           • Attach VS Code
+  • Expose port 2346        1 replica               debugger
+```
+
+#### Architecture Overview
+
+The remote debugging setup creates a connection between your local development environment and the Agones service running in Minikube:
+
+```
+                     ┌──────────────────────────────────────────┐
+                     │             Minikube Cluster             │
+                     │                                          │
+                     │   ┌──────────────────────────────────┐   │
+                     │   │            Agones Pod            │   │
+                     │   │                                  │   │
+                     │   │  ┌─────────────┐   ┌────────────────┐│
+                     │   │  │    Delve    │◄──► Agones Binary   ││
+                     │   │  │  Debugger   │   │ (debug build)   ││
+                     │   │  │   :2346     │   │ e.g. /agones-   ││
+                     │   │  └─────────────┘   │ allocator       ││
+                     │   │                    └────────────────┘│
+                     │   └──────────────────────────────────┘   │
+                     │                                          │
+                     │       ▲                                   │
+                     │       │ kubectl port-forward 2346:2346    │
+┌────────────────────┴───────┼───────────────────────────────────┐
+│                            │                                    │
+│                            ▼                                    │
+│        ┌──────────────────────────────────────────────────┐     │
+│        │               Local Machine                      │     │
+│        │                                                  │     │
+│        │   ┌─────────────────────┐      ┌──────────────┐  │     │
+│        │   │  VS Code            │◄────►│ localhost:2346│ │     │
+│        │   │  Debug Mode         │ Debug│ (Delve Remote │ │     │
+│        │   │  Breakpoints        │      │   Endpoint)   │ │     │
+│        │   └─────────────────────┘      └──────────────┘  │     │
+│        │                                                  │     │
+│        │   - Local source code (matches pod build)        │     │
+│        │   - launch.json (remote attach)                  │     │
+│        └──────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Setting up Debug Environment
+
+1. **Start Minikube cluster (if not already running):**
+   ```bash
+   make minikube-test-cluster
+   ```
+
+2. **Build debug image for the desired service:**
+   ```bash
+   make build-images-debug WITH_WINDOWS=0 WITH_ARM64=0
+   ```
+
+3. **Push debug image to Minikube:**
+   ```bash
+   make minikube-push-debug WITH_WINDOWS=0 WITH_ARM64=0
+   ```
+
+4. **Install Agones with debug configuration:**
+   ```bash
+   make minikube-install-debug
+   ```
+   This installs Agones with:
+   - All services set to 1 replica for easier debugging
+   - Debug image deployed all services
+
+5. **Set up port forwarding:**
+   ```bash
+   # This will use the default value (MINIKUBE_DEBUG_SERVICE=agones-allocator and MINIKUBE_DEBUG_LOCAL_PORT=2346)
+   make minikube-debug-portforward
+
+   # If you want to debug another one or multiple one at the same time you will need to run this command multiple time:
+   make minikube-debug-portforward MINIKUBE_DEBUG_SERVICE=agones-allocator MINIKUBE_DEBUG_LOCAL_PORT=2346 &
+
+   make minikube-debug-portforward MINIKUBE_DEBUG_SERVICE=agones-controller MINIKUBE_DEBUG_LOCAL_PORT=2347 &
+   ```
+   This forwards local port 2346 to the debug port in the pod.
+
+#### VS Code Configuration
+
+Create or update `.vscode/launch.json` in your workspace root (the Agones repository root directory):
+
+**Note:** The `${workspaceFolder}` variable must point to the Agones repository root path (e.g., `/path/to/agones`) for proper source file mapping between your local workspace and the remote debugging session
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Agones Allocator (Remote)",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "host": "127.0.0.1",
+            "port": 2346,
+            "cwd": "${workspaceFolder}",
+            "substitutePath": [
+                {
+                    "from": "${workspaceFolder}",
+                    "to": "/go/src/agones.dev/agones"
+                }
+            ]
+        },
+        {
+            "name": "Debug Agones Controller (Remote)",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote", 
+            "host": "127.0.0.1",
+            "port": 2347,
+            "cwd": "${workspaceFolder}",
+            "substitutePath": [
+                {
+                    "from": "${workspaceFolder}",
+                    "to": "/go/src/agones.dev/agones"
+                }
+            ]
+        }
+    ]
+}
+```
+
+**Start multiple debug sessions** in VS Code:
+   - Each debug session runs in its own debug console
+   - You can set breakpoints in different services simultaneously
+   - Switch between debug sessions using the VS Code debug console dropdown
+
+This is particularly useful when debugging interactions between services, such as when the controller communicates with the allocator, or when investigating issues that span multiple Agones components
 
 ## Make Variable Reference
 

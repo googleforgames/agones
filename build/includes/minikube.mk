@@ -14,6 +14,8 @@
 
 MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
+MINIKUBE_DEBUG_SERVICE ?= agones-allocator
+MINIKUBE_DEBUG_LOCAL_PORT ?= 2346
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -121,3 +123,36 @@ minikube-grafana-portforward:
 minikube-prometheus-portforward:
 	$(MAKE) prometheus-portforward \
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
+# Push debug images to minikube
+# This will load the debug images and retag them to the normal tag
+minikube-push-debug:
+	$(MINIKUBE) image load $(controller_debug_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(extensions_debug_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(sidecar_debug_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(ping_debug_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(allocator_debug_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image load $(processor_debug_tag) -p $(MINIKUBE_PROFILE)
+
+	$(MINIKUBE) image tag $(controller_debug_tag) $(controller_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(extensions_debug_tag) $(extensions_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(sidecar_debug_tag) $(sidecar_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(ping_debug_tag) $(ping_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(allocator_debug_tag) $(allocator_tag) -p $(MINIKUBE_PROFILE)
+	$(MINIKUBE) image tag $(processor_debug_tag) $(processor_tag) -p $(MINIKUBE_PROFILE)
+
+# Install Agones with debug images / single replicas
+minikube-install-debug:
+	$(MAKE) minikube-install HELM_ARGS="\
+		--set agones.controller.replicas=1 \
+		--set agones.extensions.replicas=1 \
+		--set agones.allocator.replicas=1 \
+		--set agones.allocator.processor.replicas=1 \
+		--set agones.ping.replicas=1"
+
+# Port forward allocator debug port to localhost
+# You will need to set MINIKUBE_DEBUG_SERVICE and MINIKUBE_DEBUG_LOCAL_PORT
+# By default, this will port forward agones-allocator:2346 to localhost:2346
+# E.g. make minikube-debug-portforward MINIKUBE_DEBUG_SERVICE=agones-controller MINIKUBE_DEBUG_LOCAL_PORT=2347
+minikube-debug-portforward:
+	kubectl port-forward deployment/$(MINIKUBE_DEBUG_SERVICE) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n agones-system
