@@ -33,4 +33,4 @@ USER nonroot:nonroot
 EXPOSE 2346
 
 # Start with Delve instead of direct execution
-ENTRYPOINT ["/dlv", "--listen=:2346", "--headless", "--api-version=2", "--accept-multiclient", "exec", "--continue", "/processor"]
+ENTRYPOINT ["/dlv", "--listen=:2346", "--headless", "--api-version=2", "--accept-multiclient", "exec", "--continue", "/processor", "--"]

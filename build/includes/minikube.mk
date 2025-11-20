@@ -16,6 +16,7 @@ MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
 MINIKUBE_DEBUG_SERVICE ?= agones-allocator
 MINIKUBE_DEBUG_LOCAL_PORT ?= 2346
+MINIKUBE_DEBUG_NAMESPACE ?= agones-system
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -155,4 +156,12 @@ minikube-install-debug:
 # By default, this will port forward agones-allocator:2346 to localhost:2346
 # E.g. make minikube-debug-portforward MINIKUBE_DEBUG_SERVICE=agones-controller MINIKUBE_DEBUG_LOCAL_PORT=2347
 minikube-debug-portforward:
-	kubectl port-forward deployment/$(MINIKUBE_DEBUG_SERVICE) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n agones-system
+	kubectl port-forward deployment/$(MINIKUBE_DEBUG_SERVICE) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
+
+# For the agones sdk, it's a bit different as we need to port forward to a pod
+minikube-debug-sdk-portforward: MINIKUBE_DEBUG_NAMESPACE := default
+minikube-debug-sdk-portforward:
+ifndef MINIKUBE_DEBUG_POD_NAME
+	$(error MINIKUBE_DEBUG_POD_NAME is required. Set it to the pod name where the agones sdk is running)
+endif
+	kubectl port-forward pod/$(MINIKUBE_DEBUG_POD_NAME) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
