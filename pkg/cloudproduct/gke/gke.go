@@ -139,7 +139,7 @@ func checkPassthroughPortPolicy(portPolicy agonesv1.PortPolicy) bool {
 	// if feature is not enabled and port is not Passthrough you can return false because there's no error  but check for None port
 	// if feature is enabled and port is passthrough return false because there is no error
 	// if feature is enabled and port is not passthrough return false because there is no error but check for None port
-	return (!runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
+	return !(portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
 }
 
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
@@ -179,7 +179,7 @@ func (*gkeAutopilot) MutateGameServerPod(gss *agonesv1.GameServerSpec, pod *core
 // This will help to back the container port from the allocated port using an objectSelector of this label
 // in GameServers that are using Passthrough Port Policy
 func setPassthroughLabel(gs *agonesv1.GameServerSpec, pod *corev1.Pod) {
-	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && hasPortPolicy(gs, agonesv1.Passthrough) {
+	if hasPortPolicy(gs, agonesv1.Passthrough) {
 		pod.ObjectMeta.Labels[agonesv1.GameServerPortPolicyPodLabel] = "autopilot-passthrough"
 	}
 }
@@ -270,7 +270,7 @@ func checkPassthroughPortPolicyForAutopilot(portPolicy agonesv1.PortPolicy) bool
 	// if feature is not enabled and port is not Passthrough -> true
 	// if feature is enabled and port is Passthrough -> false
 	// if feature is enabled and port is not Passthrough -> true
-	return !(runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough)
+	return !(portPolicy == agonesv1.Passthrough)
 }
 
 func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
