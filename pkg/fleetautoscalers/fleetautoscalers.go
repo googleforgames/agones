@@ -49,14 +49,6 @@ const (
 	maxDuration = "2540400h" // 290 Years
 )
 
-var tlsConfig = &tls.Config{}
-var client = http.Client{
-	Timeout: 15 * time.Second,
-	Transport: &http.Transport{
-		TLSClientConfig: tlsConfig,
-	},
-}
-
 // InactiveScheduleError denotes an error for schedules that are not currently active.
 type InactiveScheduleError struct{}
 
@@ -117,11 +109,16 @@ func applyWasmPolicy(ctx context.Context, state *fasState, wp *autoscalingv1.Was
 
 	if state.wasmPlugin == nil {
 		// Build URL from the WasmPolicy
-		u, err := buildURLFromWebhookPolicy(wp.From.URL)
+		u, err := buildURLFromConfiguration(state, wp.From.URL)
 		if err != nil {
 			return 0, false, err
 		}
-		res, err := client.Get(u.String())
+
+		if state.httpClient == nil {
+			return 0, false, errors.New("http client not set")
+		}
+
+		res, err := state.httpClient.Get(u.String())
 		if err != nil {
 			return 0, false, errors.Wrapf(err, "failed to fetch Wasm module from %s", u.String())
 		}
@@ -197,19 +194,32 @@ func applyWasmPolicy(ctx context.Context, state *fasState, wp *autoscalingv1.Was
 	return f.Status.Replicas, false, nil
 }
 
-// buildURLFromWebhookPolicy - build URL for Webhook and set CARoot for client Transport
-func buildURLFromWebhookPolicy(w *autoscalingv1.URLConfiguration) (u *url.URL, err error) {
+// buildURLFromConfiguration - build URL for Webhook and set CARoot for client Transport
+func buildURLFromConfiguration(state *fasState, w *autoscalingv1.URLConfiguration) (u *url.URL, err error) {
 	if w.URL != nil && w.Service != nil {
 		return nil, errors.New("service and URL cannot be used simultaneously")
+	}
+
+	// if we haven't created the http state yet, let's create the http client, with appropriate tls configuration.
+	if state.httpClient == nil {
+		config := &tls.Config{}
+		state.httpClient = &http.Client{
+			Timeout: 15 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: config,
+			},
+		}
+
+		if w.CABundle != nil {
+			if err := setCABundle(config, w.CABundle); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	scheme := "http"
 	if w.CABundle != nil {
 		scheme = "https"
-
-		if err := setCABundle(w.CABundle); err != nil {
-			return nil, err
-		}
 	}
 
 	if w.URL != nil {
@@ -254,18 +264,16 @@ func createURL(scheme, name, namespace, path string, port *int32) *url.URL {
 	}
 }
 
-func setCABundle(caBundle []byte) error {
-	// We can have multiple fleetautoscalers with different CABundles defined,
-	// so we switch client.Transport before each POST request
+func setCABundle(tls *tls.Config, caBundle []byte) error {
 	rootCAs := x509.NewCertPool()
 	if ok := rootCAs.AppendCertsFromPEM(caBundle); !ok {
 		return errors.New("no certs were appended from caBundle")
 	}
-	tlsConfig.RootCAs = rootCAs
+	tls.RootCAs = rootCAs
 	return nil
 }
 
-func applyWebhookPolicy(_ *fasState, w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
+func applyWebhookPolicy(state *fasState, w *autoscalingv1.URLConfiguration, f *agonesv1.Fleet, fasLog *FasLogger) (replicas int32, limited bool, err error) {
 	if w == nil {
 		return 0, false, errors.New("webhookPolicy parameter must not be nil")
 	}
@@ -274,9 +282,12 @@ func applyWebhookPolicy(_ *fasState, w *autoscalingv1.URLConfiguration, f *agone
 		return 0, false, errors.New("fleet parameter must not be nil")
 	}
 
-	u, err := buildURLFromWebhookPolicy(w)
+	u, err := buildURLFromConfiguration(state, w)
 	if err != nil {
 		return 0, false, err
+	}
+	if state.httpClient == nil {
+		return 0, false, errors.New("http client not set")
 	}
 
 	faReq := autoscalingv1.FleetAutoscaleReview{
@@ -299,7 +310,7 @@ func applyWebhookPolicy(_ *fasState, w *autoscalingv1.URLConfiguration, f *agone
 		return 0, false, err
 	}
 
-	res, err := client.Post(
+	res, err := state.httpClient.Post(
 		u.String(),
 		"application/json",
 		strings.NewReader(string(b)),
@@ -354,7 +365,7 @@ func applyBufferPolicy(_ *fasState, b *autoscalingv1.BufferPolicy, f *agonesv1.F
 	} else {
 		// the percentage value is a little more complex, as we can't apply
 		// the desired percentage to any current value, but to the future one
-		// Example: we have 8 allocated replicas, 10 total replicas and bufferSize set to 30%
+		// Example: we have 8 allocated replicas, 10 total replicas and bufferSize set to 30%.
 		// 30% means that we must have 30% ready instances in the fleet
 		// Right now there are 20%, so we must increase the fleet until we reach 30%
 		// To compute the new size, we start from the other end: if ready must be 30%
@@ -513,7 +524,7 @@ func applyCounterOrListPolicy(c *autoscalingv1.CounterPolicy, l *autoscalingv1.L
 		}
 		return replicas, false, nil
 	case availableCapacity < buffer: // Scale Up
-		if limited { // Case where we want to scale up but we're already limited by MaxCapacity.
+		if limited { // Case where we want to scale up, but we're already limited by MaxCapacity.
 			return scaleLimited(scale, f, gameServerNamespacedLister, nodeCounts, key, isCounter, replicas,
 				capacity, aggCapacity, minCapacity, maxCapacity)
 		}

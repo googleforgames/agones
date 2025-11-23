@@ -80,8 +80,8 @@ func main() {
 	}
 
 	t := &tail.Tail{}
-	// Loop to make sure the log has been created. Sometimes it takes a few seconds
-	for i := 0; i < 10; i++ {
+	// Loop to make sure the log has been created. Let's give it at least a minute, because it can be slow.
+	for i := 0; i < 60; i++ {
 		time.Sleep(time.Second)
 
 		t, err = tail.TailFile(path.Join(home, logLocation), tail.Config{Follow: true})
