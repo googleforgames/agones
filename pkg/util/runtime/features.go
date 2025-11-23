@@ -150,16 +150,16 @@ var (
 		// Stable features
 		// Note that stable features cannot be set to "false", and are here so that upgrades from a
 		// previous version with the feature flag do not fail on parsing an unknown flag.
-		FeatureDisableResyncOnSDKServer: true,
+		FeatureDisableResyncOnSDKServer:         true,
+		FeatureGKEAutopilotExtendedDurationPods: true,
 
 		// Beta features
-		FeatureAutopilotPassthroughPort:         true,
-		FeatureCountsAndLists:                   true,
-		FeatureGKEAutopilotExtendedDurationPods: true,
-		FeaturePortPolicyNone:                   true,
-		FeaturePortRanges:                       true,
-		FeatureRollingUpdateFix:                 true,
-		FeatureScheduledAutoscaler:              true,
+		FeatureAutopilotPassthroughPort: true,
+		FeatureCountsAndLists:           true,
+		FeaturePortPolicyNone:           true,
+		FeaturePortRanges:               true,
+		FeatureRollingUpdateFix:         true,
+		FeatureScheduledAutoscaler:      true,
 
 		// Alpha features
 		FeatureFleetAutoscaleRequestMetaData: false,
