@@ -431,13 +431,10 @@ func (w *URLConfiguration) ValidateURLConfiguration(fldPath *field.Path) field.E
 		}
 	}
 	if w.URL != nil {
-		u, err := url.Parse(*w.URL)
+		_, err := url.Parse(*w.URL)
 		if err != nil {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("url"), *w.URL, "url is not valid"))
-		} else if u.Scheme == "https" && w.CABundle == nil {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("caBundle"), w.CABundle, "CABundle should be provided if HTTPS webhook is used"))
 		}
-
 	}
 	return allErrs
 }

@@ -67,6 +67,8 @@ var (
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
 	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
+	// ErrGameServerUpdateConflict is returned when the game server selected for applying the allocation cannot be updated
+	ErrGameServerUpdateConflict = errors.New("could not update the selected GameServer")
 )
 
 const (
@@ -274,7 +276,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 	}
 
 	switch err {
-	case ErrNoGameServer:
+	case ErrNoGameServer, ErrGameServerUpdateConflict:
 		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
 	case ErrConflictInGameServerSelection:
 		gsa.Status.State = allocationv1.GameServerAllocationContention
@@ -600,7 +602,7 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 							// we should wait for it to get updated with fresh info.
 							c.allocationCache.AddGameServer(gs)
 						}
-						res.err = errors.Wrap(err, "error updating allocated gameserver")
+						res.err = ErrGameServerUpdateConflict
 					} else {
 						// put the GameServer back into the cache, so it's immediately around for re-allocation
 						c.allocationCache.AddGameServer(gs)
