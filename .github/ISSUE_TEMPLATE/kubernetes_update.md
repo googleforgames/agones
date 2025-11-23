@@ -35,7 +35,7 @@ List of items to do for upgrading to {version_1} {version_2} {version_3}
   - [ ] Kind in `build/includes/kind.mk` (Confirm {version_2} is supported and get the patch version
         [here](https://github.com/kubernetes-sigs/kind/releases))
 - [ ] Update the k8s image used in the helm [pre-delete-hook](https://github.com/googleforgames/agones/blob/main/install/helm/agones/templates/hooks/pre_delete_hook.yaml)
-      to {version_2} (Get the patch version [here](https://hub.docker.com/r/bitnami/kubectl))
+      to {version_2} (Get the patch version [here](https://hub.docker.com/r/alpine/kubectl))
 - [ ] Update client-go in `go.mod` to {version_2} by running `go get k8s.io/client-go@{CORRESPONDING_VERSION}`
       and `go get k8s.io/apiextensions-apiserver@{CORRESPONDING_VERSION}`, then re-run `go mod tidy`
       and `go mod vendor`

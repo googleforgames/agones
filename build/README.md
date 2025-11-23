@@ -271,6 +271,13 @@ First, [install Minikube](https://github.com/kubernetes/minikube#installation).
 Next we will create the Agones Minikube cluster. Run `make minikube-test-cluster` to create the `agones` profile,
 and a Kubernetes cluster of the supported version under this profile.
 
+For e2e testing that requires multiple nodes, you can specify the number of nodes using the `MINIKUBE_NODES` environment variable.
+A minimum of 2-3 nodes is recommended for comprehensive e2e testing:
+
+```bash
+make minikube-test-cluster MINIKUBE_NODES=3 
+```
+
 This will also install the kubectl authentication credentials in `~/.kube`, and set the
 [`kubectl` context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
 to `agones`.
@@ -299,10 +306,7 @@ and makes cross-platform support for the build system much easier.
 To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
-Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm
-a local minikube cluster, so use at your own risk. Take a look at
-[Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case
-basis.
+Running end-to-end tests on Minikube can be done via the `make minikube-test-e2e` target, but this can often overwhelm a local minikube cluster, so use at your own risk. Take a look at [Running Individual End-to-End Tests](#running-individual-end-to-end-tests) to run individual tests on a case by case basis.
 
 If you are getting issues connecting to `GameServers` running on minikube, check the
 [Agones minikube](https://agones.dev/site/docs/installation/creating-cluster/minikube/) documentation. You may need to
@@ -343,6 +347,25 @@ Now that the images are pushed, to install the development version,
 run `make kind-install` and Agones will install the images that you built and pushed to the Agones Kind cluster.
 
 Running end-to-end tests on Kind is done via the `make kind-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Kind cluster.
+
+
+**Note:** By default, KIND creates a single control-plane node, which is subject to the Kubernetes pod-per-node limit (about 110 pods). For e2e tests, you may want to create additional worker nodes to ensure enough pod availability. You can do this by providing a custom KIND config file when creating the cluster:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+   - role: control-plane
+   - role: worker
+   - role: worker
+```
+
+Create the cluster with:
+```sh
+kind create cluster --name agones --config <your-config.yaml>
+```
+
+This will ensure enough pod capacity for e2e tests.
 
 If you are having performance issues, check out these docs [here](https://kind.sigs.k8s.io/docs/user/quick-start/#creating-a-cluster)
 

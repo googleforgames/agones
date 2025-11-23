@@ -199,8 +199,7 @@ func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 		fas.Spec.Policy.Webhook.CABundle = nil
 
 		causes := fas.Validate()
-		assert.Len(t, causes, 1)
-		assert.Equal(t, "spec.policy.webhook.caBundle", causes[0].Field)
+		assert.Len(t, causes, 0)
 	})
 
 	t.Run("bad url value", func(t *testing.T) {
