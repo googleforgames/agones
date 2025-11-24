@@ -1,5 +1,4 @@
----
-# Copyright 2020 Google LLC All Rights Reserved.
+# Copyright 2025 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: agones.dev/v1
-kind: GameServer
+
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
 metadata:
-  name: supertuxkart
+  name: default-pool
+  namespace: metallb-system
 spec:
-  ports:
-    - name: default
-      containerPort: 8080
-  template:
-    spec:
-      containers:
-        - name: supertuxkart
-          image: us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.20
-          # imagePullPolicy: Always  # add for development
-          env:
-            - name: ENABLE_PLAYER_TRACKING
-              value: 'false'
+  addresses:
+  - __RANGE__
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default-advertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - default-pool

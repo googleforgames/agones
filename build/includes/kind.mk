@@ -29,6 +29,19 @@ kind-test-cluster: $(ensure-build-image)
 		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.33.5 --wait 5m;\
 	fi
 
+# kind-metallb-helm-install installs metallb via helm for kind
+kind-metallb-helm-install:
+	helm repo add metallb https://metallb.github.io/metallb
+	helm repo update
+	helm upgrade metallb metallb/metallb --install --namespace metallb-system --create-namespace --version 0.15.2 --wait --timeout 180s
+
+# kind-metallb-configure configures metallb with an ip address range based on the kind node IP
+kind-metallb-configure:
+	KIND_IP=$$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$(docker ps --filter "name=control-plane" --format "{{.Names}}" | head -n1)); \
+	NETWORK_PREFIX=$$(echo "$$KIND_IP" | cut -d '.' -f 1-3); \
+	METALLB_IP_RANGE="$$NETWORK_PREFIX.50-$$NETWORK_PREFIX.250"; \
+	sed "s|__RANGE__|$${METALLB_IP_RANGE}|g" $(build_path)/metallb-config.yaml.tpl | kubectl apply -f -
+
 # deletes the kind agones cluster
 # useful if you're want to start from scratch
 kind-delete-cluster:
@@ -40,17 +53,28 @@ kind-shell: $(ensure-build-image)
 
 # installs the current dev version of agones
 # you should build-images and kind-push first.
+kind-install: PING_SERVICE_TYPE := LoadBalancer
+kind-install: ALLOCATOR_SERVICE_TYPE := LoadBalancer
 kind-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=$(PING_SERVICE_TYPE) \
+		ALLOCATOR_SERVICE_TYPE=$(ALLOCATOR_SERVICE_TYPE)
 
 # pushes the current dev version of agones to the kind single node cluster.
 kind-push:
-	kind load docker-image $(sidecar_linux_amd64_tag) --name="$(KIND_PROFILE)"
+	docker tag $(sidecar_linux_amd64_tag) $(sidecar_tag)
+	docker tag $(controller_amd64_tag) $(controller_tag)
+	docker tag $(ping_amd64_tag) $(ping_tag)
+	docker tag $(allocator_amd64_tag) $(allocator_tag)
+	docker tag $(processor_amd64_tag) $(processor_tag)
+	docker tag $(extensions_amd64_tag) $(extensions_tag)
+
+	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(allocator_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(processor_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image $(extensions_tag) --name="$(KIND_PROFILE)"
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:
