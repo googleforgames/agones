@@ -632,7 +632,6 @@ func TestAutopilotPortAllocator(t *testing.T) {
 			// PortPolicy None is behind a feature flag
 			runtime.FeatureTestMutex.Lock()
 			defer runtime.FeatureTestMutex.Unlock()
-			require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s="+tc.passthroughFlag, runtime.FeatureAutopilotPassthroughPort)))
 			gs := (&autopilotPortAllocator{minPort: 8000, maxPort: 9000}).Allocate(&agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.ports}})
 			wantGS := &agonesv1.GameServer{Spec: agonesv1.GameServerSpec{Ports: tc.wantPorts}}
 			if tc.wantAnnotation {
