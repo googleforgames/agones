@@ -194,6 +194,28 @@ struct FPort
 };
 
 USTRUCT(BlueprintType)
+struct FCounter
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	int64 Count = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	int64 Capacity = 0;
+
+	FCounter()
+	{
+	}
+
+	explicit FCounter(const TSharedPtr<FJsonObject> JsonObject)
+	{
+		JsonObject->TryGetNumberField(TEXT("count"), Count);
+		JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FStatus
 {
 	GENERATED_BODY()
@@ -209,6 +231,9 @@ struct FStatus
 
 	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TArray<FPort> Ports;
+
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
+	TMap<FString, FCounter> Counters;
 
 	FStatus()
 	{
@@ -243,6 +268,21 @@ struct FStatus
 				{
 					FPort Port = FPort(PortItem->AsObject());
 					Ports.Add(Port);
+				}
+			}
+		}
+
+		const TSharedPtr<FJsonObject>* CountersObject;
+		if (JsonObject->TryGetObjectField(TEXT("counters"), CountersObject))
+		{
+			for (const auto& CounterPair : CountersObject->Get()->Values)
+			{
+				const FString& CounterName = CounterPair.Key;
+				const TSharedPtr<FJsonValue>& CounterValue = CounterPair.Value;
+				if (CounterValue.IsValid() && !CounterValue->IsNull())
+				{
+					FCounter Counter = FCounter(CounterValue->AsObject());
+					Counters.Add(CounterName, Counter);
 				}
 			}
 		}
@@ -431,7 +471,7 @@ struct FCounterResponse
 	explicit FCounterResponse(const TSharedPtr<FJsonObject> JsonObject)
 	{
 		JsonObject->TryGetNumberField(TEXT("count"), Count);
-        JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
+		JsonObject->TryGetNumberField(TEXT("capacity"), Capacity);
 	}
 };
 
