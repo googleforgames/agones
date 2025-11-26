@@ -135,8 +135,6 @@ func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRa
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 
 func checkPassthroughPortPolicy(portPolicy agonesv1.PortPolicy) bool {
-	// if feature is not enabled and port is Passthrough return true because that should be an invalid port
-	// if feature is not enabled and port is not Passthrough you can return false because there's no error  but check for None port
 	// if feature is enabled and port is passthrough return false because there is no error
 	// if feature is enabled and port is not passthrough return false because there is no error but check for None port
 	return !(portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
