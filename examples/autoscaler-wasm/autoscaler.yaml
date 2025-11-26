@@ -13,22 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 #
-# Full example of a FleetAutoscaler that is using wasm for it's custom
-# aautomation logic - this is used to scale a Fleet.
-#
-
-#
-# For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
+# Example FleetAutoscaler configuration using wasm plugin. Use the simple-game-server fleet as the Fleet configuration
 #
 apiVersion: autoscaling.agones.dev/v1
 kind: FleetAutoscaler
 metadata:
-  name: webhook-fleet-autoscaler
+  name: wasm-fleet-autoscaler
 spec:
   fleetName: simple-game-server
   policy:
-    # type of the policy - this example is Webhook
+    # type of the policy - wasm
     type: Wasm
     # parameters for the wasm policy
     wasm:
@@ -36,16 +32,8 @@ spec:
       function: 'scale'
       # Config values to pass to the wasm program on startup
       config:
-        buffer_size: "10"
+        buffer_size: "5"
       from:
         url:
-          # use a service, or direct URL
-          service:
-            name: fileserver
-            namespace: default
-            path: /wasm/plugin.wasm
-            # optionally can define a full URL if not hosted on cluster (or you just want to).
-            # url: "https://my-bucket-storage.cloud/wasm/plugin.wasm"
-            # caBundle:  optional, used for HTTPS paths with custom certs
-      # optional hex encoded sha256 hash to match against wasm file (it's optional, but recommended)
-      hash: "df7199d01a25bf34b3d650c7e6f685736b2c794e6a526d86b2e55bf074df3f36"
+          # Direct URL to the wasm plugin
+          url: "https://github.com/googleforgames/agones/raw/refs/heads/main/examples/autoscaler-wasm/plugin.wasm"
