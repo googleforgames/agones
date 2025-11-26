@@ -57,9 +57,6 @@ via Agones exposed ports.
 * Docker (default)
 * Hyperkit
 
-**Windows (amd64 - Windows 10 Enterprise or Pro)**
-* Hyper-V: You might need to refer to [this blog post](https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1) and/or [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) for WSL support.
-
 **Windows (amd64)**
 * Docker (default) with [this workaround](#minikube-start---ports-docker-only)
 * VirtualBox: You might need [this command](https://github.com/kubernetes/minikube/issues/3900) to disable hardware virtualization checks before starting the VM.
