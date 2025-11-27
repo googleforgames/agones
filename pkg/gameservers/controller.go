@@ -220,10 +220,8 @@ func NewExtensions(apiHooks agonesv1.APIHooks, wh *webhooks.WebHook) *Extensions
 
 	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationMutationHandler)
 	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admissionv1.Create, ext.creationValidationHandler)
+	wh.AddHandler("/mutate", corev1.SchemeGroupVersion.WithKind("Pod").GroupKind(), admissionv1.Create, ext.creationMutationHandlerPod)
 
-	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) {
-		wh.AddHandler("/mutate", corev1.SchemeGroupVersion.WithKind("Pod").GroupKind(), admissionv1.Create, ext.creationMutationHandlerPod)
-	}
 	return ext
 }
 

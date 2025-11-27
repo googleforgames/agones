@@ -1584,7 +1584,6 @@ func TestGameServerPassthroughPortAnnotation(t *testing.T) {
 	t.Parallel()
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureAutopilotPassthroughPort)+"=true"))
 	containerOne := "containerOne"
 	containerTwo := "containerTwo"
 	containerThree := "containerThree"
