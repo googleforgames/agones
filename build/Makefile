@@ -453,7 +453,14 @@ install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: SERVICE_MONITOR := false
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
-	-$(DOCKER_RUN) bash -c '[[ $$(helm status agones -n agones-system --output json | jq -r ".info.status") =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true'
+	-$(DOCKER_RUN) bash -c ' \
+		HELM_STATUS=$$(helm status agones -n agones-system --output json 2>/dev/null || echo "{}") && \
+		STATUS=$$(echo "$$HELM_STATUS" | jq -r ".info.status // \"not-found\"" 2>/dev/null || echo "not-found") && \
+		DESCRIPTION=$$(echo "$$HELM_STATUS" | jq -r ".info.description // \"no details\"" 2>/dev/null || echo "no details") && \
+		if [[ "$$STATUS" =~ ^(failed|pending-.*)$$ ]]; then \
+			echo "Uninstalling problematic Agones release in $$STATUS state: $$DESCRIPTION..." && \
+			helm uninstall agones --namespace=agones-system --wait --timeout=20m; \
+		fi || true'
 	$(DOCKER_RUN) \
 		helm upgrade --install --atomic --wait --timeout 10m --namespace=agones-system \
 		--create-namespace \
