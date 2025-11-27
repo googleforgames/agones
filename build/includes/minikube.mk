@@ -14,9 +14,14 @@
 
 MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
-MINIKUBE_DEBUG_SERVICE ?= agones-allocator
-MINIKUBE_DEBUG_LOCAL_PORT ?= 2346
 MINIKUBE_DEBUG_NAMESPACE ?= agones-system
+
+MINIKUBE_DEBUG_CONTROLLER_PORT ?= 2346
+MINIKUBE_DEBUG_EXTENSIONS_PORT ?= 2347
+MINIKUBE_DEBUG_PING_PORT ?= 2348
+MINIKUBE_DEBUG_ALLOCATOR_PORT ?= 2349
+MINIKUBE_DEBUG_PROCESSOR_PORT ?= 2350
+MINIKUBE_DEBUG_SDK_PORT ?= 2351
 
 # minikube shell mount for certificates
 minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
@@ -151,17 +156,55 @@ minikube-install-debug:
 		--set agones.allocator.processor.replicas=1 \
 		--set agones.ping.replicas=1"
 
-# Port forward allocator debug port to localhost
-# You will need to set MINIKUBE_DEBUG_SERVICE and MINIKUBE_DEBUG_LOCAL_PORT
-# By default, this will port forward agones-allocator:2346 to localhost:2346
-# E.g. make minikube-debug-portforward MINIKUBE_DEBUG_SERVICE=agones-controller MINIKUBE_DEBUG_LOCAL_PORT=2347
+# Port forward debug ports for all Agones services to localhost
+# Each service gets its own port with configurable defaults:
+# - Controller: 2346 (MINIKUBE_DEBUG_CONTROLLER_PORT)
+# - Extensions: 2347 (MINIKUBE_DEBUG_EXTENSIONS_PORT)  
+# - Ping: 2348 (MINIKUBE_DEBUG_PING_PORT)
+# - Allocator: 2349 (MINIKUBE_DEBUG_ALLOCATOR_PORT)
+# - Processor: 2350 (MINIKUBE_DEBUG_PROCESSOR_PORT)
+# E.g. make minikube-debug-portforward MINIKUBE_DEBUG_CONTROLLER_PORT=2345
 minikube-debug-portforward:
-	kubectl port-forward deployment/$(MINIKUBE_DEBUG_SERVICE) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
+	@echo "Starting port forwarding for all Agones services..."
+	@echo "Controller: localhost:$(MINIKUBE_DEBUG_CONTROLLER_PORT) -> agones-controller:2346"
+	@echo "Extensions: localhost:$(MINIKUBE_DEBUG_EXTENSIONS_PORT) -> agones-extensions:2346" 
+	@echo "Ping: localhost:$(MINIKUBE_DEBUG_PING_PORT) -> agones-ping:2346"
+	@echo "Allocator: localhost:$(MINIKUBE_DEBUG_ALLOCATOR_PORT) -> agones-allocator:2346"
+	@echo "Processor: localhost:$(MINIKUBE_DEBUG_PROCESSOR_PORT) -> agones-processor:2346"
+	@echo "Use Ctrl+C to stop all port forwards"
+	@trap 'echo "Stopping all port forwards..."; kill $$(jobs -p) 2>/dev/null || true; exit 0' EXIT SIGINT SIGTERM; \
+	(kubectl port-forward deployment/agones-controller $(MINIKUBE_DEBUG_CONTROLLER_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Controller port-forward failed") & \
+	(kubectl port-forward deployment/agones-extensions $(MINIKUBE_DEBUG_EXTENSIONS_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Extensions port-forward failed") & \
+	(kubectl port-forward deployment/agones-ping $(MINIKUBE_DEBUG_PING_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Ping port-forward failed") & \
+	(kubectl port-forward deployment/agones-allocator $(MINIKUBE_DEBUG_ALLOCATOR_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Allocator port-forward failed") & \
+	(kubectl port-forward deployment/agones-processor $(MINIKUBE_DEBUG_PROCESSOR_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Processor port-forward failed") & \
+	wait
 
-# For the agones sdk, it's a bit different as we need to port forward to a pod
+# Port forward debug port for Agones SDK to localhost
+# By default, it looks for pods in the "default" namespace with the
+# "agones-gameserver-sidecar" container. You can specify a pod name directly
+# using the MINIKUBE_DEBUG_POD_NAME variable.
+# The local port can be set with MINIKUBE_DEBUG_SDK_PORT (default 2351)
 minikube-debug-sdk-portforward: MINIKUBE_DEBUG_NAMESPACE := default
 minikube-debug-sdk-portforward:
-ifndef MINIKUBE_DEBUG_POD_NAME
-	$(error MINIKUBE_DEBUG_POD_NAME is required. Set it to the pod name where the agones sdk is running)
+ifdef MINIKUBE_DEBUG_POD_NAME
+	kubectl port-forward pod/$(MINIKUBE_DEBUG_POD_NAME) $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
+else
+	@echo "Searching for pods with agones-gameserver-sidecar container..."
+	@PODS=$$(kubectl get pods -n $(MINIKUBE_DEBUG_NAMESPACE) -o json | jq -r '.items[] | select(.spec.containers[]?.name == "agones-gameserver-sidecar") | .metadata.name' 2>/dev/null || true); \
+	if [ -z "$$PODS" ]; then \
+		echo "No pods with agones-gameserver-sidecar container found in namespace $(MINIKUBE_DEBUG_NAMESPACE)"; \
+		exit 1; \
+	fi; \
+	echo "Found pods with agones-gameserver-sidecar container:"; \
+	echo "$$PODS" | nl -v 1; \
+	echo -n "Select pod number (1-$$(echo "$$PODS" | wc -l)): "; \
+	read choice; \
+	SELECTED_POD=$$(echo "$$PODS" | sed -n "$${choice}p"); \
+	if [ -z "$$SELECTED_POD" ]; then \
+		echo "Invalid selection"; \
+		exit 1; \
+	fi; \
+	echo "Port forwarding to pod: $$SELECTED_POD"; \
+	kubectl port-forward pod/$$SELECTED_POD $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
 endif
-	kubectl port-forward pod/$(MINIKUBE_DEBUG_POD_NAME) $(MINIKUBE_DEBUG_LOCAL_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
