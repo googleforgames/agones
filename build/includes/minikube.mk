@@ -14,8 +14,8 @@
 
 MINIKUBE_DRIVER ?= docker
 MINIKUBE_NODES ?= 1
-MINIKUBE_DEBUG_NAMESPACE ?= agones-system
 
+MINIKUBE_DEBUG_SDK_NAMESPACE ?= default
 MINIKUBE_DEBUG_CONTROLLER_PORT ?= 2346
 MINIKUBE_DEBUG_EXTENSIONS_PORT ?= 2347
 MINIKUBE_DEBUG_PING_PORT ?= 2348
@@ -173,27 +173,27 @@ minikube-debug-portforward:
 	@echo "Processor: localhost:$(MINIKUBE_DEBUG_PROCESSOR_PORT) -> agones-processor:2346"
 	@echo "Use Ctrl+C to stop all port forwards"
 	@trap 'echo "Stopping all port forwards..."; kill $$(jobs -p) 2>/dev/null || true; exit 0' EXIT SIGINT SIGTERM; \
-	(kubectl port-forward deployment/agones-controller $(MINIKUBE_DEBUG_CONTROLLER_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Controller port-forward failed") & \
-	(kubectl port-forward deployment/agones-extensions $(MINIKUBE_DEBUG_EXTENSIONS_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Extensions port-forward failed") & \
-	(kubectl port-forward deployment/agones-ping $(MINIKUBE_DEBUG_PING_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Ping port-forward failed") & \
-	(kubectl port-forward deployment/agones-allocator $(MINIKUBE_DEBUG_ALLOCATOR_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Allocator port-forward failed") & \
-	(kubectl port-forward deployment/agones-processor $(MINIKUBE_DEBUG_PROCESSOR_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE) 2>/dev/null || echo "Warning: Processor port-forward failed") & \
+	(kubectl port-forward deployment/agones-controller $(MINIKUBE_DEBUG_CONTROLLER_PORT):2346 -n agones-system 2>/dev/null || echo "Warning: Controller port-forward failed") & \
+	(kubectl port-forward deployment/agones-extensions $(MINIKUBE_DEBUG_EXTENSIONS_PORT):2346 -n agones-system 2>/dev/null || echo "Warning: Extensions port-forward failed") & \
+	(kubectl port-forward deployment/agones-ping $(MINIKUBE_DEBUG_PING_PORT):2346 -n agones-system 2>/dev/null || echo "Warning: Ping port-forward failed") & \
+	(kubectl port-forward deployment/agones-allocator $(MINIKUBE_DEBUG_ALLOCATOR_PORT):2346 -n agones-system 2>/dev/null || echo "Warning: Allocator port-forward failed") & \
+	(kubectl port-forward deployment/agones-processor $(MINIKUBE_DEBUG_PROCESSOR_PORT):2346 -n agones-system 2>/dev/null || echo "Warning: Processor port-forward failed") & \
 	wait
 
 # Port forward debug port for Agones SDK to localhost
 # By default, it looks for pods in the "default" namespace with the
 # "agones-gameserver-sidecar" container. You can specify a pod name directly
-# using the MINIKUBE_DEBUG_POD_NAME variable.
+# using the MINIKUBE_DEBUG_POD_NAME variable, or change the target namespace
+# using MINIKUBE_DEBUG_SDK_NAMESPACE (defaults to "default").
 # The local port can be set with MINIKUBE_DEBUG_SDK_PORT (default 2351)
-minikube-debug-sdk-portforward: MINIKUBE_DEBUG_NAMESPACE := default
 minikube-debug-sdk-portforward:
 ifdef MINIKUBE_DEBUG_POD_NAME
-	kubectl port-forward pod/$(MINIKUBE_DEBUG_POD_NAME) $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
+	kubectl port-forward pod/$(MINIKUBE_DEBUG_POD_NAME) $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_SDK_NAMESPACE)
 else
 	@echo "Searching for pods with agones-gameserver-sidecar container..."
-	@PODS=$$(kubectl get pods -n $(MINIKUBE_DEBUG_NAMESPACE) -o json | jq -r '.items[] | select(.spec.containers[]?.name == "agones-gameserver-sidecar") | .metadata.name' 2>/dev/null || true); \
+	@PODS=$$(kubectl get pods -n $(MINIKUBE_DEBUG_SDK_NAMESPACE) -o json | jq -r '.items[] | select(.spec.containers[]?.name == "agones-gameserver-sidecar" or .spec.initContainers[]?.name == "agones-gameserver-sidecar") | .metadata.name' 2>/dev/null || true); \
 	if [ -z "$$PODS" ]; then \
-		echo "No pods with agones-gameserver-sidecar container found in namespace $(MINIKUBE_DEBUG_NAMESPACE)"; \
+		echo "No pods with agones-gameserver-sidecar container found in namespace $(MINIKUBE_DEBUG_SDK_NAMESPACE)"; \
 		exit 1; \
 	fi; \
 	echo "Found pods with agones-gameserver-sidecar container:"; \
@@ -206,5 +206,5 @@ else
 		exit 1; \
 	fi; \
 	echo "Port forwarding to pod: $$SELECTED_POD"; \
-	kubectl port-forward pod/$$SELECTED_POD $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_NAMESPACE)
+	kubectl port-forward pod/$$SELECTED_POD $(MINIKUBE_DEBUG_SDK_PORT):2346 -n $(MINIKUBE_DEBUG_SDK_NAMESPACE)
 endif

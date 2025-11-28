@@ -295,7 +295,7 @@ build: build-images build-sdks
 
 # build the docker images
 build-images: build-controller-image build-extensions-image build-agones-sdk-image build-ping-image build-allocator-image build-processor-image
-build-images-debug: build-controller-debug-image build-extensions-debug-image build-agones-sdk-debug-image build-ping-debug-image build-allocator-debug-image build-processor-debug-image
+build-debug-images: build-controller-debug-image build-extensions-debug-image build-agones-sdk-debug-image build-ping-debug-image build-allocator-debug-image build-processor-debug-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
