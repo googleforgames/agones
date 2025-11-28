@@ -24,7 +24,6 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	netcontext "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -127,7 +126,7 @@ func (*gameServerMockStream) SetTrailer(metadata.MD) {
 	panic("implement me")
 }
 
-func (m *gameServerMockStream) Context() netcontext.Context {
+func (m *gameServerMockStream) Context() context.Context {
 	return m.ctx
 }
 

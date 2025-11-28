@@ -205,6 +205,9 @@ func setupGameServer(t *testing.T, ctrl *fakeController) {
 
 	require.Eventually(t, func() bool {
 		gs, err := ctrl.gameServerLister.GameServers(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false // Keep retrying
+		}
 		assert.NoError(t, err)
 		return gs.Status.State == agonesv1.GameServerStateCreating
 	}, 5*time.Second, time.Second)
@@ -262,6 +265,9 @@ func setupGameServerPlayerConnect(t *testing.T, ctrl *fakeController) {
 
 	require.Eventually(t, func() bool {
 		gs, err := ctrl.gameServerLister.GameServers(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false // Keep retrying
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
 	}, 5*time.Second, time.Second)
