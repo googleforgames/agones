@@ -14,8 +14,6 @@
 
 module github.com/extism/go-pdk-template
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25
 
 require github.com/extism/go-pdk v1.1.3
