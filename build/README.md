@@ -31,19 +31,21 @@ tasks you may wish to accomplish.
 
 ```bash
 # Run tests and build images
-make test-go build-images
+make lint test-go build-images
 
 # Set up Minikube cluster and install Agones
 make minikube-test-cluster
 make build-images minikube-push minikube-install
 
 # Debug with Minikube
-make build-debug-images minikube-push-debug minikube-install-debug
+make build-debug-images minikube-push minikube-install-debug
 make minikube-debug-portforward
 
 # Run end-to-end tests
-make test-e2e
+# This takes a _while_, so run at your peril!
 make minikube-test-e2e
+# You can specify ARGS to run specific tests
+make minikube-test-e2e ARGS='-run TestAllocatorWithSelectors'
 ```
 
 For detailed command documentation, see the [Make Reference](docs/make-reference.md).
@@ -54,3 +56,5 @@ For detailed command documentation, see the [Make Reference](docs/make-reference
 - **Build Problems**: See [Building and Testing Guide](docs/building-testing.md)
 - **Setup Issues**: Check [Platform Setup Guide](docs/platform-setup.md) or [Cluster Setup Guide](docs/cluster-setup.md)
 - **Remote Debugging**: See [Development Workflow Guide](docs/development-workflow.md)
+- **#development Slack**: [Join the development channel on Slack](https://join.slack.com/t/agones/shared_invite/zt-2mg1j7ddw-0QYA9IAvFFRKw51ZBK6mkQ) and talk to fellow Agones developers.
+

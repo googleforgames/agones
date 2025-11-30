@@ -402,10 +402,6 @@ instead of `make shell` to start an interactive shell for development on Minikub
 The minikube version of [`make controller-portforward`](#make-controller-portforward) to setup
 port forwarding to the controller deployment.
 
-#### `make minikube-push-debug`
-Push the debug-enabled Agones Docker images into the Minikube cluster.
-Use this after `make build-debug-images` to deploy debug images for remote debugging.
-
 #### `make minikube-install-debug`
 Install Agones in debug mode with all services set to 1 replica and debug images.
 This target is specifically designed for debugging workflows with proper debug configuration.

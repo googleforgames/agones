@@ -130,23 +130,6 @@ minikube-prometheus-portforward:
 	$(MAKE) prometheus-portforward \
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
-# Push debug images to minikube
-# This will load the debug images and retag them to the normal tag
-minikube-push-debug:
-	$(MINIKUBE) image load $(controller_debug_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image load $(extensions_debug_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image load $(sidecar_debug_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image load $(ping_debug_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image load $(allocator_debug_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image load $(processor_debug_tag) -p $(MINIKUBE_PROFILE)
-
-	$(MINIKUBE) image tag $(controller_debug_tag) $(controller_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image tag $(extensions_debug_tag) $(extensions_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image tag $(sidecar_debug_tag) $(sidecar_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image tag $(ping_debug_tag) $(ping_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image tag $(allocator_debug_tag) $(allocator_tag) -p $(MINIKUBE_PROFILE)
-	$(MINIKUBE) image tag $(processor_debug_tag) $(processor_tag) -p $(MINIKUBE_PROFILE)
-
 # Install Agones with debug images / single replicas
 minikube-install-debug:
 	$(MAKE) minikube-install HELM_ARGS="\

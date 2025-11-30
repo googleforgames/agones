@@ -24,6 +24,8 @@ Before starting, ensure you have:
 - Docker installed and configured
 - Basic familiarity with VS Code debugging
 
+**Note**: While this guide uses VS Code as an example, the remote debugging approach works with any IDE or editor that supports connecting to Delve's remote debugging protocol. Contributions documenting setup instructions for other development environments are more than welcome !
+
 ### Debug Workflow Overview
 
 ```
@@ -92,7 +94,7 @@ The remote debugging setup creates a connection between your local development e
 
 3. **Push debug image to Minikube:**
    ```bash
-   make minikube-push-debug WITH_WINDOWS=0 WITH_ARM64=0
+   make minikube-push WITH_WINDOWS=0 WITH_ARM64=0
    ```
 
 4. **Install Agones with debug configuration:**

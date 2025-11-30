@@ -109,17 +109,11 @@ workdir_path = $(mount_path)
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
 build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
-controller_debug_tag = $(REGISTRY)/agones-controller:$(VERSION)-debug
 extensions_tag = $(REGISTRY)/agones-extensions:$(VERSION)
-extensions_debug_tag = $(REGISTRY)/agones-extensions:$(VERSION)-debug
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
-sidecar_debug_tag = $(REGISTRY)/agones-sdk:$(VERSION)-debug
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
-allocator_debug_tag = $(REGISTRY)/agones-allocator:$(VERSION)-debug
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
-ping_debug_tag = $(REGISTRY)/agones-ping:$(VERSION)-debug
 processor_tag = $(REGISTRY)/agones-processor:$(VERSION)
-processor_debug_tag = $(REGISTRY)/agones-processor:$(VERSION)-debug
 
 ifeq ($(WITH_WINDOWS), 1)
 sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk:$(VERSION)-linux-amd64
@@ -507,10 +501,8 @@ build-controller-binary-linux-arm64: $(ensure-build-image)
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Build controller with debug symbols for debugging
-build-controller-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+build-controller-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-controller-debug-binary: build-controller-binary-linux-amd64
 
 # Build a static binary for the gamerserver extensions
 ifeq ($(WITH_ARM64), 1)
@@ -529,10 +521,8 @@ build-extensions-binary-linux-arm64: $(ensure-build-image)
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
 
 # Build extensions with debug symbols for debugging
-build-extensions-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/extensions/bin/extensions.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/extensions
+build-extensions-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-extensions-debug-binary: build-extensions-binary-linux-amd64
 
 # Lint the go source code and yaml files.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -573,7 +563,7 @@ build-controller-image-arm64: $(ensure-build-image) build-controller-binary crea
 
 # Build the debug image for the controller service
 build-controller-debug-image: $(ensure-build-image) build-controller-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --file $(agones_path)/cmd/controller/Dockerfile.debug --tag=$(controller_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/controller/ --file $(agones_path)/cmd/controller/Dockerfile.debug --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: push-controller-image-amd64
@@ -616,10 +606,8 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build agones-sdk with debug symbols for debugging
-build-agones-sdk-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+build-agones-sdk-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-agones-sdk-debug-binary: build-agones-sdk-binary-linux-amd64
 
 ensure-windows-buildx:
 	docker buildx use $(BUILDX_WINDOWS_BUILDER) || docker buildx create --platform windows/amd64 --name $(BUILDX_WINDOWS_BUILDER) --use
@@ -638,7 +626,7 @@ build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary crea
 
 # Build the debug image for the extensions service
 build-extensions-debug-image: $(ensure-build-image) build-extensions-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/extensions/ --file $(agones_path)/cmd/extensions/Dockerfile.debug --tag=$(extensions_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/extensions/ --file $(agones_path)/cmd/extensions/Dockerfile.debug --tag=$(extensions_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers extensions image
 push-extensions-image: push-extensions-image-amd64
@@ -678,7 +666,7 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 
 # Build the debug image for the agones-sdk service
 build-agones-sdk-debug-image: $(ensure-build-image) build-agones-sdk-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --file $(agones_path)/cmd/sdk-server/Dockerfile.debug --tag=$(sidecar_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/sdk-server/ --file $(agones_path)/cmd/sdk-server/Dockerfile.debug --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: build-ping-binary-amd64
@@ -696,10 +684,8 @@ build-ping-binary-arm64: $(ensure-build-image)
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Build ping with debug symbols for debugging
-build-ping-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/ping/bin/ping.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+build-ping-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-ping-debug-binary: build-ping-binary-amd64
 
 # Pushes up the ping image
 push-ping-image: push-ping-image-amd64
@@ -729,7 +715,7 @@ build-ping-image-arm64: $(ensure-build-image) build-ping-binary create-arm64-bui
 
 # Build the debug image for the ping service
 build-ping-debug-image: $(ensure-build-image) build-ping-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/ping/ --file $(agones_path)/cmd/ping/Dockerfile.debug --tag=$(ping_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/ping/ --file $(agones_path)/cmd/ping/Dockerfile.debug --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -747,10 +733,8 @@ build-allocator-binary-linux-arm64:
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 
 # Build allocator with debug symbols for debugging
-build-allocator-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+build-allocator-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-allocator-debug-binary: build-allocator-binary-linux-amd64
 
 # Pushes up the allocator image
 push-allocator-image: push-allocator-image-amd64
@@ -779,7 +763,7 @@ build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create
 
 # Build the debug image for the allocator service
 build-allocator-debug-image: $(ensure-build-image) build-allocator-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/allocator/ --file $(agones_path)/cmd/allocator/Dockerfile.debug --tag=$(allocator_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/allocator/ --file $(agones_path)/cmd/allocator/Dockerfile.debug --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
 
 # push the processor image
 build-processor-binary: $(ensure-build-image) build-processor-binary-linux-amd64
@@ -797,10 +781,8 @@ build-processor-binary-linux-arm64: $(ensure-build-image)
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
 
 # Build processor with debug symbols for debugging
-build-processor-debug-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -gcflags="all=-N -l" -o $(go_build_base_path)/cmd/processor/bin/processor.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/processor
+build-processor-debug-binary: GO_BUILD_TAGS += -gcflags="all=-N -l"
+build-processor-debug-binary: build-processor-binary-linux-amd64
 
 # Build the image for the processor service
 build-processor-image: build-processor-image-amd64
@@ -816,7 +798,7 @@ build-processor-image-arm64: $(ensure-build-image) build-processor-binary create
 
 # Build the debug image for the processor service
 build-processor-debug-image: $(ensure-build-image) build-processor-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/processor/ --file $(agones_path)/cmd/processor/Dockerfile.debug --tag=$(processor_debug_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/processor/ --file $(agones_path)/cmd/processor/Dockerfile.debug --tag=$(processor_tag) $(DOCKER_BUILD_ARGS)
 
 # Pushes up the processor image
 push-processor-image: push-processor-image-amd64
