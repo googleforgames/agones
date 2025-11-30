@@ -2,6 +2,22 @@
 
 This guide covers advanced development patterns, debugging, and workflow optimization for Agones development.
 
+## Performance and Profiling Issues
+
+### I want to use pprof to profile the controller.
+
+Run `make build-images GO_BUILD_TAGS=profile` and this will build images with [pprof](https://golang.org/pkg/net/http/pprof/)
+enabled in the controller, which you can then push and install on your cluster.
+
+To get the pprof ui working, run `make controller-portforward PORT=6060` (or `minikube-controller-portforward PORT=6060` if you are on minikube),
+which will setup the port forwarding to the pprof http endpoint.
+
+To view CPU profiling, run `make pprof-cpu-web`, which will start the web interface with a CPU usage graph
+on [http://localhost:6061](http://localhost:6061).
+
+To view heap metrics, run `make pprof-heap-web`, which will start the web interface with a Heap usage graph.
+on [http://localhost:6062](http://localhost:6062).
+
 ## Remote Debugging with Minikube
 
 This section covers how to set up remote debugging for Agones services running in a Minikube cluster, allowing you to debug with breakpoints and step-through debugging from your IDE
