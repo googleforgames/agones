@@ -37,11 +37,11 @@ The current set of `alpha` and `beta` feature gates:
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Enabled  | `Beta`   | 1.50.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
+| [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Enabled  | `Beta`   | 1.49.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
-| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
-| [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
 | [Wasm Autoscaler](https://github.com/googleforgames/agones/issues/4080)                                                    | `WasmAutoscaler`                   | Disabled | `Alpha`  | 1.54.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
 
@@ -58,11 +58,11 @@ The current set of `alpha` and `beta` feature gates:
 | [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
 | [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |
 | [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Enabled  | `Beta`   | 1.50.0 |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
+| [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Enabled  | `Beta`   | 1.49.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
-| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
 | [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Disabled | `Alpha`  | 1.48.0 |
-| [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
 
 {{% /feature %}}
