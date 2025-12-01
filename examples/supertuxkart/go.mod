@@ -5,13 +5,14 @@ go 1.24.0
 toolchain go1.24.4
 
 require (
-	agones.dev/agones v1.51.0
-	github.com/hpcloud/tail v1.0.0
+	agones.dev/agones v1.53.0
+	github.com/nxadm/tail v1.4.11
 	github.com/stretchr/testify v1.10.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
 	github.com/kr/text v0.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -24,7 +25,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250826171959-ef028d996bc1 // indirect
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
-	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
