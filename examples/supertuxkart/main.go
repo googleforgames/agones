@@ -26,7 +26,7 @@ import (
 	"time"
 
 	sdk "agones.dev/agones/sdks/go"
-	"github.com/hpcloud/tail"
+	"github.com/nxadm/tail"
 )
 
 // logLocation is the path to the location of the SuperTuxKart log file
@@ -84,9 +84,22 @@ func main() {
 	for i := 0; i < 60; i++ {
 		time.Sleep(time.Second)
 
-		t, err = tail.TailFile(path.Join(home, logLocation), tail.Config{Follow: true})
+		absoluteLogPath := path.Join(home, logLocation)
+		log.Printf("Checking file %s (attempt %d)", absoluteLogPath, i)
+		fileInfo, err := os.Stat(absoluteLogPath)
+		if os.IsNotExist(err) {
+			log.Printf("File %s does not exist yet, retrying...", absoluteLogPath)
+			continue
+		}
+
+		if fileInfo.Size() == 0 {
+			log.Printf("File %s is empty, retrying...", absoluteLogPath)
+			continue
+		}
+
+		t, err = tail.TailFile(absoluteLogPath, tail.Config{Follow: true})
 		if err != nil {
-			log.Print(err)
+			log.Printf("Error tailing file: %s", err)
 			continue
 		} else {
 			break
