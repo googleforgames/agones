@@ -28,9 +28,9 @@ PortPolicyNone: true
 PortRanges: true
 ScheduledAutoscaler: true
 RollingUpdateFix: true
+FleetAutoscaleRequestMetaData: true
 
 # Alpha features
-FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 SidecarContainers: false
