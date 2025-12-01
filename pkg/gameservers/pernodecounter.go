@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 )
@@ -42,6 +43,14 @@ type PerNodeCounter struct {
 	gameServerLister listerv1.GameServerLister
 	countMutex       sync.RWMutex
 	counts           map[string]*NodeCount
+	processed        map[types.UID]processed
+}
+
+// processed tracks the last processed state of a GameServer to prevent duplicate event processing
+type processed struct {
+	resourceVersion string
+	state           agonesv1.GameServerState
+	nodeName        string
 }
 
 // NodeCount is just a convenience data structure for
@@ -61,46 +70,76 @@ func NewPerNodeCounter(
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 	gsInformer := gameServers.Informer()
 
-	ac := &PerNodeCounter{
+	pnc := &PerNodeCounter{
 		gameServerSynced: gsInformer.HasSynced,
 		gameServerLister: gameServers.Lister(),
 		countMutex:       sync.RWMutex{},
 		counts:           map[string]*NodeCount{},
+		processed:        map[types.UID]processed{},
 	}
 
-	ac.logger = runtime.NewLoggerWithType(ac)
+	pnc.logger = runtime.NewLoggerWithType(pnc)
 
 	_, _ = gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			gs := obj.(*agonesv1.GameServer)
 
+			pnc.countMutex.Lock()
+			defer pnc.countMutex.Unlock()
+
+			// Check if we've already processed this GameServer
+			if processed, exists := pnc.processed[gs.ObjectMeta.UID]; exists {
+				// Skip if same ResourceVersion (when set) and same state
+				if processed.resourceVersion == gs.ObjectMeta.ResourceVersion &&
+					processed.state == gs.Status.State {
+					// Already processed this exact version, skip
+					return
+				}
+
+				// If state changed, handle it as an update
+				if processed.state != gs.Status.State {
+					ready, allocated := pnc.calculateStateTransition(processed.state, gs.Status.State)
+					updateProcessed(pnc.processed, gs)
+					pnc.inc(gs, ready, allocated)
+				}
+				return
+			}
+
+			// Track this state
+			updateProcessed(pnc.processed, gs)
+
 			switch gs.Status.State {
 			case agonesv1.GameServerStateReady:
-				ac.inc(gs, 1, 0)
+				pnc.inc(gs, 1, 0)
 			case agonesv1.GameServerStateAllocated:
-				ac.inc(gs, 0, 1)
+				pnc.inc(gs, 0, 1)
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			oldGS := oldObj.(*agonesv1.GameServer)
 			newGS := newObj.(*agonesv1.GameServer)
 
-			var ready int64
-			var allocated int64
+			pnc.countMutex.Lock()
+			defer pnc.countMutex.Unlock()
 
-			if oldGS.Status.State == agonesv1.GameServerStateReady && newGS.Status.State != agonesv1.GameServerStateReady {
-				ready = -1
-			} else if newGS.Status.State == agonesv1.GameServerStateReady && oldGS.Status.State != agonesv1.GameServerStateReady {
-				ready = 1
+			// Check if we've already processed this exact state
+			if pnc.isAlreadyProcessed(newGS.ObjectMeta.UID, newGS.ObjectMeta.ResourceVersion) {
+				return
 			}
 
-			if oldGS.Status.State == agonesv1.GameServerStateAllocated && newGS.Status.State != agonesv1.GameServerStateAllocated {
-				allocated = -1
-			} else if newGS.Status.State == agonesv1.GameServerStateAllocated && oldGS.Status.State != agonesv1.GameServerStateAllocated {
-				allocated = 1
+			// Use the tracked previous state instead of oldGS to handle duplicates
+			if processed, exists := pnc.processed[newGS.ObjectMeta.UID]; exists {
+				oldGS = &agonesv1.GameServer{
+					Status: agonesv1.GameServerStatus{
+						State:    processed.state,
+						NodeName: processed.nodeName,
+					},
+				}
 			}
 
-			ac.inc(newGS, ready, allocated)
+			ready, allocated := pnc.calculateStateTransition(oldGS.Status.State, newGS.Status.State)
+			updateProcessed(pnc.processed, newGS)
+			pnc.inc(newGS, ready, allocated)
 		},
 		DeleteFunc: func(obj interface{}) {
 			gs, ok := obj.(*agonesv1.GameServer)
@@ -108,12 +147,31 @@ func NewPerNodeCounter(
 				return
 			}
 
+			pnc.countMutex.Lock()
+			defer pnc.countMutex.Unlock()
+
+			// Check if we've tracked this GameServer
+			processed, exists := pnc.processed[gs.ObjectMeta.UID]
+			if exists {
+				// Use the tracked state for accurate counting, as the current state may not be
+				// allocated or ready at this point (could very well be Shutdown).
+				gs = &agonesv1.GameServer{
+					Status: agonesv1.GameServerStatus{
+						State:    processed.state,
+						NodeName: processed.nodeName,
+					},
+				}
+			}
+
 			switch gs.Status.State {
 			case agonesv1.GameServerStateReady:
-				ac.inc(gs, -1, 0)
+				pnc.inc(gs, -1, 0)
 			case agonesv1.GameServerStateAllocated:
-				ac.inc(gs, 0, -1)
+				pnc.inc(gs, 0, -1)
 			}
+
+			// Remove from tracking since the object is deleted
+			delete(pnc.processed, gs.ObjectMeta.UID)
 		},
 	})
 
@@ -125,14 +183,14 @@ func NewPerNodeCounter(
 				return
 			}
 
-			ac.countMutex.Lock()
-			defer ac.countMutex.Unlock()
+			pnc.countMutex.Lock()
+			defer pnc.countMutex.Unlock()
 
-			delete(ac.counts, node.ObjectMeta.Name)
+			delete(pnc.counts, node.ObjectMeta.Name)
 		},
 	})
 
-	return ac
+	return pnc
 }
 
 // Run sets up the current state GameServer counts across nodes
@@ -153,6 +211,8 @@ func (pnc *PerNodeCounter) Run(ctx context.Context, _ int) error {
 	}
 
 	counts := map[string]*NodeCount{}
+	processedGS := map[types.UID]processed{}
+
 	for _, gs := range gsList {
 		_, ok := counts[gs.Status.NodeName]
 		if !ok {
@@ -165,9 +225,13 @@ func (pnc *PerNodeCounter) Run(ctx context.Context, _ int) error {
 		case agonesv1.GameServerStateAllocated:
 			counts[gs.Status.NodeName].Allocated++
 		}
+
+		// Track this GameServer to prevent duplicate processing
+		updateProcessed(processedGS, gs)
 	}
 
 	pnc.counts = counts
+	pnc.processed = processedGS
 	return nil
 }
 
@@ -186,10 +250,9 @@ func (pnc *PerNodeCounter) Counts() map[string]NodeCount {
 	return result
 }
 
+// incLocked increments the counts for a GameServer without acquiring the lock.
+// The caller must hold the countMutex lock.
 func (pnc *PerNodeCounter) inc(gs *agonesv1.GameServer, ready, allocated int64) {
-	pnc.countMutex.Lock()
-	defer pnc.countMutex.Unlock()
-
 	_, ok := pnc.counts[gs.Status.NodeName]
 	if !ok {
 		pnc.counts[gs.Status.NodeName] = &NodeCount{}
@@ -200,10 +263,50 @@ func (pnc *PerNodeCounter) inc(gs *agonesv1.GameServer, ready, allocated int64) 
 
 	// just in case
 	if pnc.counts[gs.Status.NodeName].Allocated < 0 {
+		pnc.logger.WithField("node", gs.Status.NodeName).Warn("Allocated count went negative, resetting to 0")
 		pnc.counts[gs.Status.NodeName].Allocated = 0
 	}
 
 	if pnc.counts[gs.Status.NodeName].Ready < 0 {
 		pnc.counts[gs.Status.NodeName].Ready = 0
+	}
+}
+
+// calculateStateTransition calculates the ready and allocated deltas when transitioning
+// from oldState to newState.
+func (pnc *PerNodeCounter) calculateStateTransition(oldState, newState agonesv1.GameServerState) (ready, allocated int64) {
+	if oldState == agonesv1.GameServerStateReady && newState != agonesv1.GameServerStateReady {
+		ready = -1
+	} else if newState == agonesv1.GameServerStateReady && oldState != agonesv1.GameServerStateReady {
+		ready = 1
+	}
+
+	if oldState == agonesv1.GameServerStateAllocated && newState != agonesv1.GameServerStateAllocated {
+		allocated = -1
+	} else if newState == agonesv1.GameServerStateAllocated && oldState != agonesv1.GameServerStateAllocated {
+		allocated = 1
+	}
+
+	return ready, allocated
+}
+
+// isAlreadyProcessed checks if a GameServer with the given UID and ResourceVersion
+// has already been processed. The caller must hold the countMutex lock.
+func (pnc *PerNodeCounter) isAlreadyProcessed(uid types.UID, resourceVersion string) bool {
+	if processed, exists := pnc.processed[uid]; exists {
+		if processed.resourceVersion == resourceVersion {
+			return true
+		}
+	}
+	return false
+}
+
+// updateProcessed updates the tracking state for a GameServer in the specified map.
+// The caller must hold the countMutex lock when updating pnc.processed.
+func updateProcessed(processedMap map[types.UID]processed, gs *agonesv1.GameServer) {
+	processedMap[gs.ObjectMeta.UID] = processed{
+		resourceVersion: gs.ObjectMeta.ResourceVersion,
+		state:           gs.Status.State,
+		nodeName:        gs.Status.NodeName,
 	}
 }

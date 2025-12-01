@@ -261,7 +261,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		}
 
 		ret, err := executeAllocation(gsa, c)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 		assert.Equal(t, gsa.Namespace, ret.Namespace)
 		expectedState := allocationv1.GameServerAllocationAllocated
@@ -779,8 +779,9 @@ func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Extensions) (*
 	}
 
 	ret := &allocationv1.GameServerAllocation{}
-	err = json.Unmarshal(rec.Body.Bytes(), ret)
-	return ret, err
+	jsn := rec.Body.Bytes()
+	err = json.Unmarshal(jsn, ret)
+	return ret, errors.Wrapf(err, "failed to unmarshal allocation response: %s", jsn)
 }
 
 func addReactorForGameServer(m *agtesting.Mocks) string {
@@ -806,11 +807,13 @@ func createRequest(gsa *allocationv1.GameServerAllocation) (*http.Request, error
 	}
 
 	r, err := http.NewRequest(http.MethodPost, "/", buf)
-	r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
-
 	if err != nil {
 		return nil, err
 	}
+
+	r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
+	r.Header.Set("Accept", k8sruntime.ContentTypeJSON)
+
 	return r, nil
 }
 
