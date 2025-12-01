@@ -563,7 +563,7 @@ build-controller-image-arm64: $(ensure-build-image) build-controller-binary crea
 
 # Build the debug image for the controller service
 build-controller-debug-image: $(ensure-build-image) build-controller-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --file $(agones_path)/cmd/controller/Dockerfile.debug --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/controller/ --file $(agones_path)/cmd/controller/Dockerfile.debug --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: push-controller-image-amd64
@@ -626,7 +626,7 @@ build-extensions-image-arm64: $(ensure-build-image) build-extensions-binary crea
 
 # Build the debug image for the extensions service
 build-extensions-debug-image: $(ensure-build-image) build-extensions-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/extensions/ --file $(agones_path)/cmd/extensions/Dockerfile.debug --tag=$(extensions_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/extensions/ --file $(agones_path)/cmd/extensions/Dockerfile.debug --tag=$(extensions_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers extensions image
 push-extensions-image: push-extensions-image-amd64
@@ -666,7 +666,7 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 
 # Build the debug image for the agones-sdk service
 build-agones-sdk-debug-image: $(ensure-build-image) build-agones-sdk-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --file $(agones_path)/cmd/sdk-server/Dockerfile.debug --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/sdk-server/ --file $(agones_path)/cmd/sdk-server/Dockerfile.debug --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: build-ping-binary-amd64
@@ -715,7 +715,7 @@ build-ping-image-arm64: $(ensure-build-image) build-ping-binary create-arm64-bui
 
 # Build the debug image for the ping service
 build-ping-debug-image: $(ensure-build-image) build-ping-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/ping/ --file $(agones_path)/cmd/ping/Dockerfile.debug --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/ping/ --file $(agones_path)/cmd/ping/Dockerfile.debug --tag=$(ping_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
@@ -763,7 +763,7 @@ build-allocator-image-arm64: $(ensure-build-image) build-allocator-binary create
 
 # Build the debug image for the allocator service
 build-allocator-debug-image: $(ensure-build-image) build-allocator-debug-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/allocator/ --file $(agones_path)/cmd/allocator/Dockerfile.debug --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/allocator/ --file $(agones_path)/cmd/allocator/Dockerfile.debug --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the processor image
 build-processor-binary: $(ensure-build-image) build-processor-binary-linux-amd64
