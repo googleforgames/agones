@@ -7,12 +7,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
 const examplesDir = "examples"
 
 var excludedPatterns = [...]string{"*.md", "*.yaml", "*.yml", "OWNERS", ".gitignore"}
+var excludedExamples = []string{"autoscaler-wasm"}
 
 func dirIsExample(dirName string) bool {
 	makefileName := fmt.Sprintf("%s/Makefile", dirName)
@@ -35,7 +37,10 @@ func getAllExampleNames() []string {
 
 	for _, entry := range entries {
 		name := entry.Name()
-		path := fmt.Sprintf("%s/%s", baseDir, entry.Name())
+		if slices.Contains(excludedExamples, name) {
+			continue
+		}
+		path := fmt.Sprintf("%s/%s", baseDir, name)
 		if dirIsExample(path) {
 			dirNames = append(dirNames, name)
 		}
