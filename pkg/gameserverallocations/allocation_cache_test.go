@@ -588,7 +588,7 @@ func TestAllocatorRunCacheSync(t *testing.T) {
 	deletedCopy := gs.DeepCopy()
 	deletedCopy.ObjectMeta.DeletionTimestamp = &n
 	deletedCopy.ObjectMeta.ResourceVersion = "8"
-	gsWatch.Modify(deletedCopy)
+	gsWatch.Modify(deletedCopy.DeepCopy())
 	assertCacheEntries(0)
 
 	// add back in ready gameserver
