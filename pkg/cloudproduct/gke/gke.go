@@ -98,7 +98,7 @@ func Detect(ctx context.Context, kc *kubernetes.Clientset) string {
 //
 //nolint:revive // ignore the unexported return; implements ControllerHooksInterface
 func Autopilot() *gkeAutopilot {
-	return &gkeAutopilot{useExtendedDurationPods: runtime.FeatureEnabled(runtime.FeatureGKEAutopilotExtendedDurationPods)}
+	return &gkeAutopilot{useExtendedDurationPods: true}
 }
 
 func (*gkeAutopilot) SyncPodPortsToGameServer(gs *agonesv1.GameServer, pod *corev1.Pod) error {
