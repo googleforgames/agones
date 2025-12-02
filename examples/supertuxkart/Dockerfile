@@ -13,15 +13,15 @@
 # limitations under the License.
 
 # build go
-FROM golang:1.24.6 as go-builder
+FROM golang:1.24.6 AS go-builder
 WORKDIR /go/src/supertuxkart
 
 COPY main.go go.mod ./
 RUN go mod tidy &&\
     go build -o wrapper .
 
-# Installing STK
-FROM debian:bookworm
+# Installing STK - forky has 1.5, so we'll jump ahead a little.
+FROM debian:forky
 
 WORKDIR /home/supertuxkart
 RUN apt update && apt-get install -y supertuxkart && apt clean
