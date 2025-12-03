@@ -33,8 +33,8 @@ tasks you may wish to accomplish.
 # Run tests and build images
 make lint test-go build-images
 
-# Set up Minikube cluster and install Agones
-make minikube-test-cluster
+# Set up Minikube cluster (with 2 nodes) and install Agones
+make minikube-test-cluster MINIKUBE_NODES=2
 make build-images minikube-push minikube-install
 
 # Debug with Minikube
