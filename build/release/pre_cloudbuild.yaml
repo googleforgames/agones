@@ -33,7 +33,8 @@ steps:
       - .
 
   #
-  # Creates the initial make + docker build platform
+  # Creates the initial make + docker build platform.
+  # This image is used to run subsequent 'make' commands.
   #
   - name: ubuntu
     args:
@@ -46,7 +47,29 @@ steps:
     args: [build, -f, Dockerfile.build, -t, make-docker, .]
 
   #
-  # Ensure example images exists
+  # Pull the build environment image if it exists.
+  # This image contains all the tools needed to run the build and test commands.
+  #
+  - name: make-docker
+    id: pull-build-image
+    dir: build
+    env: ['REGISTRY=us-docker.pkg.dev/${PROJECT_ID}/ci']
+    args: [pull-build-image]
+    waitFor:
+      - build-make-docker
+
+  #
+  # Build the build environment image if we were unable to pull it.
+  #
+  - name: "make-docker"
+    id: "ensure-build-image"
+    dir: "build"
+    args: ["ensure-build-image"]
+    waitFor:
+      - pull-build-image
+
+  #
+  # Ensure example images exists. Requires build image to exist in Cloudbuild environment.
   #
   - name: make-docker
     id: test-examples-on-gar
@@ -55,9 +78,11 @@ steps:
       - REGISTRY=us-docker.pkg.dev/${PROJECT_ID}
       - DOCKER_RUN_ARGS=--network=cloudbuild
     args: [test-examples-on-gar]
+    waitFor:
+      - ensure-build-image
 
   #
-  # Deploys the site by taking in the base version and deploying the previous version
+  # Deploys the site by taking in the base version and deploying the previous version.
   #
   - name: make-docker
     id: release-deploy-site
@@ -65,4 +90,6 @@ steps:
     env:
       - VERSION=${_VERSION}
     args: [release-deploy-site]
+    waitFor:
+      - test-examples-on-gar
 timeout: 5400s

@@ -34,11 +34,11 @@ const (
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 
-	////////////////
-	// Beta features
-
 	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
 	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
+
+	////////////////
+	// Beta features
 
 	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
@@ -151,9 +151,9 @@ var (
 		// Note that stable features cannot be set to "false", and are here so that upgrades from a
 		// previous version with the feature flag do not fail on parsing an unknown flag.
 		FeatureDisableResyncOnSDKServer: true,
+		FeatureAutopilotPassthroughPort: true,
 
 		// Beta features
-		FeatureAutopilotPassthroughPort:         true,
 		FeatureCountsAndLists:                   true,
 		FeatureGKEAutopilotExtendedDurationPods: true,
 		FeaturePortPolicyNone:                   true,

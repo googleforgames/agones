@@ -39,10 +39,9 @@ const (
 	hostPortAssignmentAnnotation = "autopilot.gke.io/host-port-assignment"
 	primaryContainerAnnotation   = "autopilot.gke.io/primary-container"
 
-	errPortPolicyMustBeDynamicOrNone = "portPolicy must be Dynamic or None on GKE Autopilot"
-	errRangeInvalid                  = "range must not be used on GKE Autopilot"
-	errSchedulingMustBePacked        = "scheduling strategy must be Packed on GKE Autopilot"
-	errEvictionSafeOnUpgradeInvalid  = "eviction.safe OnUpgrade not supported on GKE Autopilot"
+	errRangeInvalid                 = "range must not be used on GKE Autopilot"
+	errSchedulingMustBePacked       = "scheduling strategy must be Packed on GKE Autopilot"
+	errEvictionSafeOnUpgradeInvalid = "eviction.safe OnUpgrade not supported on GKE Autopilot"
 )
 
 var (
@@ -134,24 +133,15 @@ func (*gkeAutopilot) NewPortAllocator(portRanges map[string]portallocator.PortRa
 
 func (*gkeAutopilot) WaitOnFreePorts() bool { return true }
 
-func checkPassthroughPortPolicy(portPolicy agonesv1.PortPolicy) bool {
-	// if feature is not enabled and port is Passthrough return true because that should be an invalid port
-	// if feature is not enabled and port is not Passthrough you can return false because there's no error  but check for None port
-	// if feature is enabled and port is passthrough return false because there is no error
-	// if feature is enabled and port is not passthrough return false because there is no error but check for None port
-	return (!runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough) || portPolicy == agonesv1.Static
-}
-
 func (g *gkeAutopilot) ValidateGameServerSpec(gss *agonesv1.GameServerSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := g.ValidateScheduling(gss.Scheduling, fldPath.Child("scheduling"))
+
+	// Loop through ports and use the helper function for validation
 	for i, p := range gss.Ports {
-		if p.PortPolicy != agonesv1.Dynamic && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) && checkPassthroughPortPolicy(p.PortPolicy) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("portPolicy"), string(p.PortPolicy), errPortPolicyMustBeDynamicOrNone))
-		}
-		if p.Range != agonesv1.DefaultPortRange && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
-		}
+		allErrs = append(allErrs, validatePortPolicy(p, i, fldPath)...)
+
 	}
+
 	// See SetEviction comment below for why we block EvictionSafeOnUpgrade, if Extended Duration pods aren't supported.
 	if !g.useExtendedDurationPods && gss.Eviction.Safe == agonesv1.EvictionSafeOnUpgrade {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("eviction").Child("safe"), string(gss.Eviction.Safe), errEvictionSafeOnUpgradeInvalid))
@@ -179,7 +169,7 @@ func (*gkeAutopilot) MutateGameServerPod(gss *agonesv1.GameServerSpec, pod *core
 // This will help to back the container port from the allocated port using an objectSelector of this label
 // in GameServers that are using Passthrough Port Policy
 func setPassthroughLabel(gs *agonesv1.GameServerSpec, pod *corev1.Pod) {
-	if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && hasPortPolicy(gs, agonesv1.Passthrough) {
+	if hasPortPolicy(gs, agonesv1.Passthrough) {
 		pod.ObjectMeta.Labels[agonesv1.GameServerPortPolicyPodLabel] = "autopilot-passthrough"
 	}
 }
@@ -264,15 +254,6 @@ type autopilotPortAllocator struct {
 func (*autopilotPortAllocator) Run(_ context.Context) error       { return nil }
 func (*autopilotPortAllocator) DeAllocate(_ *agonesv1.GameServer) {}
 
-func checkPassthroughPortPolicyForAutopilot(portPolicy agonesv1.PortPolicy) bool {
-	// Autopilot can have Dynamic or Passthrough
-	// if feature is not enabled and port is Passthrough -> true
-	// if feature is not enabled and port is not Passthrough -> true
-	// if feature is enabled and port is Passthrough -> false
-	// if feature is enabled and port is not Passthrough -> true
-	return !(runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && portPolicy == agonesv1.Passthrough)
-}
-
 func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	if len(gs.Spec.Ports) == 0 {
 		return gs // Nothing to do.
@@ -280,7 +261,7 @@ func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.G
 
 	var ports []agonesv1.GameServerPort
 	for i, p := range gs.Spec.Ports {
-		if p.PortPolicy != agonesv1.Dynamic && checkPassthroughPortPolicyForAutopilot(p.PortPolicy) {
+		if !(p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough) {
 			logger.WithField("gs", gs.Name).WithField("portPolicy", p.PortPolicy).Error(
 				"GameServer has invalid PortPolicy for Autopilot - this should have been rejected by webhooks. Refusing to assign ports.")
 			return gs
@@ -314,4 +295,30 @@ func (apa *autopilotPortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.G
 	}
 	gs.Spec.Template.ObjectMeta.Annotations[hostPortAssignmentAnnotation] = string(hpaJSON)
 	return gs
+}
+
+// validatePortPolicy is a helper function to validate a single GameServerPort's PortPolicy
+// for GKE Autopilot constraints.
+func validatePortPolicy(p agonesv1.GameServerPort, i int, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	portPath := fldPath.Child("ports").Index(i)
+
+	switch p.PortPolicy {
+	case agonesv1.Dynamic, agonesv1.Passthrough:
+		// These policies are always valid on GKE Autopilot.
+	case agonesv1.None:
+		// "None" is valid only if the feature gate FeaturePortPolicyNone is enabled.
+		if !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone) {
+			allErrs = append(allErrs, field.Invalid(portPath.Child("portPolicy"), p.PortPolicy, "PortPolicy 'None' is not enabled"))
+		}
+	default:
+		// Any other port policy, such as "Static", is considered invalid on GKE Autopilot.
+		allErrs = append(allErrs, field.Invalid(portPath.Child("portPolicy"), p.PortPolicy, "portPolicy must be Dynamic, Passthrough, or None on GKE Autopilot"))
+	}
+
+	if p.Range != agonesv1.DefaultPortRange && (p.PortPolicy != agonesv1.None || !runtime.FeatureEnabled(runtime.FeaturePortPolicyNone)) {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("ports").Index(i).Child("range"), p.Range, errRangeInvalid))
+	}
+
+	return allErrs
 }
