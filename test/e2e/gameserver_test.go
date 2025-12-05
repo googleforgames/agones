@@ -781,6 +781,86 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	assert.NoError(t, errPoll, "expected no errors after polling a port: %s", secondPort)
 }
 
+func TestGameServerWithPortsMappedToInitSidecarContainers(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	containerName := "udp-server"
+	sidecarContainerName := "sidecar-server"
+	firstPort := "gameport"
+	secondPort := "second-gameport"
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: framework.Namespace},
+		Spec: agonesv1.GameServerSpec{
+			Container: containerName,
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          firstPort,
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}, {
+				ContainerPort: 5000,
+				Name:          secondPort,
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+				Container:     &sidecarContainerName,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            containerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+					InitContainers: []corev1.Container{
+						{
+							Name:            sidecarContainerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Args:            []string{"-port", "5000"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	interval := 2 * time.Second
+	timeOut := 60 * time.Second
+
+	expectedMsg1 := "Ping 1"
+	errPoll := wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
+		res, err := framework.SendGameServerUDPToPort(t, readyGs, firstPort, expectedMsg1)
+		if err != nil {
+			t.Logf("Could not message GameServer on %s: %v. Will try again...", firstPort, err)
+		}
+		return err == nil && strings.Contains(res, expectedMsg1), nil
+	})
+	if errPoll != nil {
+		assert.FailNow(t, errPoll.Error(), "expected no errors after polling a port: %s", firstPort)
+	}
+
+	expectedMsg2 := "Ping 2"
+	errPoll = wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
+		res, err := framework.SendGameServerUDPToPort(t, readyGs, secondPort, expectedMsg2)
+		if err != nil {
+			t.Logf("Could not message GameServer on %s: %v. Will try again...", secondPort, err)
+		}
+		return err == nil && strings.Contains(res, expectedMsg2), nil
+	})
+
+	assert.NoError(t, errPoll, "expected no errors after polling a port: %s", secondPort)
+}
+
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
