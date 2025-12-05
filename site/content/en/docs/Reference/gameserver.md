@@ -159,6 +159,14 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
 {{< /alert >}}
 
+{{% feature publishVersion="1.55.0" %}}
+## Sidecar Containers
+
+Agones supports the use of [Sidecar Containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/).
+This requires the `RestartPolicy` to be set to `Always` and can be referenced in the `ports.*.container` field. Typically they used to run
+services that need to run alongside the GameServer container, such as log shippers, monitoring agents, allocators and other supporting services.
+{{% /feature %}}
+
 ## Stable Network ID
 
 
