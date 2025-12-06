@@ -687,22 +687,23 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 // CreateNamespace creates a namespace and a service account in the test cluster
 func (f *Framework) CreateNamespace(namespace string) error {
 	kubeCore := f.KubeClient.CoreV1()
+	kubeRbac := f.KubeClient.RbacV1()
+	ctx := context.Background()
+	options := metav1.CreateOptions{}
+	saName := "agones-sdk"
+	roleName := "agones-gameserver-access"
+
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   namespace,
 			Labels: NamespaceLabel,
 		},
 	}
-
-	ctx := context.Background()
-
-	options := metav1.CreateOptions{}
 	if _, err := kubeCore.Namespaces().Create(ctx, ns, options); err != nil {
 		return errors.Errorf("creating namespace %s failed: %s", namespace, err.Error())
 	}
 	logrus.Infof("Namespace %s is created", namespace)
 
-	saName := "agones-sdk"
 	if _, err := kubeCore.ServiceAccounts(namespace).Create(ctx, &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      saName,
@@ -711,17 +712,61 @@ func (f *Framework) CreateNamespace(namespace string) error {
 		},
 	}, options); err != nil {
 		err = errors.Errorf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err.Error())
-		derr := f.DeleteNamespace(namespace)
-		if derr != nil {
-			return errors.Wrap(err, derr.Error())
-		}
+		_ = f.DeleteNamespace(namespace) // Use _ to ignore derr since we return err anyway
 		return err
 	}
 	logrus.Infof("ServiceAccount %s/%s is created", namespace, saName)
 
+	role := &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      roleName,
+			Namespace: namespace,
+			Labels:    map[string]string{"app": "agones"},
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{"agones.dev"},
+				Resources: []string{"gameservers"},
+				Verbs:     []string{"get", "patch", "update"},
+			},
+		},
+	}
+	if _, err := kubeRbac.Roles(namespace).Create(ctx, role, options); err != nil {
+		err = errors.Errorf("creating Role %s in namespace %s failed: %s", roleName, namespace, err.Error())
+		_ = f.DeleteNamespace(namespace)
+		return err
+	}
+	logrus.Infof("Role %s/%s is created", namespace, roleName)
+
 	rb := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "agones-sdk-access",
+			Namespace: namespace,
+			Labels:    map[string]string{"app": "agones"},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     roleName,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      saName,
+				Namespace: namespace,
+			},
+		},
+	}
+	if _, err := kubeRbac.RoleBindings(namespace).Create(ctx, rb, options); err != nil {
+		err = errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err.Error())
+		_ = f.DeleteNamespace(namespace)
+		return err
+	}
+	logrus.Infof("RoleBinding %s/%s is created", namespace, rb.Name)
+
+	rbCluster := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "agones-sdk-cluster-access",
 			Namespace: namespace,
 			Labels:    map[string]string{"app": "agones"},
 		},
@@ -738,15 +783,9 @@ func (f *Framework) CreateNamespace(namespace string) error {
 			},
 		},
 	}
-	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(ctx, rb, options); err != nil {
-		err = errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err.Error())
-		derr := f.DeleteNamespace(namespace)
-		if derr != nil {
-			return errors.Wrap(err, derr.Error())
-		}
-		return err
+	if _, err := kubeRbac.RoleBindings(namespace).Create(ctx, rbCluster, options); err != nil {
+		logrus.Warnf("Failed to create ClusterRoleBinding for agones-sdk, relying on local Role: %s", err.Error())
 	}
-	logrus.Infof("RoleBinding %s/%s is created", namespace, rb.Name)
 
 	return nil
 }
