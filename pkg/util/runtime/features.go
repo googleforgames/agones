@@ -60,11 +60,11 @@ const (
 	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
 	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
 
-	////////////////
-	// Alpha features
-
 	// FeatureFleetAutoscaleRequestMetaData is a feature flag that enables/disables fleet metadata on webhook autoscaler request.
 	FeatureFleetAutoscaleRequestMetaData Feature = "FleetAutoscaleRequestMetaData"
+
+	////////////////
+	// Alpha features
 
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
@@ -160,13 +160,13 @@ var (
 		FeaturePortRanges:                       true,
 		FeatureRollingUpdateFix:                 true,
 		FeatureScheduledAutoscaler:              true,
+		FeatureFleetAutoscaleRequestMetaData:    true,
 
 		// Alpha features
-		FeatureFleetAutoscaleRequestMetaData: false,
-		FeaturePlayerAllocationFilter:        false,
-		FeaturePlayerTracking:                false,
-		FeatureSidecarContainers:             false,
-		FeatureWasmAutoscaler:                false,
+		FeaturePlayerAllocationFilter: false,
+		FeaturePlayerTracking:         false,
+		FeatureSidecarContainers:      false,
+		FeatureWasmAutoscaler:         false,
 
 		// Dev features
 		FeatureProcessorAllocator: false,
