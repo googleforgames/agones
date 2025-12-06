@@ -190,11 +190,13 @@ The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `
 The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
 providing the autoscaling functionality.
 
+{{% feature publishVersion="1.54.0" %}}
 {{< beta title="Fleet Metadata in Webhook Requests" gate="FleetAutoscaleRequestMetaData" >}}
 
 When the `FleetAutoscaleRequestMetaData` feature gate is enabled by default, the Fleet's `labels` and 
 `annotations` are included in the `FleetAutoscaleRequest`, allowing webhooks to make scaling decisions based on 
 Fleet-specific metadata.
+{{% /feature %}}
 
 ```go
 // FleetAutoscaleReview is passed to the webhook with a populated Request value,
