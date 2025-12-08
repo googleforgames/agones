@@ -780,7 +780,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		if err != nil {
 			return nil, err
 		}
-		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
+		if p.PortPolicy == Passthrough {
 			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], portIdx)
 		}
 	}

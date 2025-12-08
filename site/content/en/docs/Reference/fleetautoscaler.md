@@ -246,7 +246,6 @@ The example of the webhook written in Go could be found {{< ghlink href="example
 It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.
 
 
-{{% feature publishVersion="1.54.0" %}}
 
 ## Wasm Autoscaling
 
@@ -370,7 +369,6 @@ The example of a Wasm autoscaler written in Go using the Extism PDK can be found
 
 It implements {{< ghlink href="examples/autoscaler-wasm/" >}}scaling logic{{< /ghlink >}} that maintains a buffer of available replicas based on allocated game servers.
 
-{{% /feature %}}
 
 ## Schedule and Chain Autoscaling
 
@@ -533,7 +531,6 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
       - `bufferSize` is the size of a buffer based on the List capacity that is available over the current aggregate List length in the Fleet (available capacity). It can be specified either as an absolute value or percentage format.
       - `minCapacity` is the minimum aggregate List total capacity across the fleet. If zero, it is ignored. If non zero, it must be smaller than MaxCapacity and bigger than BufferSize.
       - `maxCapacity` is the maximum aggregate List total capacity across the fleet. It must be bigger than both MinCapacity and BufferSize. Required field.
-{{% feature publishVersion="1.54.0" %}}
   - `wasm` parameters of the wasm policy type
     - The following are subfields of the `wasm` field, which contains the settings for WebAssembly-based autoscaling:
       - `function` is the exported function to call in the wasm module. Optional, defaults to 'scale'.
@@ -548,7 +545,6 @@ The `spec` field of the `FleetAutoscaler` is composed as follows:
           - `url` gives the direct URL location of the Wasm module, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. Optional.
           - `caBundle` is a PEM encoded certificate authority bundle for HTTPS. Base64 encoded PEM string. Required only for HTTPS with custom certificates.
       - `hash` is an optional hex encoded sha256 hash to verify the integrity of the Wasm module. Optional but recommended.
-{{% /feature %}}
 - `sync` is autoscaling sync strategy. It defines when to run the autoscaling
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync
