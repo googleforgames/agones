@@ -96,6 +96,131 @@ func resetMetrics() {
 
 var mu sync.Mutex
 
+func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	f := fleet("fleet-test", 8, 2, 5, 1, 1)
+	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
+	c.fleetWatch.Add(f)
+	f = f.DeepCopy()
+	f.Status.ReadyReplicas = 1
+	f.Spec.Replicas = 5
+	c.fleetWatch.Modify(f)
+	c.fleetWatch.Add(fd)
+	c.fleetWatch.Delete(fd)
+	time.Sleep(5 * time.Second)
+	// wait until the fleet-deleted no longer exists
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetReplicaCountName {
+				for _, d := range m.TimeSeries {
+					value := d.LabelValues[0].Value
+					if len(value) > 0 && value != "fleet-deleted" {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
+		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
+		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
+	})
+}
+
+func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	// testing fleet name change
+	fasFleetNameChange := fleetAutoScaler("first-fleet", "name-switch")
+	c.fasWatch.Add(fasFleetNameChange)
+	fasFleetNameChange = fasFleetNameChange.DeepCopy()
+	fasFleetNameChange.Spec.Policy.Buffer.BufferSize = intstr.FromInt(10)
+	fasFleetNameChange.Spec.Policy.Buffer.MaxReplicas = 50
+	fasFleetNameChange.Spec.Policy.Buffer.MinReplicas = 10
+	fasFleetNameChange.Status.CurrentReplicas = 20
+	fasFleetNameChange.Status.DesiredReplicas = 10
+	fasFleetNameChange.Status.ScalingLimited = true
+	c.fasWatch.Modify(fasFleetNameChange)
+	fasFleetNameChange = fasFleetNameChange.DeepCopy()
+	fasFleetNameChange.Spec.FleetName = "second-fleet"
+	c.fasWatch.Modify(fasFleetNameChange)
+	// testing deletion
+	fasDeleted := fleetAutoScaler("deleted-fleet", "deleted")
+	fasDeleted.Spec.Policy.Buffer.BufferSize = intstr.FromString("50%")
+	fasDeleted.Spec.Policy.Buffer.MaxReplicas = 150
+	fasDeleted.Spec.Policy.Buffer.MinReplicas = 15
+	c.fasWatch.Add(fasDeleted)
+	c.fasWatch.Delete(fasDeleted)
+	time.Sleep(5 * time.Second)
+	c.sync()
+	// wait until the fleet-deleted no longer exists
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetAutoscalersLimitedName {
+				for _, d := range m.TimeSeries {
+					values := d.LabelValues
+					if len(values[0].Value) > 0 && values[0].Value != "deleted-fleet" && values[1].Value != "deleted" && values[2].Value == defaultNs {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalerBufferLimitName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalterBufferSizeName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalersLimitedName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+	})
+}
+
 func TestControllerGameServerCount(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -301,7 +426,7 @@ func TestControllerGameServersTotal(t *testing.T) {
 	list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
 	require.NoError(t, err)
 	require.Len(t, list, expected)
-
+	time.Sleep(5 * time.Second)
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, gameServersTotalName, []expectedMetricData{
 		{labels: []string{"test", defaultNs, "Creating"}, val: int64(16)},
@@ -376,56 +501,6 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 	})
 }
 
-func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	resetMetrics()
-	exporter := &metricExporter{}
-	reader := metricexport.NewReader()
-	c := newFakeController()
-	defer c.close()
-	c.run(t)
-
-	f := fleet("fleet-test", 8, 2, 5, 1, 1)
-	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
-	c.fleetWatch.Add(f)
-	f = f.DeepCopy()
-	f.Status.ReadyReplicas = 1
-	f.Spec.Replicas = 5
-	c.fleetWatch.Modify(f)
-	c.fleetWatch.Add(fd)
-	c.fleetWatch.Delete(fd)
-
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetReplicaCountName {
-				for _, d := range m.TimeSeries {
-					value := d.LabelValues[0].Value
-					if len(value) > 0 && value != "fleet-deleted" {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
-		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
-		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
-		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
-		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
-		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
-	})
-}
-
 func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -479,81 +554,6 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
 		{labels: []string{"fleet-deleting", "fas-deleting", defaultNs}, val: int64(15)},
 		{labels: []string{"fleet-test", "fas-test", defaultNs}, val: int64(5)},
-	})
-}
-
-func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	resetMetrics()
-	exporter := &metricExporter{}
-	reader := metricexport.NewReader()
-	c := newFakeController()
-	defer c.close()
-	c.run(t)
-
-	// testing fleet name change
-	fasFleetNameChange := fleetAutoScaler("first-fleet", "name-switch")
-	c.fasWatch.Add(fasFleetNameChange)
-	fasFleetNameChange = fasFleetNameChange.DeepCopy()
-	fasFleetNameChange.Spec.Policy.Buffer.BufferSize = intstr.FromInt(10)
-	fasFleetNameChange.Spec.Policy.Buffer.MaxReplicas = 50
-	fasFleetNameChange.Spec.Policy.Buffer.MinReplicas = 10
-	fasFleetNameChange.Status.CurrentReplicas = 20
-	fasFleetNameChange.Status.DesiredReplicas = 10
-	fasFleetNameChange.Status.ScalingLimited = true
-	c.fasWatch.Modify(fasFleetNameChange)
-	fasFleetNameChange = fasFleetNameChange.DeepCopy()
-	fasFleetNameChange.Spec.FleetName = "second-fleet"
-	c.fasWatch.Modify(fasFleetNameChange)
-	// testing deletion
-	fasDeleted := fleetAutoScaler("deleted-fleet", "deleted")
-	fasDeleted.Spec.Policy.Buffer.BufferSize = intstr.FromString("50%")
-	fasDeleted.Spec.Policy.Buffer.MaxReplicas = 150
-	fasDeleted.Spec.Policy.Buffer.MinReplicas = 15
-	c.fasWatch.Add(fasDeleted)
-	c.fasWatch.Delete(fasDeleted)
-
-	c.sync()
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetAutoscalersLimitedName {
-				for _, d := range m.TimeSeries {
-					values := d.LabelValues
-					if len(values[0].Value) > 0 && values[0].Value != "deleted-fleet" && values[1].Value != "deleted" && values[2].Value == defaultNs {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalerBufferLimitName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalterBufferSizeName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalersLimitedName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
 	})
 }
 
@@ -666,7 +666,7 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 
 	}, 10*time.Second, time.Second)
 	c.collect()
-
+	time.Sleep(5 * time.Second)
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetCountersName, []expectedMetricData{
 		// keyCounter, keyName, keyNamespace, keyType
