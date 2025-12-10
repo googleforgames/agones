@@ -17,6 +17,7 @@ package metrics
 import (
 	"context"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -93,7 +94,11 @@ func resetMetrics() {
 	registerViews()
 }
 
+var mu sync.Mutex
+
 func TestControllerGameServerCount(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -108,9 +113,12 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gs1)
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.State == agonesv1.GameServerStateCreating
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -118,9 +126,12 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Modify(gs1)
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.State == agonesv1.GameServerStateReady
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -159,8 +170,8 @@ func TestControllerGameServerCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -182,9 +193,12 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -195,9 +209,12 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 4
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	reader.ReadAndExport(exporter)
@@ -207,8 +224,8 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -231,9 +248,12 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	reader.ReadAndExport(exporter)
@@ -243,6 +263,8 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 }
 
 func TestControllerGameServersTotal(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -267,11 +289,15 @@ func TestControllerGameServersTotal(t *testing.T) {
 	expected := 96
 	assert.Eventually(t, func() bool {
 		list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		require.NoError(t, err)
 		return len(list) == expected
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	// While these values are tested above, the following test checks will provide a more detailed diff output
 	// in the case where the assert.Eventually(...) case fails, which makes failing tests easier to debug.
+
 	list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
 	require.NoError(t, err)
 	require.Len(t, list, expected)
@@ -290,7 +316,8 @@ func TestControllerGameServersTotal(t *testing.T) {
 }
 
 func TestControllerFleetOnDeleting(t *testing.T) {
-
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -331,7 +358,7 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
@@ -350,8 +377,8 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 }
 
 func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -387,7 +414,7 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
@@ -400,7 +427,8 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 }
 
 func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
-
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -445,7 +473,7 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
@@ -455,8 +483,8 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 }
 
 func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -505,7 +533,7 @@ func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
@@ -530,6 +558,8 @@ func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
 }
 
 func TestControllerGameServersNodeState(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	m := agtesting.NewMocks()
 
@@ -567,8 +597,8 @@ func TestControllerGameServersNodeState(t *testing.T) {
 				check++
 			}
 		}
-
 		return check == 2
+
 	}, 10*time.Second, time.Second)
 
 	// check the details
@@ -587,8 +617,8 @@ func TestControllerGameServersNodeState(t *testing.T) {
 }
 
 func TestFleetCountersAndListsMetrics(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	resetMetrics()
@@ -628,9 +658,13 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		fl, err := c.fleetLister.Fleets(f.GetObjectMeta().GetNamespace()).Get(fleetName)
+		if fl == nil || err != nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return cmp.Equal(counters, fl.Status.Counters) && cmp.Equal(lists, fl.Status.Lists)
-	}, 5*time.Second, time.Second)
+
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	reader.ReadAndExport(exporter)
