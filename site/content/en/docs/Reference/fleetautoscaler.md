@@ -140,9 +140,10 @@ Webhook based autoscalers have the added benefit of being able to scale a Fleet 
 scale up on demand based on an external signal before a `GameServerAllocation` is executed from a match-maker or 
 similar system.
 
-In order to define the path to your Webhook you can use either `URL` or `service`. Note that `caBundle` parameter is
-required if you use HTTPS for webhook `FleetAutoscaler`, `caBundle` should be omitted if you want to use HTTP webhook
-server.
+In order to define the path to your Webhook you can use either `URL` or `service`.
+
+The `caBundle` parameter is available if you use custom certificates for HTTPS webhooks or want specifically to
+validate the HTTPS certificate with a specific certificate authority.
 
 For Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
@@ -189,6 +190,18 @@ The JSON payload that is sent is a `FleetAutoscaleReview` data structure and a `
 
 The `FleetAutoscaleResponse`'s `Replica` field is used to set the target `Fleet` count with each sync interval, thereby
 providing the autoscaling functionality.
+
+{{% feature expiryVersion="1.54.0" %}}
+{{< alpha title="Fleet Metadata in Webhook Requests" gate="FleetAutoscaleRequestMetaData" >}}
+{{% /feature %}}
+
+{{% feature publishVersion="1.54.0" %}}
+{{< beta title="Fleet Metadata in Webhook Requests" gate="FleetAutoscaleRequestMetaData" >}}
+{{% /feature %}}
+
+When the `FleetAutoscaleRequestMetaData` feature gate is enabled, the Fleet's `labels` and 
+`annotations` are included in the `FleetAutoscaleRequest`, allowing webhooks to make scaling decisions based on 
+Fleet-specific metadata.
 
 ```go
 // FleetAutoscaleReview is passed to the webhook with a populated Request value,
