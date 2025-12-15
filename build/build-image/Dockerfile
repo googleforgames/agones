@@ -17,8 +17,8 @@
 FROM debian:trixie
 
 RUN apt-get update && \
-    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion \
-    zip nano jq graphviz gettext-base plantuml software-properties-common ruby-full && \
+    apt-get install -y build-essential gnupg curl git wget psmisc rsync make python3 bash-completion ruby\
+    zip nano jq graphviz gettext-base plantuml && \
     apt-get clean
 
 RUN gem install fpm && \
@@ -38,7 +38,9 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 WORKDIR /opt
 
 # credits https://cloud.google.com/sdk/docs/install#deb
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && \
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    apt-get update -y && \
     apt-get install google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-app-engine-go -y && \
     echo "source /usr/share/google-cloud-sdk/completion.bash.inc" >> /root/.bashrc
 
