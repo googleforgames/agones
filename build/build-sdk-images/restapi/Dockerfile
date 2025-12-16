@@ -15,7 +15,7 @@ ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
 RUN apt-get --allow-releaseinfo-change update && \
-    apt-get install -y wget jq software-properties-common gnupg && \
+    apt-get install -y wget jq gnupg && \
     apt-get clean
 
 # install go

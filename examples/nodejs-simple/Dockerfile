@@ -14,7 +14,7 @@
 
 FROM debian:trixie
 RUN useradd -u 1000 -m server
-RUN apt-get update && apt-get install -y curl software-properties-common gnupg  && \
+RUN apt-get update && apt-get install -y curl gnupg  && \
     apt-get clean
 
 # Import the Nodesource GPG key
