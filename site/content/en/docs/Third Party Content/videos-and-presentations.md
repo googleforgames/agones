@@ -18,7 +18,7 @@ weight: 10
 
 ### (Paywall) 'Monster Hunter Wilds' Network Architecture Supporting Over 1 Million Concurrent Users (Presented by AWS) (Devcom, 2025)
 
-[![devcom-mhw-thumb.png](/images/devcom-mhw-thumb.png)](https://bizcommunity.gamescom.global/event/devcom-developer-conference-2025/planning/UGxhbm5pbmdfMjc0ODE4MQ==)
+[![devcom-mhw-thumb.png](../../../images/devcom-mhw-thumb.png)](https://bizcommunity.gamescom.global/event/devcom-developer-conference-2025/planning/UGxhbm5pbmdfMjc0ODE4MQ==)
 
 ### (Japanese) PlayStation™Network のボイスチャットサーバの Amazon EKS 移行と Hybrid Cloud 化（AWS Summit Japan, 2025)
 
