@@ -20,6 +20,8 @@ weight: 10
 
 [![devcom-mhw-thumb.png](../../../images/devcom-mhw-thumb.png)](https://bizcommunity.gamescom.global/event/devcom-developer-conference-2025/planning/UGxhbm5pbmdfMjc0ODE4MQ==)
 
+Unfortunately, it seems that only people who have previously registered for Devcom can view this video. If you find another way to access it, please submit a PR on this page! 
+
 ### (Japanese) PlayStation™Network のボイスチャットサーバの Amazon EKS 移行と Hybrid Cloud 化（AWS Summit Japan, 2025)
 
 {{< youtube "NHoxFgGHtVg" >}}
