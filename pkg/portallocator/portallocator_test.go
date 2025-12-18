@@ -578,6 +578,9 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch.Add(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) == 3
 	}, 5*time.Second, time.Second)
@@ -593,8 +596,12 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	// delete allocated gs
 	gsWatch.Delete(gs3.DeepCopy())
+	time.Sleep(5 * time.Second)
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) == 2
 	}, 5*time.Second, time.Second)
@@ -607,8 +614,12 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	// delete the currently non allocated server, all should be the same
 	// simulated getting an old delete message
 	gsWatch.Delete(gs4.DeepCopy())
+	time.Sleep(5 * time.Second)
 	require.Never(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) != 2
 	}, time.Second, 100*time.Millisecond)
