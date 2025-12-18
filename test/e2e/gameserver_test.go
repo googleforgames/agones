@@ -1213,7 +1213,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.39
+          image: us-docker.pkg.dev/agones-images/examples/simple-game-server:0.40
 `
 	err := os.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
@@ -1601,8 +1601,11 @@ func TestLists(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
-
+	gs.Labels = map[string]string{agonesv1.FleetNameLabel: "fleet-example"}
 	gs.Spec.Lists = make(map[string]agonesv1.ListStatus)
+	gs.Spec.Lists["players"] = agonesv1.ListStatus{
+		Capacity: 1000,
+	}
 	gs.Spec.Lists["games"] = agonesv1.ListStatus{
 		Values:   []string{"game1", "game2"},
 		Capacity: 50,

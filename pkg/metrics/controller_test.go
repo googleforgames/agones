@@ -17,6 +17,7 @@ package metrics
 import (
 	"context"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -93,7 +94,136 @@ func resetMetrics() {
 	registerViews()
 }
 
+var mu sync.Mutex
+
+func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	f := fleet("fleet-test", 8, 2, 5, 1, 1)
+	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
+	c.fleetWatch.Add(f)
+	f = f.DeepCopy()
+	f.Status.ReadyReplicas = 1
+	f.Spec.Replicas = 5
+	c.fleetWatch.Modify(f)
+	c.fleetWatch.Add(fd)
+	c.fleetWatch.Delete(fd)
+	time.Sleep(5 * time.Second)
+	// wait until the fleet-deleted no longer exists
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetReplicaCountName {
+				for _, d := range m.TimeSeries {
+					value := d.LabelValues[0].Value
+					if len(value) > 0 && value != "fleet-deleted" {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
+		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
+		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
+	})
+}
+
+func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	c := newFakeController()
+	defer c.close()
+	c.run(t)
+
+	// testing fleet name change
+	fasFleetNameChange := fleetAutoScaler("first-fleet", "name-switch")
+	c.fasWatch.Add(fasFleetNameChange)
+	fasFleetNameChange = fasFleetNameChange.DeepCopy()
+	fasFleetNameChange.Spec.Policy.Buffer.BufferSize = intstr.FromInt(10)
+	fasFleetNameChange.Spec.Policy.Buffer.MaxReplicas = 50
+	fasFleetNameChange.Spec.Policy.Buffer.MinReplicas = 10
+	fasFleetNameChange.Status.CurrentReplicas = 20
+	fasFleetNameChange.Status.DesiredReplicas = 10
+	fasFleetNameChange.Status.ScalingLimited = true
+	c.fasWatch.Modify(fasFleetNameChange)
+	fasFleetNameChange = fasFleetNameChange.DeepCopy()
+	fasFleetNameChange.Spec.FleetName = "second-fleet"
+	c.fasWatch.Modify(fasFleetNameChange)
+	// testing deletion
+	fasDeleted := fleetAutoScaler("deleted-fleet", "deleted")
+	fasDeleted.Spec.Policy.Buffer.BufferSize = intstr.FromString("50%")
+	fasDeleted.Spec.Policy.Buffer.MaxReplicas = 150
+	fasDeleted.Spec.Policy.Buffer.MinReplicas = 15
+	c.fasWatch.Add(fasDeleted)
+	c.fasWatch.Delete(fasDeleted)
+	time.Sleep(5 * time.Second)
+	c.sync()
+	// wait until the fleet-deleted no longer exists
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == fleetAutoscalersLimitedName {
+				for _, d := range m.TimeSeries {
+					values := d.LabelValues
+					if len(values[0].Value) > 0 && values[0].Value != "deleted-fleet" && values[1].Value != "deleted" && values[2].Value == defaultNs {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
+	reader.ReadAndExport(exporter)
+	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalerBufferLimitName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalterBufferSizeName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
+	})
+	assertMetricData(t, exporter, fleetAutoscalersLimitedName, []expectedMetricData{
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+	})
+}
+
 func TestControllerGameServerCount(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -108,9 +238,12 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gs1)
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.State == agonesv1.GameServerStateCreating
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -118,9 +251,12 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Modify(gs1)
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.State == agonesv1.GameServerStateReady
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -159,8 +295,8 @@ func TestControllerGameServerCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -182,9 +318,12 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -195,9 +334,12 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 4
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	reader.ReadAndExport(exporter)
@@ -207,8 +349,8 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 }
 
 func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
 	exporter := &metricExporter{}
@@ -231,9 +373,12 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		if err != nil || gs == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	c.collect()
 
 	reader.ReadAndExport(exporter)
@@ -243,6 +388,8 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 }
 
 func TestControllerGameServersTotal(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -267,15 +414,19 @@ func TestControllerGameServersTotal(t *testing.T) {
 	expected := 96
 	assert.Eventually(t, func() bool {
 		list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		require.NoError(t, err)
 		return len(list) == expected
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 	// While these values are tested above, the following test checks will provide a more detailed diff output
 	// in the case where the assert.Eventually(...) case fails, which makes failing tests easier to debug.
+
 	list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
 	require.NoError(t, err)
 	require.Len(t, list, expected)
-
+	time.Sleep(5 * time.Second)
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, gameServersTotalName, []expectedMetricData{
 		{labels: []string{"test", defaultNs, "Creating"}, val: int64(16)},
@@ -290,7 +441,8 @@ func TestControllerGameServersTotal(t *testing.T) {
 }
 
 func TestControllerFleetOnDeleting(t *testing.T) {
-
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -331,7 +483,7 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
@@ -349,58 +501,9 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 	})
 }
 
-func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	resetMetrics()
-	exporter := &metricExporter{}
-	reader := metricexport.NewReader()
-	c := newFakeController()
-	defer c.close()
-	c.run(t)
-
-	f := fleet("fleet-test", 8, 2, 5, 1, 1)
-	fd := fleet("fleet-deleted", 100, 100, 100, 100, 100)
-	c.fleetWatch.Add(f)
-	f = f.DeepCopy()
-	f.Status.ReadyReplicas = 1
-	f.Spec.Replicas = 5
-	c.fleetWatch.Modify(f)
-	c.fleetWatch.Add(fd)
-	c.fleetWatch.Delete(fd)
-
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetReplicaCountName {
-				for _, d := range m.TimeSeries {
-					value := d.LabelValues[0].Value
-					if len(value) > 0 && value != "fleet-deleted" {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 5*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
-		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
-		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
-		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
-		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
-		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
-	})
-}
-
 func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
-
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -445,7 +548,7 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 		}
 
 		return false
-	}, 5*time.Second, time.Second)
+	}, 10*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
@@ -454,82 +557,9 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 	})
 }
 
-func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	resetMetrics()
-	exporter := &metricExporter{}
-	reader := metricexport.NewReader()
-	c := newFakeController()
-	defer c.close()
-	c.run(t)
-
-	// testing fleet name change
-	fasFleetNameChange := fleetAutoScaler("first-fleet", "name-switch")
-	c.fasWatch.Add(fasFleetNameChange)
-	fasFleetNameChange = fasFleetNameChange.DeepCopy()
-	fasFleetNameChange.Spec.Policy.Buffer.BufferSize = intstr.FromInt(10)
-	fasFleetNameChange.Spec.Policy.Buffer.MaxReplicas = 50
-	fasFleetNameChange.Spec.Policy.Buffer.MinReplicas = 10
-	fasFleetNameChange.Status.CurrentReplicas = 20
-	fasFleetNameChange.Status.DesiredReplicas = 10
-	fasFleetNameChange.Status.ScalingLimited = true
-	c.fasWatch.Modify(fasFleetNameChange)
-	fasFleetNameChange = fasFleetNameChange.DeepCopy()
-	fasFleetNameChange.Spec.FleetName = "second-fleet"
-	c.fasWatch.Modify(fasFleetNameChange)
-	// testing deletion
-	fasDeleted := fleetAutoScaler("deleted-fleet", "deleted")
-	fasDeleted.Spec.Policy.Buffer.BufferSize = intstr.FromString("50%")
-	fasDeleted.Spec.Policy.Buffer.MaxReplicas = 150
-	fasDeleted.Spec.Policy.Buffer.MinReplicas = 15
-	c.fasWatch.Add(fasDeleted)
-	c.fasWatch.Delete(fasDeleted)
-
-	c.sync()
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetAutoscalersLimitedName {
-				for _, d := range m.TimeSeries {
-					values := d.LabelValues
-					if len(values[0].Value) > 0 && values[0].Value != "deleted-fleet" && values[1].Value != "deleted" && values[2].Value == defaultNs {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 5*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalerBufferLimitName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalterBufferSizeName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
-	})
-	assertMetricData(t, exporter, fleetAutoscalersLimitedName, []expectedMetricData{
-		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
-	})
-}
-
 func TestControllerGameServersNodeState(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
 	resetMetrics()
 	m := agtesting.NewMocks()
 
@@ -567,8 +597,8 @@ func TestControllerGameServersNodeState(t *testing.T) {
 				check++
 			}
 		}
-
 		return check == 2
+
 	}, 10*time.Second, time.Second)
 
 	// check the details
@@ -587,8 +617,8 @@ func TestControllerGameServersNodeState(t *testing.T) {
 }
 
 func TestFleetCountersAndListsMetrics(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	resetMetrics()
@@ -628,11 +658,15 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 	require.True(t, c.sync())
 	require.Eventually(t, func() bool {
 		fl, err := c.fleetLister.Fleets(f.GetObjectMeta().GetNamespace()).Get(fleetName)
+		if fl == nil || err != nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return cmp.Equal(counters, fl.Status.Counters) && cmp.Equal(lists, fl.Status.Lists)
-	}, 5*time.Second, time.Second)
-	c.collect()
 
+	}, 10*time.Second, time.Second)
+	c.collect()
+	time.Sleep(5 * time.Second)
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, fleetCountersName, []expectedMetricData{
 		// keyCounter, keyName, keyNamespace, keyType

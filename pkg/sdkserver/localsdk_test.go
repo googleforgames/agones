@@ -912,6 +912,7 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
+		"players":  {Capacity: 1000},
 		"games":    {Capacity: 100, Values: []string{"game1", "game2"}},
 		"unicorns": {Capacity: 1000, Values: []string{"unicorn1", "unicorn2"}},
 		"clients":  {Capacity: 10, Values: []string{}},
