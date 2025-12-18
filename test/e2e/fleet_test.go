@@ -1698,6 +1698,9 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Template.Spec.Lists = map[string]agonesv1.ListStatus{
+		"players": {
+			Capacity: 1000,
+		},
 		"gamers": {
 			Values:   []string{"gamer0", "gamer1"},
 			Capacity: 10,
@@ -1738,7 +1741,6 @@ func TestFleetAggregatedListStatus(t *testing.T) {
 	for _, gs := range list {
 		count := rand.IntnRange(2, 9)
 		capacity := rand.IntnRange(count, 100)
-
 		totalCapacity += capacity
 		msg := fmt.Sprintf("SET_LIST_CAPACITY gamers %d", capacity)
 		reply, err := framework.SendGameServerUDP(t, &gs, msg)
