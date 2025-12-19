@@ -274,8 +274,21 @@ func TestControllerGameServerCount(t *testing.T) {
 
 		for _, m := range ex.metrics {
 			if m.Descriptor.Name == gameServersCountName {
-				if len(m.TimeSeries) == 4 {
-					return true
+				// Check that we have 4 time series and that PortAllocation count is 2
+				if len(m.TimeSeries) != 4 {
+					return false
+				}
+				// Verify the PortAllocation count is 2
+				for _, tsd := range m.TimeSeries {
+					if len(tsd.LabelValues) >= 3 &&
+						tsd.LabelValues[0].Value == "none" &&
+						tsd.LabelValues[2].Value == "PortAllocation" {
+						if len(tsd.Points) > 0 && tsd.Points[0].Value == int64(2) {
+							return true
+						}
+						// PortAllocation found but count is not 2 yet
+						return false
+					}
 				}
 				logrus.WithField("m", m).Info("Metrics")
 				return false
