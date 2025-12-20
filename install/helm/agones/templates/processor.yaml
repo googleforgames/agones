@@ -130,6 +130,8 @@ spec:
           value: {{ .Values.agones.allocator.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
           value: {{ .Values.agones.allocator.apiServerQPSBurst | quote }}
+        - name: FEATURE_GATES
+          value: {{ .Values.agones.featureGates | quote }}
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER

@@ -239,29 +239,19 @@ func (h *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 
 	resultObj, err := h.allocator.Allocate(h.ctx, gsa)
 	if err != nil {
-		unallocated := &allocationv1.GameServerAllocation{
-			Spec: gsa.Spec,
-			Status: allocationv1.GameServerAllocationStatus{
-				State: allocationv1.GameServerAllocationUnAllocated,
+		grpcStatus, ok := status.FromError(err)
+		code := h.grpcUnallocatedStatusCode
+		msg := err.Error()
+		if ok {
+			code = grpcStatus.Code()
+			msg = grpcStatus.Message()
+		}
+		return allocationResult{
+			error: &rpcstatus.Status{
+				Code:    int32(code),
+				Message: msg,
 			},
 		}
-		response, convErr := converters.ConvertGSAToAllocationResponse(unallocated, h.grpcUnallocatedStatusCode)
-		if convErr != nil {
-			grpcStatus, ok := status.FromError(convErr)
-			code := h.grpcUnallocatedStatusCode
-			msg := convErr.Error()
-			if ok {
-				code = grpcStatus.Code()
-				msg = grpcStatus.Message()
-			}
-			return allocationResult{
-				error: &rpcstatus.Status{
-					Code:    int32(code),
-					Message: msg,
-				},
-			}
-		}
-		return allocationResult{response: response}
 	}
 
 	if s, ok := resultObj.(*metav1.Status); ok {
@@ -300,6 +290,7 @@ func (h *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 			},
 		}
 	}
+
 	return allocationResult{response: response}
 }
 
