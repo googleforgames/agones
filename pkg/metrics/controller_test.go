@@ -597,7 +597,6 @@ func TestControllerGameServersNodeState(t *testing.T) {
 
 	// wait until we have some nodes and gameservers in metrics
 	var exporter *metricExporter
-	time.Sleep(5 * time.Second)
 	assert.Eventually(t, func() bool {
 		exporter = &metricExporter{}
 		reader.ReadAndExport(exporter)
@@ -613,7 +612,7 @@ func TestControllerGameServersNodeState(t *testing.T) {
 		}
 		return check == 2
 
-	}, 10*time.Second, time.Second)
+	}, 10*time.Second, 100*time.Millisecond)
 
 	// check the details
 	assertMetricData(t, exporter, gameServersNodeCountName, []expectedMetricData{
