@@ -570,8 +570,18 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 		return true, nl, nil
 	})
 
-	_, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
+	ctx, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
+
+	m.KubeInformerFactory.Start(ctx.Done())
+	m.AgonesInformerFactory.Start(ctx.Done())
+
+	// 🔑 wait for caches
+	require.True(t, cache.WaitForCacheSync(
+		ctx.Done(),
+		pa.gameServerSynced,
+		pa.nodeSynced,
+	))
 
 	gsWatch.Add(gs1.DeepCopy())
 	gsWatch.Add(gs2.DeepCopy())
@@ -583,7 +593,7 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 		}
 		assert.NoError(t, err)
 		return len(list) == 3
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 50*time.Millisecond)
 
 	err := pa.syncAll()
 	require.NoError(t, err)
@@ -596,7 +606,6 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	// delete allocated gs
 	gsWatch.Delete(gs3.DeepCopy())
-	time.Sleep(5 * time.Second)
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
 		if err != nil || list == nil {
@@ -604,7 +613,7 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 		}
 		assert.NoError(t, err)
 		return len(list) == 2
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 50*time.Millisecond)
 
 	pa.mutex.RLock() // reading mutable state, so read lock
 	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
@@ -614,7 +623,7 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	// delete the currently non allocated server, all should be the same
 	// simulated getting an old delete message
 	gsWatch.Delete(gs4.DeepCopy())
-	time.Sleep(5 * time.Second)
+
 	require.Never(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
 		if err != nil || list == nil {
