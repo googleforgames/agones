@@ -237,21 +237,21 @@ func (h *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 	gsa := converters.ConvertAllocationRequestToGSA(req)
 	gsa.ApplyDefaults()
 
-	resultObj, err := h.allocator.Allocate(h.ctx, gsa)
-	if err != nil {
-		grpcStatus, ok := status.FromError(err)
-		code := h.grpcUnallocatedStatusCode
+	makeError := func(err error, fallbackCode codes.Code) allocationResult {
+		code := fallbackCode
 		msg := err.Error()
-		if ok {
+		if grpcStatus, ok := status.FromError(err); ok {
 			code = grpcStatus.Code()
 			msg = grpcStatus.Message()
 		}
 		return allocationResult{
-			error: &rpcstatus.Status{
-				Code:    int32(code),
-				Message: msg,
-			},
+			error: &rpcstatus.Status{Code: int32(code), Message: msg},
 		}
+	}
+
+	resultObj, err := h.allocator.Allocate(h.ctx, gsa)
+	if err != nil {
+		return makeError(err, h.grpcUnallocatedStatusCode)
 	}
 
 	if s, ok := resultObj.(*metav1.Status); ok {
@@ -265,30 +265,17 @@ func (h *processorHandler) processAllocation(req *allocationpb.AllocationRequest
 
 	allocatedGsa, ok := resultObj.(*allocationv1.GameServerAllocation)
 	if !ok {
-		msg := fmt.Sprintf("internal server error - Bad GSA format %v", resultObj)
 		return allocationResult{
 			error: &rpcstatus.Status{
 				Code:    int32(codes.Internal),
-				Message: msg,
+				Message: fmt.Sprintf("internal server error - Bad GSA format %v", resultObj),
 			},
 		}
 	}
 
 	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa, h.grpcUnallocatedStatusCode)
 	if err != nil {
-		grpcStatus, ok := status.FromError(err)
-		code := h.grpcUnallocatedStatusCode
-		msg := err.Error()
-		if ok {
-			code = grpcStatus.Code()
-			msg = grpcStatus.Message()
-		}
-		return allocationResult{
-			error: &rpcstatus.Status{
-				Code:    int32(code),
-				Message: msg,
-			},
-		}
+		return makeError(err, h.grpcUnallocatedStatusCode)
 	}
 
 	return allocationResult{response: response}
