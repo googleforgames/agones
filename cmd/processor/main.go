@@ -378,6 +378,8 @@ func grpcCodeFromHTTPStatus(httpUnallocatedStatusCode int) codes.Code {
 		return codes.ResourceExhausted
 	case http.StatusNotImplemented:
 		return codes.Unimplemented
+	case http.StatusUnprocessableEntity:
+		return codes.InvalidArgument
 	case http.StatusServiceUnavailable:
 		return codes.Unavailable
 	default:
