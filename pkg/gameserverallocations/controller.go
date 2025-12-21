@@ -197,9 +197,13 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 				}
 			}
 		} else {
-			result = converters.ConvertAllocationResponseToGSA(resp, resp.Source)
+			resultGSA := converters.ConvertAllocationResponseToGSA(resp, resp.Source)
 			// TODO: need investigation, it lost gsa spec somewhere (this should fix it but still)
-			result.(*allocationv1.GameServerAllocation).Spec = gsa.Spec
+			// This is because the `AllocationResponse` from the proto doesn't have the spec or metadata
+			resultGSA.Spec = gsa.Spec
+			resultGSA.ObjectMeta.Namespace = gsa.ObjectMeta.Namespace
+			resultGSA.ObjectMeta.Name = gsa.ObjectMeta.Name
+			result = resultGSA
 			code = http.StatusCreated
 		}
 
