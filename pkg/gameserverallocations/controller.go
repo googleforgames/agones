@@ -25,6 +25,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -170,25 +171,34 @@ func (c *Extensions) processAllocationRequest(ctx context.Context, w http.Respon
 		resp, err := c.processorClient.Allocate(ctx, req)
 		if err != nil {
 			if st, ok := status.FromError(err); ok {
-				code = gwruntime.HTTPStatusFromCode(st.Code())
+				switch st.Code() {
+				case codes.ResourceExhausted:
+					gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
+					result, code = gsa, http.StatusCreated
+				case codes.Aborted:
+					gsa.Status.State = allocationv1.GameServerAllocationContention
+					result, code = gsa, http.StatusCreated
+				default:
+					code = gwruntime.HTTPStatusFromCode(st.Code())
+				}
 			} else {
 				code = http.StatusInternalServerError
 			}
 
-			result = &metav1.Status{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Status",
-					APIVersion: "v1",
-				},
-				Status:  metav1.StatusFailure,
-				Message: err.Error(),
-				Code:    int32(code),
+			if result == nil {
+				result = &metav1.Status{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Status",
+						APIVersion: "v1",
+					},
+					Status:  metav1.StatusFailure,
+					Message: err.Error(),
+					Code:    int32(code),
+				}
 			}
 		} else {
 			result = converters.ConvertAllocationResponseToGSA(resp, resp.Source)
-			// TODO: investigate this part
-			// Re-apply the spec, as the processor does not return it within the proto response
-			// but focus on the status/result fields
+			// TODO: need investigation, it lost gsa spec somewhere (this should fix it but still)
 			result.(*allocationv1.GameServerAllocation).Spec = gsa.Spec
 			code = http.StatusCreated
 		}
