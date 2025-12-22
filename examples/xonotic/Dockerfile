@@ -26,7 +26,7 @@ RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.6.zip && \
     unzip -qq xonotic.zip && rm xonotic.zip
 
 # final image
-FROM debian:bookworm
+FROM debian:trixie
 
 WORKDIR /home/xonotic
 

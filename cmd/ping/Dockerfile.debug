@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/distroless/static-debian12:nonroot as base
+FROM gcr.io/distroless/static-debian13:nonroot as base
 FROM golang:1.24-alpine as delve
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 

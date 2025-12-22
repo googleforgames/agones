@@ -21,7 +21,7 @@ WORKDIR /go/src/agones.dev/agones/examples/simple-game-server
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 WORKDIR /
 
 COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/server /server

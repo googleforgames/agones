@@ -27,7 +27,7 @@ COPY Makefile /home/builder/agones/examples/rust-simple/
 WORKDIR /home/builder/agones/examples/rust-simple
 RUN make build-server
 
-FROM debian:bookworm
+FROM debian:trixie
 RUN useradd -u 1000 -m server
 
 COPY --from=builder --chown=server:server /home/builder/agones/examples/rust-simple/target/release/rust-simple /home/server/rust-simple
