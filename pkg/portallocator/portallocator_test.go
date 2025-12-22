@@ -573,10 +573,7 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	ctx, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
 
-	m.KubeInformerFactory.Start(ctx.Done())
-	m.AgonesInformerFactory.Start(ctx.Done())
-
-	// 🔑 wait for caches
+	// wait for caches
 	require.True(t, cache.WaitForCacheSync(
 		ctx.Done(),
 		pa.gameServerSynced,
@@ -588,6 +585,8 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch.Add(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		// Informer caches are asynchronous; an error or nil list usually means the cache
+		// is not ready yet, so return false to let Eventually() retry instead of failing.
 		if err != nil || list == nil {
 			return false
 		}
@@ -608,6 +607,8 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch.Delete(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		// Informer caches are asynchronous; an error or nil list usually means the cache
+		// is not ready yet, so return false to let Eventually() retry instead of failing.
 		if err != nil || list == nil {
 			return false
 		}
