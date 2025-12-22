@@ -570,17 +570,29 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 		return true, nl, nil
 	})
 
-	_, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
+	ctx, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
+
+	// wait for caches
+	require.True(t, cache.WaitForCacheSync(
+		ctx.Done(),
+		pa.gameServerSynced,
+		pa.nodeSynced,
+	))
 
 	gsWatch.Add(gs1.DeepCopy())
 	gsWatch.Add(gs2.DeepCopy())
 	gsWatch.Add(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		// Informer caches are asynchronous; an error or nil list usually means the cache
+		// is not ready yet, so return false to let Eventually() retry instead of failing.
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) == 3
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 50*time.Millisecond)
 
 	err := pa.syncAll()
 	require.NoError(t, err)
@@ -595,9 +607,14 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch.Delete(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		// Informer caches are asynchronous; an error or nil list usually means the cache
+		// is not ready yet, so return false to let Eventually() retry instead of failing.
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) == 2
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 50*time.Millisecond)
 
 	pa.mutex.RLock() // reading mutable state, so read lock
 	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
@@ -607,8 +624,12 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	// delete the currently non allocated server, all should be the same
 	// simulated getting an old delete message
 	gsWatch.Delete(gs4.DeepCopy())
+
 	require.Never(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		if err != nil || list == nil {
+			return false
+		}
 		assert.NoError(t, err)
 		return len(list) != 2
 	}, time.Second, 100*time.Millisecond)

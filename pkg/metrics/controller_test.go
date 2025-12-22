@@ -612,7 +612,7 @@ func TestControllerGameServersNodeState(t *testing.T) {
 		}
 		return check == 2
 
-	}, 10*time.Second, time.Second)
+	}, 10*time.Second, 100*time.Millisecond)
 
 	// check the details
 	assertMetricData(t, exporter, gameServersNodeCountName, []expectedMetricData{
