@@ -89,6 +89,7 @@ steps:
     dir: build
     env:
       - VERSION=${_VERSION}
+      - DOCKER_RUN_ARGS=--network=cloudbuild
     args: [release-deploy-site]
     waitFor:
       - test-examples-on-gar

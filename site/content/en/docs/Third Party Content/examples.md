@@ -3,7 +3,7 @@ title: "Third Party Examples"
 linkTitle: "Examples"
 date: 2021-09-09
 description: "Community contributed Dedicated Game Server examples on Agones."
-weight: 20
+weight: 80
 ---
 
 ## Integrations with other projects

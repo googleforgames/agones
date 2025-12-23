@@ -54,7 +54,7 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "supertuxkart",
-							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.21",
+							Image: "us-docker.pkg.dev/agones-images/examples/supertuxkart-example:0.22",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("1Gi"),
@@ -76,7 +76,16 @@ func TestSuperTuxKartGameServerReady(t *testing.T) {
 
 	// Use the e2e framework's function to create the GameServer and wait until it's ready
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	if err != nil {
+	defer func() {
+		if readyGs == nil {
+			return
+		}
+		err := framework.AgonesClient.AgonesV1().GameServers(readyGs.ObjectMeta.Namespace).Delete(context.Background(), readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+		if err != nil {
+			log.Error(err, "Error deleting game server")
+		}
+	}()
+	if err != nil && readyGs != nil {
 		log.Info("Game Server Events:")
 		framework.LogEvents(t, log, readyGs.ObjectMeta.Namespace, readyGs)
 
@@ -232,7 +241,7 @@ func TestXonoticGameServerReady(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name:  "xonotic",
-							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.5",
+							Image: "us-docker.pkg.dev/agones-images/examples/xonotic-example:2.6",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceMemory: resource.MustParse("700Mi"),
