@@ -23,6 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
@@ -2438,4 +2441,25 @@ func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream sdk.SDK_WatchGameS
 		err := sc.WatchGameServer(&sdk.Empty{}, stream)
 		require.NoError(t, err)
 	}()
+}
+
+func TestSetLabel_InvalidLabelRejected(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+
+	// Invalid label key (spaces are not allowed)
+	_, err = sc.SetLabel(context.Background(), &sdk.KeyValue{
+		Key:   "INVALID KEY",
+		Value: "x",
+	})
+
+	require.Error(t, err)
+
+	st, ok := status.FromError(err)
+	require.True(t, ok, "expected gRPC status error")
+	assert.Equal(t, codes.InvalidArgument, st.Code())
 }
