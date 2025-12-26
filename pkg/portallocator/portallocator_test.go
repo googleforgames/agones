@@ -578,9 +578,9 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch.Add(gs3.DeepCopy())
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		return len(list) == 3
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 100*time.Millisecond)
 
 	err := pa.syncAll()
 	require.NoError(t, err)
@@ -593,16 +593,23 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	// delete allocated gs
 	gsWatch.Delete(gs3.DeepCopy())
+	// just gate that the delete event changed the list data
 	require.Eventually(t, func() bool {
 		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		return len(list) == 2
-	}, 5*time.Second, time.Second)
+	}, 5*time.Second, 100*time.Millisecond)
 
-	pa.mutex.RLock() // reading mutable state, so read lock
-	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
-	assert.Equal(t, 1, countAllocatedPorts(pa, 11))
-	pa.mutex.RUnlock()
+	// since there's no guarantee that the event handler has fired yet, also eventually the test for the state.
+	require.Eventually(t, func() bool {
+		pa.mutex.RLock() // reading mutable state, so read lock
+		defer pa.mutex.RUnlock()
+		port10Count := countAllocatedPorts(pa, 10)
+		port11Count := countAllocatedPorts(pa, 11)
+
+		logrus.WithField("port10", port10Count).WithField("port11", port11Count).Info("First counts")
+		return port10Count == 1 && port11Count == 1
+	}, 10*time.Second, 100*time.Millisecond)
 
 	// delete the currently non allocated server, all should be the same
 	// simulated getting an old delete message
@@ -612,10 +619,18 @@ func TestPortRangeAllocatorSyncDeleteGameServer(t *testing.T) {
 		assert.NoError(t, err)
 		return len(list) != 2
 	}, time.Second, 100*time.Millisecond)
-	pa.mutex.RLock() // reading mutable state, so read lock
-	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
-	assert.Equal(t, 1, countAllocatedPorts(pa, 11))
-	pa.mutex.RUnlock()
+
+	// to cover bases, let's also do this as a never, to check for a short period, or the same potential race condition
+	// as above.
+	require.Never(t, func() bool {
+		pa.mutex.RLock() // reading mutable state, so read lock
+		defer pa.mutex.RUnlock()
+		port10Count := countAllocatedPorts(pa, 10)
+		port11Count := countAllocatedPorts(pa, 11)
+
+		logrus.WithField("port10", port10Count).WithField("port11", port11Count).Info("Final counts")
+		return port10Count != 1 || port11Count != 1
+	}, time.Second, 100*time.Millisecond)
 }
 
 func TestNodePortAllocation(t *testing.T) {
