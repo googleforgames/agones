@@ -76,7 +76,9 @@ func (c *Controller) rollingUpdateRestFixedOnReadyRollingUpdateFix(ctx context.C
 	// Check if we can scale down.
 	allGSS := rest
 	allGSS = append(allGSS, active)
-	readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
+	readyReplicasCount := agonesv1.SumGameServerSets(allGSS, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Status.ReadyReplicas
+	})
 	minAvailable := fleet.Status.ReadyReplicas - unavailable
 	if minAvailable > fleet.Spec.Replicas {
 		minAvailable = fleet.Spec.Replicas
