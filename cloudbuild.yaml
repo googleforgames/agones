@@ -176,6 +176,25 @@ steps:
     args: [-j, '4', --output-sync=recurse, build-sdks]
 
   #
+  # Build and push simple-game-server for e2e tests
+  #
+  - name: gcr.io/cloud-builders/docker:24.0.6
+    id: build-push-simple-game-server
+    waitFor: [push-images]
+    env:
+      - 'SGS_IMAGE=us-docker.pkg.dev/${PROJECT_ID}/ci/simple-game-server:${COMMIT_SHA}'
+    script: |
+      # Check if image already exists (e.g., CI re-run on same commit)
+      if docker manifest inspect ${SGS_IMAGE} > /dev/null 2>&1; then
+        echo "Image ${SGS_IMAGE} already exists, skipping build"
+      else
+        echo "Building ${SGS_IMAGE}"
+        docker build -f examples/simple-game-server/Dockerfile \
+          --tag ${SGS_IMAGE} .
+        docker push ${SGS_IMAGE}
+      fi
+
+  #
   # Example version checks
   #
   # - name: make-docker
@@ -314,6 +333,10 @@ steps:
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
         declare -A featureWithGateByVersion=( [1.32]="${featureWithGate}" [1.33]="${featureWithGate}" [1.34]="${featureWithGate}")
 
+        # simple-game-server image for e2e tests
+        SGS_IMAGE="us-docker.pkg.dev/${PROJECT_ID}/ci/simple-game-server:${COMMIT_SHA}"
+        echo "Using simple-game-server image: ${SGS_IMAGE}"
+
         for cloudProduct in ${cloudProducts[@]}
         do
           for version in "${!versionsAndRegions[@]}"
@@ -328,7 +351,7 @@ steps:
             fi
             testClusterLocation="${region}"
             { stdbuf -oL -eL gcloud builds submit . --suppress-logs --config=./ci/e2e-test-cloudbuild.yaml \
-              --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID} \
+              --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID},_GS_TEST_IMAGE=${SGS_IMAGE} \
               |& stdbuf -i0 -oL -eL grep -v " tarball " \
               |& stdbuf -i0 -oL -eL sed "s/^/${cloudProduct}-${version}: /"; } &
             pids+=($!)
@@ -354,6 +377,7 @@ steps:
         echo "all done"
     waitFor:
       - cancel-orphan-e2e-tests
+      - build-push-simple-game-server
 
   #
   # Store caches, to speed up subsequent builds (considerably)
