@@ -26,7 +26,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/metric/metricdata"
@@ -59,34 +58,85 @@ type expectedMetricData struct {
 	val    interface{}
 }
 
-func assertMetricData(t *testing.T, exporter *metricExporter, metricName string, expected []expectedMetricData) {
+// Asserts that the given metric exporter contains the expected metric data within a timeout (10s).
+// For Distribution metrics, this function automatically handles the synchronization and reset pattern:
+// it waits for the metric to be available, resets the view to clear accumulated data, collects once, then validates.
+func assertMetricData(t *testing.T, c *fakeController, f func(), reader *metricexport.Reader, metricName string, expected []expectedMetricData) {
+	t.Helper()
 
-	expectedValuesAsMap := make(map[string]expectedMetricData)
+	// Check if any expected value is a Distribution type
+	hasDistribution := false
 	for _, e := range expected {
-		expectedValuesAsMap[serialize(e.labels)] = e
-	}
-
-	var wantedMetric *metricdata.Metric
-	for _, m := range exporter.metrics {
-		if m.Descriptor.Name == metricName {
-			wantedMetric = m
+		if _, ok := e.val.(*metricdata.Distribution); ok {
+			hasDistribution = true
+			break
 		}
 	}
-	require.NotNil(t, wantedMetric, "No metric found with name: %s", metricName)
 
-	assert.Equal(t, len(expectedValuesAsMap), len(expected), "Multiple entries in 'expected' slice have the exact same labels")
-	assert.Equalf(t, len(expectedValuesAsMap), len(wantedMetric.TimeSeries), "number of timeseries does not match under metric: %v", metricName)
-	for _, tsd := range wantedMetric.TimeSeries {
-		actualLabelValues := make([]string, len(tsd.LabelValues))
-		for i, k := range tsd.LabelValues {
-			actualLabelValues[i] = k.Value
-		}
-		e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
-		assert.True(t, ok, "no TimeSeries found with labels: %v", actualLabelValues)
-		assert.Equal(t, e.labels, actualLabelValues, "label values don't match")
-		assert.Equal(t, 1, len(tsd.Points), "assertMetricDataValues can only handle a single Point in a TimeSeries")
-		assert.Equal(t, e.val, tsd.Points[0].Value, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
+	// For Distribution metrics, handle the synchronization and reset pattern
+	if hasDistribution {
+		// Wait until the metric is available
+		assert.Eventually(t, func() bool {
+			f()
+			exporter := &metricExporter{}
+			c.lock.Lock()
+			reader.ReadAndExport(exporter)
+			c.lock.Unlock()
+			for _, m := range exporter.metrics {
+				if m.Descriptor.Name == metricName {
+					return true
+				}
+			}
+			return false
+		}, 10*time.Second, 100*time.Millisecond)
+
+		// Reset the Distribution view to clear accumulated data from the Eventually loop
+		resetViews([]string{metricName})
+
+		// Collect fresh metrics once after reset
+		f()
 	}
+
+	// Now validate the metrics (without re-collecting for Distribution)
+	validateFunc := f
+	if hasDistribution {
+		validateFunc = func() {} // Don't re-collect for Distribution metrics
+	}
+
+	assert.EventuallyWithT(t, func(ct *assert.CollectT) {
+		validateFunc()
+
+		exporter := &metricExporter{}
+		c.lock.Lock()
+		reader.ReadAndExport(exporter)
+		c.lock.Unlock()
+		expectedValuesAsMap := make(map[string]expectedMetricData)
+		for _, e := range expected {
+			expectedValuesAsMap[serialize(e.labels)] = e
+		}
+
+		var wantedMetric *metricdata.Metric
+		for _, m := range exporter.metrics {
+			if m.Descriptor.Name == metricName {
+				wantedMetric = m
+			}
+		}
+		require.NotNil(ct, wantedMetric, "No metric found with name: %s", metricName)
+
+		assert.Equal(ct, len(expectedValuesAsMap), len(expected), "Multiple entries in 'expected' slice have the exact same labels")
+		assert.Equalf(ct, len(expectedValuesAsMap), len(wantedMetric.TimeSeries), "number of timeseries does not match under metric: %v", metricName)
+		for _, tsd := range wantedMetric.TimeSeries {
+			actualLabelValues := make([]string, len(tsd.LabelValues))
+			for i, k := range tsd.LabelValues {
+				actualLabelValues[i] = k.Value
+			}
+			e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
+			assert.True(ct, ok, "no TimeSeries found with labels: %v", actualLabelValues)
+			assert.Equal(ct, e.labels, actualLabelValues, "label values don't match")
+			assert.Equal(ct, 1, len(tsd.Points), "assertMetricDataValues can only handle a single Point in a TimeSeries")
+			assert.Equal(ct, e.val, tsd.Points[0].Value, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
+		}
+	}, 10*time.Second, 100*time.Millisecond)
 }
 
 func resetMetrics() {
@@ -116,28 +166,11 @@ func TestControllerFleetReplicasCount_ResetMetricsOnDelete(t *testing.T) {
 	c.fleetWatch.Modify(f)
 	c.fleetWatch.Add(fd)
 	c.fleetWatch.Delete(fd)
-	time.Sleep(5 * time.Second)
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
 
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetReplicaCountName {
-				for _, d := range m.TimeSeries {
-					value := d.LabelValues[0].Value
-					if len(value) > 0 && value != "fleet-deleted" {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
+	c.lock.Lock()
 	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
+	c.lock.Unlock()
+	assertMetricData(t, c, func() {}, reader, fleetReplicaCountName, []expectedMetricData{
 		{labels: []string{"fleet-test", defaultNs, "reserved"}, val: int64(1)},
 		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
 		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
@@ -151,7 +184,6 @@ func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
 	defer mu.Unlock()
 
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
@@ -178,45 +210,26 @@ func TestControllerFleetAutoScalerState_ResetMetricsOnDelete(t *testing.T) {
 	fasDeleted.Spec.Policy.Buffer.MinReplicas = 15
 	c.fasWatch.Add(fasDeleted)
 	c.fasWatch.Delete(fasDeleted)
-	time.Sleep(5 * time.Second)
-	c.sync()
-	// wait until the fleet-deleted no longer exists
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
+	require.True(t, c.sync())
 
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetAutoscalersLimitedName {
-				for _, d := range m.TimeSeries {
-					values := d.LabelValues
-					if len(values[0].Value) > 0 && values[0].Value != "deleted-fleet" && values[1].Value != "deleted" && values[2].Value == defaultNs {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetAutoscalersAbleToScaleName, []expectedMetricData{
+	nop := func() {}
+	assertMetricData(t, c, nop, reader, fleetAutoscalersAbleToScaleName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
 	})
-	assertMetricData(t, exporter, fleetAutoscalerBufferLimitName, []expectedMetricData{
+	assertMetricData(t, c, nop, reader, fleetAutoscalerBufferLimitName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
 		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
 	})
-	assertMetricData(t, exporter, fleetAutoscalterBufferSizeName, []expectedMetricData{
+	assertMetricData(t, c, nop, reader, fleetAutoscalterBufferSizeName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
 	})
-	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
+	assertMetricData(t, c, nop, reader, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
 	})
-	assertMetricData(t, exporter, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
+	assertMetricData(t, c, nop, reader, fleetAutoscalersDesiredReplicaCountName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
 	})
-	assertMetricData(t, exporter, fleetAutoscalersLimitedName, []expectedMetricData{
+	assertMetricData(t, c, nop, reader, fleetAutoscalersLimitedName, []expectedMetricData{
 		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
 	})
 }
@@ -225,7 +238,6 @@ func TestControllerGameServerCount(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 
 	c := newFakeController()
@@ -266,40 +278,10 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gameServerWithFleetAndState("", agonesv1.GameServerStatePortAllocation))
 
 	require.True(t, c.sync())
-	// Port allocation is last, so wait for that come to the state we expect
-	require.Eventually(t, func() bool {
+
+	assertMetricData(t, c, func() {
 		c.collect()
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == gameServersCountName {
-				// Check that we have 4 time series and that PortAllocation count is 2
-				if len(m.TimeSeries) != 4 {
-					return false
-				}
-				// Verify the PortAllocation count is 2
-				for _, tsd := range m.TimeSeries {
-					if len(tsd.LabelValues) >= 3 &&
-						tsd.LabelValues[0].Value == "none" &&
-						tsd.LabelValues[2].Value == "PortAllocation" {
-						if len(tsd.Points) > 0 && tsd.Points[0].Value == int64(2) {
-							return true
-						}
-						// PortAllocation found but count is not 2 yet
-						return false
-					}
-				}
-				logrus.WithField("m", m).Info("Metrics")
-				return false
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, gameServersCountName, []expectedMetricData{
+	}, reader, gameServersCountName, []expectedMetricData{
 		{labels: []string{"test-fleet", defaultNs, "Creating"}, val: int64(0)},
 		{labels: []string{"test-fleet", defaultNs, "Ready"}, val: int64(0)},
 		{labels: []string{"test-fleet", defaultNs, "Shutdown"}, val: int64(1)},
@@ -312,7 +294,6 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 
 	c := newFakeController()
@@ -353,10 +334,10 @@ func TestControllerGameServerPlayerConnectedCount(t *testing.T) {
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 4
 	}, 10*time.Second, time.Second)
-	c.collect()
 
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, gameServersPlayerConnectedTotalName, []expectedMetricData{
+	assertMetricData(t, c, func() {
+		c.collect()
+	}, reader, gameServersPlayerConnectedTotalName, []expectedMetricData{
 		{labels: []string{"test-fleet", gs1.GetName(), defaultNs}, val: int64(4)},
 	})
 }
@@ -366,7 +347,6 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 	defer mu.Unlock()
 	runtime.EnableAllFeatures()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 
 	c := newFakeController()
@@ -392,10 +372,8 @@ func TestControllerGameServerPlayerCapacityCount(t *testing.T) {
 		assert.NoError(t, err)
 		return gs.Status.Players.Count == 1
 	}, 10*time.Second, time.Second)
-	c.collect()
 
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, gameServersPlayerCapacityTotalName, []expectedMetricData{
+	assertMetricData(t, c, func() {}, reader, gameServersPlayerCapacityTotalName, []expectedMetricData{
 		{labels: []string{"test-fleet", gs1.GetName(), defaultNs}, val: int64(3)},
 	})
 }
@@ -404,7 +382,6 @@ func TestControllerGameServersTotal(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
@@ -439,9 +416,7 @@ func TestControllerGameServersTotal(t *testing.T) {
 	list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
 	require.NoError(t, err)
 	require.Len(t, list, expected)
-	time.Sleep(5 * time.Second)
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, gameServersTotalName, []expectedMetricData{
+	assertMetricData(t, c, func() {}, reader, gameServersTotalName, []expectedMetricData{
 		{labels: []string{"test", defaultNs, "Creating"}, val: int64(16)},
 		{labels: []string{"test", defaultNs, "Scheduled"}, val: int64(15)},
 		{labels: []string{"test", defaultNs, "Starting"}, val: int64(10)},
@@ -457,7 +432,6 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
@@ -478,28 +452,7 @@ func TestControllerFleetOnDeleting(t *testing.T) {
 	ft.Status.Replicas = 15
 	c.fleetWatch.Modify(ft)
 
-	// wait until the fleet-deleting exists and total value equal 15.
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetReplicaCountName {
-				for _, d := range m.TimeSeries {
-					name := d.LabelValues[0].Value
-					val := d.Points[0].Value
-					if len(name) > 0 && name == "fleet-test" && val == int64(15) {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetReplicaCountName, []expectedMetricData{
+	assertMetricData(t, c, func() {}, reader, fleetReplicaCountName, []expectedMetricData{
 		{labels: []string{"fleet-deleting", defaultNs, "total"}, val: int64(100)},
 		{labels: []string{"fleet-deleting", defaultNs, "allocated"}, val: int64(100)},
 		{labels: []string{"fleet-deleting", defaultNs, "ready"}, val: int64(100)},
@@ -518,7 +471,6 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
@@ -543,28 +495,7 @@ func TestControllerFleetAutoScalerOnDeleting(t *testing.T) {
 	fast.Status.CurrentReplicas = 5
 	c.fasWatch.Modify(fast)
 
-	// wait until the fas-test exists and current-replicas's value euqal 5.
-	require.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
-
-		for _, m := range ex.metrics {
-			if m.Descriptor.Name == fleetAutoscalerCurrentReplicaCountName {
-				for _, d := range m.TimeSeries {
-					name := d.LabelValues[1].Value
-					val := d.Points[0].Value
-					if len(name) > 0 && name == "fas-test" && val == int64(5) {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}, 10*time.Second, time.Second)
-
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
+	assertMetricData(t, c, func() {}, reader, fleetAutoscalerCurrentReplicaCountName, []expectedMetricData{
 		{labels: []string{"fleet-deleting", "fas-deleting", defaultNs}, val: int64(15)},
 		{labels: []string{"fleet-test", "fas-test", defaultNs}, val: int64(5)},
 	})
@@ -592,30 +523,9 @@ func TestControllerGameServersNodeState(t *testing.T) {
 	c := newFakeControllerWithMock(m)
 	defer c.close()
 	require.True(t, c.sync())
-	c.collect()
 	reader := metricexport.NewReader()
 
-	// wait until we have some nodes and gameservers in metrics
-	var exporter *metricExporter
-	assert.Eventually(t, func() bool {
-		exporter = &metricExporter{}
-		reader.ReadAndExport(exporter)
-
-		check := 0
-		for _, m := range exporter.metrics {
-			switch m.Descriptor.Name {
-			case nodeCountName:
-				check++
-			case gameServersNodeCountName:
-				check++
-			}
-		}
-		return check == 2
-
-	}, 10*time.Second, time.Second)
-
-	// check the details
-	assertMetricData(t, exporter, gameServersNodeCountName, []expectedMetricData{
+	assertMetricData(t, c, func() { c.collect() }, reader, gameServersNodeCountName, []expectedMetricData{
 		{labels: []string{}, val: &metricdata.Distribution{
 			Count:                 3,
 			Sum:                   3,
@@ -623,7 +533,7 @@ func TestControllerGameServersNodeState(t *testing.T) {
 			BucketOptions:         &metricdata.BucketOptions{Bounds: []float64{0.00001, 1.00001, 2.00001, 3.00001, 4.00001, 5.00001, 6.00001, 7.00001, 8.00001, 9.00001, 10.00001, 11.00001, 12.00001, 13.00001, 14.00001, 15.00001, 16.00001, 32.00001, 40.00001, 50.00001, 60.00001, 70.00001, 80.00001, 90.00001, 100.00001, 110.00001, 120.00001}},
 			Buckets:               []metricdata.Bucket{{Count: 1}, {Count: 1}, {Count: 1}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}}}},
 	})
-	assertMetricData(t, exporter, nodeCountName, []expectedMetricData{
+	assertMetricData(t, c, func() { c.collect() }, reader, nodeCountName, []expectedMetricData{
 		{labels: []string{"true"}, val: int64(1)},
 		{labels: []string{"false"}, val: int64(2)},
 	})
@@ -635,7 +545,6 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	resetMetrics()
-	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
@@ -679,16 +588,19 @@ func TestFleetCountersAndListsMetrics(t *testing.T) {
 
 	}, 10*time.Second, time.Second)
 	c.collect()
-	time.Sleep(5 * time.Second)
-	reader.ReadAndExport(exporter)
-	assertMetricData(t, exporter, fleetCountersName, []expectedMetricData{
+
+	assertMetricData(t, c, func() {
+		c.collect()
+	}, reader, fleetCountersName, []expectedMetricData{
 		// keyCounter, keyName, keyNamespace, keyType
 		{labels: []string{counterName, fleetName, defaultNs, "allocated_count"}, val: int64(24)},
 		{labels: []string{counterName, fleetName, defaultNs, "allocated_capacity"}, val: int64(30)},
 		{labels: []string{counterName, fleetName, defaultNs, "total_count"}, val: int64(28)},
 		{labels: []string{counterName, fleetName, defaultNs, "total_capacity"}, val: int64(50)},
 	})
-	assertMetricData(t, exporter, fleetListsName, []expectedMetricData{
+	assertMetricData(t, c, func() {
+		c.collect()
+	}, reader, fleetListsName, []expectedMetricData{
 		// keyList, keyName, keyNamespace, keyType
 		{labels: []string{listName, fleetName, defaultNs, "allocated_count"}, val: int64(4)},
 		{labels: []string{listName, fleetName, defaultNs, "allocated_capacity"}, val: int64(6)},
