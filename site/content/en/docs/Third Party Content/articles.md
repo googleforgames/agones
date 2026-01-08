@@ -34,6 +34,10 @@ weight: 20
 
 - Aug 18 - [How to run massively multiplayer games with EC2 Spot using Aurora Serverless](https://aws.amazon.com/blogs/compute/how-to-run-massively-multiplayer-games-with-ec2-spot-using-aurora-serverless/)
 
+### 2019
+
+- Sept 11 - (Embark Studios) [Iterating faster with open-source](https://medium.com/embarkstudios/itering-faster-with-open-source-76ae68f98745)
+
 ### 2018
 
 - Mar 13 - (Google Cloud) [Introducing Agones: Open-source, multiplayer, dedicated game-server hosting built on Kubernetes](https://cloud.google.com/blog/products/containers-kubernetes/introducing-agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-kubernetes)
