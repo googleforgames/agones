@@ -250,8 +250,6 @@ func (f *Fleet) LowerBoundReplicas(i int32) int32 {
 
 // SumGameServerSets calculates a total from the value returned from the passed in function.
 // Useful for calculating totals based on status value(s), such as gsSet.Status.Replicas
-// This should eventually replace the variety of `Sum*` and `GetReadyReplicaCountForGameServerSets` functions as this is
-// a higher and more flexible abstraction.
 func SumGameServerSets(list []*GameServerSet, f func(gsSet *GameServerSet) int32) int32 {
 	var total int32
 	for _, gsSet := range list {
@@ -261,51 +259,4 @@ func SumGameServerSets(list []*GameServerSet, f func(gsSet *GameServerSet) int32
 	}
 
 	return total
-}
-
-// SumStatusAllocatedReplicas returns the total number of
-// Status.AllocatedReplicas in the list of GameServerSets
-func SumStatusAllocatedReplicas(list []*GameServerSet) int32 {
-	total := int32(0)
-	for _, gsSet := range list {
-		total += gsSet.Status.AllocatedReplicas
-	}
-
-	return total
-}
-
-// SumStatusReplicas returns the total number of
-// Status.Replicas in the list of GameServerSets
-func SumStatusReplicas(list []*GameServerSet) int32 {
-	total := int32(0)
-	for _, gsSet := range list {
-		total += gsSet.Status.Replicas
-	}
-
-	return total
-}
-
-// SumSpecReplicas returns the total number of
-// Spec.Replicas in the list of GameServerSets
-func SumSpecReplicas(list []*GameServerSet) int32 {
-	total := int32(0)
-	for _, gsSet := range list {
-		if gsSet != nil {
-			total += gsSet.Spec.Replicas
-		}
-	}
-
-	return total
-}
-
-// GetReadyReplicaCountForGameServerSets returns the total number of
-// Status.ReadyReplicas in the list of GameServerSets
-func GetReadyReplicaCountForGameServerSets(gss []*GameServerSet) int32 {
-	totalReadyReplicas := int32(0)
-	for _, gss := range gss {
-		if gss != nil {
-			totalReadyReplicas += gss.Status.ReadyReplicas
-		}
-	}
-	return totalReadyReplicas
 }

@@ -386,7 +386,9 @@ func (c *Controller) applyDeploymentStrategy(ctx context.Context, fleet *agonesv
 	}
 
 	// if we do have `rest` but all their spec.replicas is zero, we can just do subtraction against whatever is allocated in `rest`.
-	if agonesv1.SumSpecReplicas(rest) == 0 {
+	if agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Spec.Replicas
+	}) == 0 {
 		blocked := agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
 			return gsSet.Status.ReservedReplicas + gsSet.Status.AllocatedReplicas
 		})
@@ -442,7 +444,9 @@ func (c *Controller) recreateDeployment(ctx context.Context, fleet *agonesv1.Fle
 			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 	}
 
-	return fleet.LowerBoundReplicas(fleet.Spec.Replicas - agonesv1.SumStatusAllocatedReplicas(rest)), nil
+	return fleet.LowerBoundReplicas(fleet.Spec.Replicas - agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Status.AllocatedReplicas
+	})), nil
 }
 
 // rollingUpdateDeployment will do the rolling update of the old GameServers
@@ -464,7 +468,9 @@ func (c *Controller) rollingUpdateDeployment(ctx context.Context, fleet *agonesv
 func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) (int32, error) {
 	replicas := active.Spec.Replicas
 	// always leave room for Allocated GameServers
-	sumAllocated := agonesv1.SumStatusAllocatedReplicas(rest)
+	sumAllocated := agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Status.AllocatedReplicas
+	})
 
 	// if the active spec replicas don't equal the active status replicas, this means we are
 	// in the middle of a rolling update, and should wait for it to complete.
@@ -493,7 +499,9 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	// make sure we don't end up with more than the configured max surge
 	maxSurge := surge + fleet.Spec.Replicas
 	replicas = fleet.UpperBoundReplicas(replicas + surge)
-	total := agonesv1.SumStatusReplicas(rest) + replicas
+	total := agonesv1.SumGameServerSets(rest, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Status.Replicas
+	}) + replicas
 	if total > maxSurge {
 		replicas = fleet.LowerBoundReplicas(replicas - (total - maxSurge))
 	}
@@ -574,11 +582,15 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 	// Check if we can scale down.
 	allGSS := rest
 	allGSS = append(allGSS, active)
-	readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
+	readyReplicasCount := agonesv1.SumGameServerSets(allGSS, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Status.ReadyReplicas
+	})
 	minAvailable := fleet.Spec.Replicas - unavailable
 
 	// Check if we are ready to scale down
-	allPodsCount := agonesv1.SumSpecReplicas(allGSS)
+	allPodsCount := agonesv1.SumGameServerSets(allGSS, func(gsSet *agonesv1.GameServerSet) int32 {
+		return gsSet.Spec.Replicas
+	})
 	newGSSUnavailablePodCount := active.Spec.Replicas - active.Status.ReadyReplicas - active.Status.AllocatedReplicas
 	maxScaledDown := allPodsCount - minAvailable - newGSSUnavailablePodCount
 

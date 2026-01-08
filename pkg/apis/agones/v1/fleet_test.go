@@ -145,7 +145,9 @@ func TestSumStatusAllocatedReplicas(t *testing.T) {
 	gsSet2 := f.GameServerSet()
 	gsSet2.Status.AllocatedReplicas = 3
 
-	assert.Equal(t, int32(5), SumStatusAllocatedReplicas([]*GameServerSet{gsSet1, gsSet2}))
+	assert.Equal(t, int32(5), SumGameServerSets([]*GameServerSet{gsSet1, gsSet2}, func(gsSet *GameServerSet) int32 {
+		return gsSet.Status.AllocatedReplicas
+	}))
 }
 
 func TestFleetGameserverSpec(t *testing.T) {
@@ -267,7 +269,9 @@ func TestSumStatusReplicas(t *testing.T) {
 		{Status: GameServerSetStatus{Replicas: 5}},
 	}
 
-	assert.Equal(t, int32(30), SumStatusReplicas(fixture))
+	assert.Equal(t, int32(30), SumGameServerSets(fixture, func(gsSet *GameServerSet) int32 {
+		return gsSet.Status.Replicas
+	}))
 }
 
 func TestSumSpecReplicas(t *testing.T) {
@@ -278,7 +282,9 @@ func TestSumSpecReplicas(t *testing.T) {
 		nil,
 	}
 
-	assert.Equal(t, int32(125), SumSpecReplicas(fixture))
+	assert.Equal(t, int32(125), SumGameServerSets(fixture, func(gsSet *GameServerSet) int32 {
+		return gsSet.Spec.Replicas
+	}))
 }
 
 func TestGetReadyReplicaCountForGameServerSets(t *testing.T) {
@@ -289,7 +295,9 @@ func TestGetReadyReplicaCountForGameServerSets(t *testing.T) {
 		nil,
 	}
 
-	assert.Equal(t, int32(1020), GetReadyReplicaCountForGameServerSets(fixture))
+	assert.Equal(t, int32(1020), SumGameServerSets(fixture, func(gsSet *GameServerSet) int32 {
+		return gsSet.Status.ReadyReplicas
+	}))
 }
 
 func TestSumGameServerSets(t *testing.T) {
