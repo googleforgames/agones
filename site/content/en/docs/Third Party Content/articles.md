@@ -36,7 +36,7 @@ weight: 20
 
 ### 2019
 
-- Sept 11 - (Embark Studios) [Iterating faster with open-source](https://medium.com/embarkstudios/itering-faster-with-open-source-76ae68f98745)
+- Sept 11 - (Embark Studios) <a href="https://medium.com/embarkstudios/itering-faster-with-open-source-76ae68f98745" data-proofer-ignore>Iterating faster with open-source</a>
 
 ### 2018
 
