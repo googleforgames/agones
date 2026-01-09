@@ -200,7 +200,7 @@ describe('AgonesSDK', () => {
 					expect(error).toEqual('error');
 				});
 			} catch (error) {
-				fail();
+				fail(error);
 			}
 		});
 
