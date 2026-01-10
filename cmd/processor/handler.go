@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC All Rights Reserved.
+// Copyright 2026 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,6 +77,7 @@ func newServiceHandler(ctx context.Context, kubeClient kubernetes.Interface, ago
 		config.RemoteAllocationTimeout,
 		config.TotalRemoteAllocationTimeout,
 		config.AllocationBatchWaitTime)
+
 	batchCtx, cancel := context.WithCancel(ctx)
 	h := processorHandler{
 		allocator:                 allocator,
@@ -315,7 +316,6 @@ func (h *processorHandler) getGRPCServerOptions() []grpc.ServerOption {
 	opts := []grpc.ServerOption{
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 
-		// Optimized for minikube networking
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             10 * time.Second,
 			PermitWithoutStream: true,
@@ -325,16 +325,6 @@ func (h *processorHandler) getGRPCServerOptions() []grpc.ServerOption {
 			Timeout:           30 * time.Second,
 			Time:              30 * time.Second,
 		}),
-
-		// Buffer sizes optimized for batch processing
-		grpc.WriteBufferSize(64 * 1024),
-		grpc.ReadBufferSize(64 * 1024),
-		grpc.InitialWindowSize(128 * 1024),
-		grpc.InitialConnWindowSize(128 * 1024),
-
-		// Message size limits
-		grpc.MaxRecvMsgSize(4 * 1024 * 1024),
-		grpc.MaxSendMsgSize(4 * 1024 * 1024),
 	}
 
 	return opts
