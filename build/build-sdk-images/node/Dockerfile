@@ -16,7 +16,7 @@ FROM $BASE_IMAGE
 
 ## --allow-releaseinfo-change is a workaround for the new debian release
 ## Can be removed when upgrading to bullseye
-RUN apt-get --allow-releaseinfo-change update && apt-get install -y curl && apt-get install -y software-properties-common && \
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y curl && apt-get install -y && \
     apt-get install -y gnupg && apt-get clean
 
 # Import the Nodesource GPG key

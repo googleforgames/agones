@@ -26,5 +26,5 @@ spec:
     spec:
       containers:
         - name: rust-simple
-          image: us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.13
+          image: us-docker.pkg.dev/agones-images/examples/rust-simple-server:0.14
           imagePullPolicy: Always

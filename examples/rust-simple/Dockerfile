@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM rust:1.71.0 as builder
+FROM rust:1.92.0 as builder
 RUN useradd -m build
 RUN apt update && apt install -y protobuf-compiler
 
@@ -27,7 +27,7 @@ COPY Makefile /home/builder/agones/examples/rust-simple/
 WORKDIR /home/builder/agones/examples/rust-simple
 RUN make build-server
 
-FROM debian:bookworm
+FROM debian:trixie
 RUN useradd -u 1000 -m server
 
 COPY --from=builder --chown=server:server /home/builder/agones/examples/rust-simple/target/release/rust-simple /home/server/rust-simple
