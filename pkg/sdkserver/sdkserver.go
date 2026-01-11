@@ -24,6 +24,10 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/util/validation"
+
 	"github.com/mennanov/fmutils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -579,6 +583,29 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 // metdata
 func (s *SDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	s.logger.WithField("values", kv).Debug("Adding SetLabel to queue")
+
+	if kv == nil {
+		return nil, status.Error(codes.InvalidArgument, "label key/value cannot be nil")
+	}
+
+	if errs := validation.IsQualifiedName(kv.Key); len(errs) > 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"invalid label key %q: %s",
+			kv.Key,
+			strings.Join(errs, ", "),
+		)
+	}
+
+	if errs := validation.IsValidLabelValue(kv.Value); len(errs) > 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"invalid label value %q for key %q: %s",
+			kv.Value,
+			kv.Key,
+			strings.Join(errs, ", "),
+		)
+	}
 
 	s.gsUpdateMutex.Lock()
 	s.gsLabels[kv.Key] = kv.Value
