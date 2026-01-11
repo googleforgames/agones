@@ -145,7 +145,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 			batchSize: 1,
 			setupResponse: func(_ *mockStream, _ []string) {
 				// Do not send any batch response, let it timeout
-				time.Sleep(300 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 			},
 			expectError: []bool{true},
 		},
@@ -156,7 +156,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 			logger := logrus.New()
 			config := Config{
 				MaxBatchSize:      10,
-				AllocationTimeout: 200 * time.Millisecond,
+				AllocationTimeout: 50 * time.Millisecond,
 				ClientID:          "test-client",
 			}
 			stream := &mockStream{
@@ -202,7 +202,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 
 			// Simulate a pullRequest
 			stream.recvChan <- &allocationpb.ProcessorMessage{Payload: &allocationpb.ProcessorMessage_Pull{}}
-			// Wait for pullRequest to be processed and immediately setup response
+			// Wait for pullRequest to be processed
 			time.Sleep(5 * time.Millisecond)
 			// Simulate responses
 			tc.setupResponse(stream, reqIDs)
