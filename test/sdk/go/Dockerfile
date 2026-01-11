@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build the Go image from source
-FROM golang:1.24.6 AS build-stage
+FROM golang:1.25.0 AS build-stage
 
 WORKDIR /agones.dev
 
@@ -28,7 +28,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o /sdk-client-test
 
 # Copy the above binary into a lean image
-FROM gcr.io/distroless/static-debian12:nonroot AS build-release-stage
+FROM gcr.io/distroless/static-debian13:nonroot AS build-release-stage
 
 WORKDIR /
 

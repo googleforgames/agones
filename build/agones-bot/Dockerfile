@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.24 AS build-env
+FROM golang:1.25 AS build-env
 COPY . /go-src
 WORKDIR /go-src
 RUN CGO_ENABLED=0 go build -o /go-app .
 
-FROM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/static-debian13
 COPY --from=build-env /go-app /
 ENTRYPOINT ["/go-app", "--alsologtostderr", "--v=0"]

@@ -24,7 +24,6 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
-	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"gomodules.xyz/jsonpatch/v2"
@@ -38,6 +37,11 @@ import (
 
 // GameServerState is the state for the GameServer
 type GameServerState string
+
+const (
+	// ListMaxCapacity is the maximum capacity for List in the gamerserver spec and status CRDs.
+	ListMaxCapacity = int64(1000)
+)
 
 const (
 	// GameServerStatePortAllocation is for when a dynamically allocating GameServer
@@ -776,7 +780,7 @@ func (gs *GameServer) Pod(apiHooks APIHooks, sidecars ...corev1.Container) (*cor
 		if err != nil {
 			return nil, err
 		}
-		if runtime.FeatureEnabled(runtime.FeatureAutopilotPassthroughPort) && p.PortPolicy == Passthrough {
+		if p.PortPolicy == Passthrough {
 			passthroughContainerPortMap[*p.Container] = append(passthroughContainerPortMap[*p.Container], portIdx)
 		}
 	}
@@ -1022,7 +1026,8 @@ func (gs *GameServer) UpdateCounterCapacity(name string, capacity int64) error {
 
 // UpdateListCapacity updates the ListStatus Capacity to the given capacity.
 func (gs *GameServer) UpdateListCapacity(name string, capacity int64) error {
-	if capacity < 0 || capacity > apiserver.ListMaxCapacity {
+
+	if capacity < 0 || capacity > ListMaxCapacity {
 		return errors.Errorf("unable to UpdateListCapacity: Name %s, Capacity %d. Capacity must be between 0 and 1000, inclusive", name, capacity)
 	}
 	if list, ok := gs.Status.Lists[name]; ok {

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.24.6 as builder
+FROM golang:1.25.0 as builder
 WORKDIR /go/src
 COPY . agones.dev/agones
 
@@ -21,7 +21,7 @@ WORKDIR /go/src/agones.dev/agones/examples/simple-genai-server
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 WORKDIR /
 
 COPY --from=builder /go/src/agones.dev/agones/examples/simple-genai-server/server /server

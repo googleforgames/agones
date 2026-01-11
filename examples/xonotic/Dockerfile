@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.24.6 as builder
+FROM golang:1.25.0 as builder
 
 RUN apt-get update && apt-get install -y unzip curl
 
@@ -26,7 +26,7 @@ RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.6.zip && \
     unzip -qq xonotic.zip && rm xonotic.zip
 
 # final image
-FROM debian:bookworm
+FROM debian:trixie
 
 WORKDIR /home/xonotic
 

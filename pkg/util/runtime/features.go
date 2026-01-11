@@ -34,11 +34,11 @@ const (
 	// FeatureDisableResyncOnSDKServer is a feature flag to enable/disable resync on SDK server.
 	FeatureDisableResyncOnSDKServer Feature = "DisableResyncOnSDKServer"
 
-	////////////////
-	// Beta features
-
 	// FeatureAutopilotPassthroughPort is a feature flag that enables/disables Passthrough Port Policy.
 	FeatureAutopilotPassthroughPort Feature = "AutopilotPassthroughPort"
+
+	////////////////
+	// Beta features
 
 	// FeatureCountsAndLists is a feature flag that enables counts and lists feature
 	// (a generic implenetation of the player tracking feature).
@@ -60,11 +60,11 @@ const (
 	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
 	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
 
-	////////////////
-	// Alpha features
-
 	// FeatureFleetAutoscaleRequestMetaData is a feature flag that enables/disables fleet metadata on webhook autoscaler request.
 	FeatureFleetAutoscaleRequestMetaData Feature = "FleetAutoscaleRequestMetaData"
+
+	////////////////
+	// Alpha features
 
 	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
 	// player capacity.
@@ -151,22 +151,22 @@ var (
 		// Note that stable features cannot be set to "false", and are here so that upgrades from a
 		// previous version with the feature flag do not fail on parsing an unknown flag.
 		FeatureDisableResyncOnSDKServer: true,
+		FeatureAutopilotPassthroughPort: true,
 
 		// Beta features
-		FeatureAutopilotPassthroughPort:         true,
 		FeatureCountsAndLists:                   true,
 		FeatureGKEAutopilotExtendedDurationPods: true,
 		FeaturePortPolicyNone:                   true,
 		FeaturePortRanges:                       true,
 		FeatureRollingUpdateFix:                 true,
 		FeatureScheduledAutoscaler:              true,
+		FeatureFleetAutoscaleRequestMetaData:    true,
 
 		// Alpha features
-		FeatureFleetAutoscaleRequestMetaData: false,
-		FeaturePlayerAllocationFilter:        false,
-		FeaturePlayerTracking:                false,
-		FeatureSidecarContainers:             false,
-		FeatureWasmAutoscaler:                false,
+		FeaturePlayerAllocationFilter: false,
+		FeaturePlayerTracking:         false,
+		FeatureSidecarContainers:      false,
+		FeatureWasmAutoscaler:         false,
 
 		// Dev features
 		FeatureProcessorAllocator: false,

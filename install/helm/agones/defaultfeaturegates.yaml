@@ -18,19 +18,19 @@
 # Note that stable features cannot be set to "false", and are here so that upgrades from a
 # previous version with the feature flag do not fail on parsing an unknown flag.
 DisableResyncOnSDKServer: true
+AutopilotPassthroughPort: true
 
 # Beta features
 
-AutopilotPassthroughPort: true
 CountsAndLists: true
 GKEAutopilotExtendedDurationPods: true
 PortPolicyNone: true
 PortRanges: true
 ScheduledAutoscaler: true
 RollingUpdateFix: true
+FleetAutoscaleRequestMetaData: true
 
 # Alpha features
-FleetAutoscaleRequestMetaData: false
 PlayerAllocationFilter: false
 PlayerTracking: false
 SidecarContainers: false

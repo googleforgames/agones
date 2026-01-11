@@ -19,23 +19,10 @@ metadata:
   name: version-map
 data:
   DevVersion: ${DevVersion}
-  ReleaseVersion: "1.53.0"
+  ReleaseVersion: "1.54.0"
   version-mappings.json: |
     {
       "k8sToAgonesVersions": {
-        "1.31": [
-          "1.44.0",
-          "1.45.0",
-          "1.46.0",
-          "1.47.0",
-          "1.48.0",
-          "1.49.0",
-          "1.50.0",
-          "1.51.0",
-          "1.52.2",
-          "1.53.0",
-          "Dev"
-        ],
         "1.32": [
           "1.48.0",
           "1.49.0",
@@ -43,6 +30,7 @@ data:
           "1.51.0",
           "1.52.2",
           "1.53.0",
+          "1.54.0",
           "Dev"
         ],
         "1.33": [
@@ -50,9 +38,11 @@ data:
           "1.51.0",
           "1.52.2",
           "1.53.0",
+          "1.54.0",
           "Dev"
         ],
         "1.34": [
+          "1.54.0",
           "Dev"
         ]
       },
@@ -113,9 +103,13 @@ data:
           "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "SidecarContainers"],
           "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler"]
         },
-        "Dev": {
+        "1.54.0": {
           "alphaGates": ["FleetAutoscaleRequestMetaData", "PlayerAllocationFilter", "PlayerTracking", "SidecarContainers", "WasmAutoscaler"],
-          "betaGates": ["AutopilotPassthroughPort", "CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler"]
+          "betaGates": ["CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler"]
+        },
+        "Dev": {
+          "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "SidecarContainers", "WasmAutoscaler"],
+          "betaGates": ["CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler", "FleetAutoscaleRequestMetaData"]
         }
       }
     }

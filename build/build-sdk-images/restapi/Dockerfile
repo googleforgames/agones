@@ -15,12 +15,12 @@ ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
 RUN apt-get --allow-releaseinfo-change update && \
-    apt-get install -y wget jq software-properties-common gnupg && \
+    apt-get install -y wget jq gnupg && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.24.6
+ENV GO_VERSION=1.25.0
 ENV GO111MODULE=on
 ENV GOPATH /go
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -28,7 +28,7 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
 
 RUN echo '§' && apt-get -qy update
 
-RUN apt-get install -qq -y openjdk-17-jre > /dev/null
+RUN apt-get install -qq -y openjdk-21-jre > /dev/null
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 

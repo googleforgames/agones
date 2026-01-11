@@ -13,14 +13,14 @@
 # limitations under the License.
 
 # Gather dependencies and build the executable
-FROM golang:1.24.6 as builder
+FROM golang:1.25.0 as builder
 WORKDIR /go/src/crd-client
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o client .
 
 # Create the final image that will run the webhook server for FleetAutoscaler webhook policy
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 
 COPY --from=builder /go/src/crd-client/client /
 
