@@ -51,13 +51,13 @@ type allocationResult struct {
 // processorHandler represents the gRPC server for processing allocation requests
 type processorHandler struct {
 	allocationpb.UnimplementedProcessorServer
-	allocator                 *gameserverallocations.Allocator
+	ctx                       context.Context
+	cancel                    context.CancelFunc
 	mu                        sync.RWMutex
+	allocator                 *gameserverallocations.Allocator
 	clients                   map[string]allocationpb.Processor_StreamBatchesServer
 	grpcUnallocatedStatusCode codes.Code
 	pullInterval              time.Duration
-	ctx                       context.Context
-	cancel                    context.CancelFunc
 }
 
 // newServiceHandler creates a new instance of processorHandler
@@ -108,11 +108,13 @@ func (h *processorHandler) StreamBatches(stream allocationpb.Processor_StreamBat
 		logger.WithError(err).Debug("Stream receive error on connect")
 		return err
 	}
+
 	clientID = msg.GetClientId()
 	if clientID == "" {
 		logger.Warn("Received empty clientID, closing stream")
 		return nil
 	}
+
 	h.addClient(clientID, stream)
 	defer h.removeClient(clientID)
 	logger.WithField("clientID", clientID).Debug("Client registered")
@@ -131,51 +133,46 @@ func (h *processorHandler) StreamBatches(stream allocationpb.Processor_StreamBat
 			continue
 		}
 
-		if batchPayload, ok := payload.(*allocationpb.ProcessorMessage_BatchRequest); ok {
-			batchRequest := batchPayload.BatchRequest
-			batchID := batchRequest.GetBatchId()
-			requestWrappers := batchRequest.GetRequests()
+		batchPayload, ok := payload.(*allocationpb.ProcessorMessage_BatchRequest)
+		if !ok {
+			logger.WithField("clientID", clientID).Warn("Received non-batch request payload")
+			continue
+		}
 
+		batchRequest := batchPayload.BatchRequest
+		batchID := batchRequest.GetBatchId()
+		requestWrappers := batchRequest.GetRequests()
+
+		logger.WithFields(logrus.Fields{
+			"clientID":     clientID,
+			"batchID":      batchID,
+			"requestCount": len(requestWrappers),
+		}).Debug("Received batch request")
+
+		// Extract request IDs for logging
+		requestIDs := make([]string, len(requestWrappers))
+		for i, wrapper := range requestWrappers {
+			requestIDs[i] = wrapper.GetRequestId()
+		}
+
+		// Submit batch for processing
+		response := h.submitBatch(batchID, requestWrappers)
+
+		respMsg := &allocationpb.ProcessorMessage{
+			ClientId: clientID,
+			Payload: &allocationpb.ProcessorMessage_BatchResponse{
+				BatchResponse: response,
+			},
+		}
+
+		// TODO: we might want to retry on failure here ?
+		if err := stream.Send(respMsg); err != nil {
 			logger.WithFields(logrus.Fields{
 				"clientID":     clientID,
 				"batchID":      batchID,
 				"requestCount": len(requestWrappers),
-			}).Debug("Received batch request")
-
-			// Extract request IDs for logging
-			requestIDs := make([]string, len(requestWrappers))
-			for i, wrapper := range requestWrappers {
-				requestIDs[i] = wrapper.GetRequestId()
-			}
-
-			response := h.submitBatch(batchID, requestWrappers)
-
-			// Count successful and failed responses for logging
-			successCount := 0
-			errorCount := 0
-			for _, respWrapper := range response.Responses {
-				switch respWrapper.Result.(type) {
-				case *allocationpb.ResponseWrapper_Response:
-					successCount++
-				case *allocationpb.ResponseWrapper_Error:
-					errorCount++
-				}
-			}
-
-			respMsg := &allocationpb.ProcessorMessage{
-				ClientId: clientID,
-				Payload: &allocationpb.ProcessorMessage_BatchResponse{
-					BatchResponse: response,
-				},
-			}
-
-			if err := stream.Send(respMsg); err != nil {
-				logger.WithFields(logrus.Fields{
-					"clientID": clientID,
-					"batchID":  batchID,
-				}).WithError(err).Error("Failed to send response")
-				return err
-			}
+			}).WithError(err).Error("Failed to send response")
+			continue
 		}
 	}
 }
@@ -217,8 +214,8 @@ func (h *processorHandler) StartPullRequestTicker() {
 
 // processAllocationsConcurrently processes multiple allocation requests in parallel
 func (h *processorHandler) processAllocationsConcurrently(requestWrappers []*allocationpb.RequestWrapper) []allocationResult {
-	results := make([]allocationResult, len(requestWrappers))
 	var wg sync.WaitGroup
+	results := make([]allocationResult, len(requestWrappers))
 
 	for i, reqWrapper := range requestWrappers {
 		wg.Add(1)
@@ -310,8 +307,7 @@ func (h *processorHandler) submitBatch(batchID string, requestWrappers []*alloca
 	}
 }
 
-// getGRPCServerOptions returns a list of GRPC server options to use when
-// only serving gRPC requests.
+// getGRPCServerOptions returns a list of GRPC server options to use when only serving gRPC requests.
 func (h *processorHandler) getGRPCServerOptions() []grpc.ServerOption {
 	opts := []grpc.ServerOption{
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
@@ -334,9 +330,11 @@ func (h *processorHandler) getGRPCServerOptions() []grpc.ServerOption {
 func (h *processorHandler) addClient(clientID string, stream allocationpb.Processor_StreamBatchesServer) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
 	if h.clients == nil {
 		h.clients = make(map[string]allocationpb.Processor_StreamBatchesServer)
 	}
+
 	h.clients[clientID] = stream
 }
 
@@ -344,5 +342,6 @@ func (h *processorHandler) addClient(clientID string, stream allocationpb.Proces
 func (h *processorHandler) removeClient(clientID string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
 	delete(h.clients, clientID)
 }
