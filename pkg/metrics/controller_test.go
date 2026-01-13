@@ -540,9 +540,12 @@ func TestControllerGameServersNodeState(t *testing.T) {
 }
 
 func TestFleetCountersAndListsMetrics(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	mu.Lock()
 	defer mu.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	resetMetrics()
 	reader := metricexport.NewReader()
