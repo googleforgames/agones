@@ -27,6 +27,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -325,7 +326,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 
 	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
 
@@ -381,7 +382,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testin
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=false"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=false"))
 
 	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
@@ -419,7 +420,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 
 	gs := func() *agonesv1.GameServer {
 		return &agonesv1.GameServer{
@@ -613,7 +614,7 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	counters := map[string]agonesv1.CounterStatus{
 		"sessions": {Count: int64(1), Capacity: int64(100)},
@@ -685,7 +686,7 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	counters := map[string]agonesv1.CounterStatus{
 		"sessions": {Count: 1, Capacity: 100},
@@ -837,7 +838,7 @@ func TestLocalSDKServerGetList(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"games": {Capacity: int64(100), Values: []string{"game1", "game2"}},
@@ -909,7 +910,7 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"players":  {Capacity: 1000},
@@ -1109,7 +1110,7 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"lemmings": {Capacity: int64(100), Values: []string{"lemming1", "lemming2"}},
@@ -1201,7 +1202,7 @@ func TestLocalSDKServerRemoveListValue(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"players": {Capacity: int64(100), Values: []string{"player1", "player2"}},
@@ -1367,7 +1368,7 @@ func TestAlphaSDKConformanceFunctionality(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 	l, err := NewLocalSDKServer("", "")
 	assert.Nil(t, err)
 	l.testMode = true
