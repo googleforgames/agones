@@ -623,7 +623,8 @@ func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 	if kv == nil {
 		return nil, status.Error(codes.InvalidArgument, "annotation key/value cannot be nil")
 	}
-
+	// TODO(k8s-1.35): Replace validation.IsQualifiedName with the new
+	// qualified name validation function once we bump apimachinery to v0.35+
 	if errs := validation.IsQualifiedName(kv.Key); len(errs) > 0 {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
