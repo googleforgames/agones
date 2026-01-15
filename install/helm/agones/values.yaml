@@ -25,6 +25,7 @@ agones:
     serviceMonitor:
       enabled: false
       interval: 30s
+      additionalLabels: {}
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true
