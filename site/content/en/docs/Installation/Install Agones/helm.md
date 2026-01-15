@@ -113,14 +113,20 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 ### Metrics
 
-| Parameter                                   | Description                                                                                                                                                                                                         | Default |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `agones.metrics.prometheusServiceDiscovery` | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                                                                                                                                            | `true`  |
-| `agones.metrics.prometheusEnabled`          | Enables controller metrics on port `8080` and path `/metrics`                                                                                                                                                       | `true`  |
-| `agones.metrics.stackdriverEnabled`         | Enables Stackdriver exporter of controller metrics                                                                                                                                                                  | `false` |
-| `agones.metrics.stackdriverProjectID`       | This overrides the default gcp project id for use with stackdriver                                                                                                                                                  | \`\`    |
-| `agones.metrics.stackdriverLabels`          | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint. | \`\`    |
-| `agones.metrics.serviceMonitor.interval`    | Default scraping interval for ServiceMonitor                                                                                                                                                                        | `30s`   |
+| Parameter                                    | Description                                                                                                                                                                                                         | Default |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `agones.metrics.prometheusServiceDiscovery`  | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                                                                                                                                            | `true`  |
+| `agones.metrics.prometheusEnabled`           | Enables controller metrics on port `8080` and path `/metrics`                                                                                                                                                       | `true`  |
+| `agones.metrics.stackdriverEnabled`          | Enables Stackdriver exporter of controller metrics                                                                                                                                                                  | `false` |
+| `agones.metrics.stackdriverProjectID`        | This overrides the default gcp project id for use with stackdriver                                                                                                                                                  | \`\`    |
+| `agones.metrics.stackdriverLabels`           | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint. | \`\`    |
+| `agones.metrics.serviceMonitor.interval`     | Default scraping interval for ServiceMonitor                                                                                                                                                                        | `30s`   |
+
+{{% feature publishVersion="1.56.0" %}}
+| Parameter                                        | Description                                      | Default |
+| ------------------------------------------------ | ------------------------------------------------ | ------- |
+| `agones.metrics.serviceMonitor.additionalLabels` | Extra labels to provide for the ServiceMonitors  |   `{}`  |
+{{% /feature %}}
 
 ### Service Accounts
 
