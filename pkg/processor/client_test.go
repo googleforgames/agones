@@ -22,6 +22,7 @@ import (
 
 	allocationpb "agones.dev/agones/pkg/allocation/go"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/metadata"
 )
@@ -145,7 +146,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 			batchSize: 1,
 			setupResponse: func(_ *mockStream, _ []string) {
 				// Do not send any batch response, let it timeout
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(300 * time.Millisecond)
 			},
 			expectError: []bool{true},
 		},
@@ -156,7 +157,7 @@ func TestProcessorClient_Allocate(t *testing.T) {
 			logger := logrus.New()
 			config := Config{
 				MaxBatchSize:      10,
-				AllocationTimeout: 50 * time.Millisecond,
+				AllocationTimeout: 200 * time.Millisecond,
 				ClientID:          "test-client",
 			}
 			stream := &mockStream{
@@ -192,20 +193,25 @@ func TestProcessorClient_Allocate(t *testing.T) {
 				}(i)
 			}
 
-			// Wait for requests to be added
-			time.Sleep(5 * time.Millisecond)
+			// Wait until hotBatch has the expected number of requests
+			// to ensure all the allocate calls have been processed and batched
+			assert.Eventually(t, func() bool {
+				p.batchMutex.RLock()
+				defer p.batchMutex.RUnlock()
+				return len(p.hotBatch.Requests) == tc.batchSize
+			}, 500*time.Millisecond, 50*time.Millisecond)
+
+			// Extract request IDs after the batch is ready
 			p.batchMutex.RLock()
-			for i := 0; i < tc.batchSize && i < len(p.hotBatch.Requests); i++ {
+			for i := 0; i < tc.batchSize; i++ {
 				reqIDs[i] = p.hotBatch.Requests[i].RequestId
 			}
 			p.batchMutex.RUnlock()
 
+			go tc.setupResponse(stream, reqIDs)
+
 			// Simulate a pullRequest
 			stream.recvChan <- &allocationpb.ProcessorMessage{Payload: &allocationpb.ProcessorMessage_Pull{}}
-			// Wait for pullRequest to be processed
-			time.Sleep(5 * time.Millisecond)
-			// Simulate responses
-			tc.setupResponse(stream, reqIDs)
 
 			for i := 0; i < tc.batchSize; i++ {
 				<-doneChans[i]
