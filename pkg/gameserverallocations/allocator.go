@@ -119,6 +119,7 @@ type Allocator struct {
 type request struct {
 	gsa      *allocationv1.GameServerAllocation
 	response chan response
+	ctx      context.Context
 }
 
 // response is an async response for a matching request
@@ -459,7 +460,12 @@ func (c *Allocator) getClientCertificates(namespace, secretName string) (clientC
 func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*agonesv1.GameServer, error) {
 	// creates an allocation request. This contains the requested GameServerAllocation, as well as the
 	// channel we expect the return values to come back for this GameServerAllocation
-	req := request{gsa: gsa, response: make(chan response)}
+	req := request{gsa: gsa, response: make(chan response), ctx: ctx}
+
+	// Avoid pushing request to the queue if the context is already done
+	if ctx.Err() != nil {
+		return nil, ErrTotalTimeoutExceeded
+	}
 
 	// this pushes the request into the batching process
 	c.pendingRequests <- req
@@ -517,6 +523,12 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 	for {
 		select {
 		case req := <-c.pendingRequests:
+			// Ensure the request context is still active before processing to avoid allocating unnecessarily
+			if req.ctx.Err() != nil {
+				req.response <- response{request: req, gs: nil, err: ErrTotalTimeoutExceeded}
+				continue
+			}
+
 			// refresh the list after every 100 allocations made in a single batch
 			if requestCount >= maxBatchBeforeRefresh {
 				list = nil
