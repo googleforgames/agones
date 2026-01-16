@@ -561,11 +561,11 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		require.Len(t, errs, 0)
 
 		// line up 3 in a batch
-		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
+		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response), ctx: context.Background()}
 		a.pendingRequests <- j1
-		j2 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
+		j2 := request{gsa: gsa.DeepCopy(), response: make(chan response), ctx: context.Background()}
 		a.pendingRequests <- j2
-		j3 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
+		j3 := request{gsa: gsa.DeepCopy(), response: make(chan response), ctx: context.Background()}
 		a.pendingRequests <- j3
 
 		go a.ListenAndAllocate(ctx, 3)
@@ -617,7 +617,7 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		errs := gsa.Validate()
 		require.Len(t, errs, 0)
 
-		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
+		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response), ctx: context.Background()}
 		a.pendingRequests <- j1
 
 		go a.ListenAndAllocate(ctx, 3)
@@ -784,17 +784,17 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 			},
 		}}
 
-	j1 := request{gsa: gsaDescending.DeepCopy(), response: make(chan response)}
+	j1 := request{gsa: gsaDescending.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j1
-	j2 := request{gsa: gsaAscending.DeepCopy(), response: make(chan response)}
+	j2 := request{gsa: gsaAscending.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j2
-	j3 := request{gsa: gsaDistributed.DeepCopy(), response: make(chan response)}
+	j3 := request{gsa: gsaDistributed.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j3
-	j4 := request{gsa: gsaListDescending.DeepCopy(), response: make(chan response)}
+	j4 := request{gsa: gsaListDescending.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j4
-	j5 := request{gsa: gsaListAscending.DeepCopy(), response: make(chan response)}
+	j5 := request{gsa: gsaListAscending.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j5
-	j6 := request{gsa: gsaListDistributed.DeepCopy(), response: make(chan response)}
+	j6 := request{gsa: gsaListDistributed.DeepCopy(), response: make(chan response), ctx: context.Background()}
 	a.pendingRequests <- j6
 
 	go a.ListenAndAllocate(ctx, 5)
@@ -861,6 +861,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			request: request{
 				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
+				ctx:      context.Background(),
 			},
 			gs: gs1,
 		}
@@ -907,6 +908,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			request: request{
 				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
+				ctx:      context.Background(),
 			},
 			gs: gs2,
 		}
@@ -942,6 +944,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			request: request{
 				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
+				ctx:      context.Background(),
 			},
 			gs: gs1,
 		}
