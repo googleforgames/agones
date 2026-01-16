@@ -620,6 +620,19 @@ func (s *SDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, e
 func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	s.logger.WithField("values", kv).Debug("Adding SetAnnotation to queue")
 
+	if kv == nil {
+		return nil, status.Error(codes.InvalidArgument, "annotation key/value cannot be nil")
+	}
+	// TODO(k8s-1.35): Replace validation.IsQualifiedName with the new
+	// qualified name validation function once we bump apimachinery to v0.35+
+	if errs := validation.IsQualifiedName(kv.Key); len(errs) > 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"invalid annotation key %q: %s",
+			kv.Key,
+			strings.Join(errs, ", "),
+		)
+	}
 	s.gsUpdateMutex.Lock()
 	s.gsAnnotations[kv.Key] = kv.Value
 	s.gsUpdateMutex.Unlock()
