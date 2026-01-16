@@ -462,7 +462,8 @@ func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 	// channel we expect the return values to come back for this GameServerAllocation
 	req := request{gsa: gsa, response: make(chan response), ctx: ctx}
 
-	// Avoid pushing request to the queue if the context is already done
+	// Avoid pushing request to the queue if the context is already done to prevent
+	// the pendingRequests reaching the max buffer size and blocking further allocations
 	if ctx.Err() != nil {
 		return nil, ErrTotalTimeoutExceeded
 	}

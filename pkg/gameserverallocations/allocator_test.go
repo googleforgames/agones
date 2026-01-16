@@ -627,6 +627,42 @@ func TestAllocatorRunLocalAllocations(t *testing.T) {
 		assert.Error(t, res1.err)
 		assert.Equal(t, ErrNoGameServer, res1.err)
 	})
+
+	t.Run("do not propagate allocation if request context cancelled", func(t *testing.T) {
+		a, m := newFakeAllocator()
+		ctx, cancel := agtesting.StartInformers(m, a.allocationCache.gameServerSynced)
+		defer cancel()
+
+		// This call initializes the cache
+		err := a.allocationCache.syncCache()
+		assert.Nil(t, err)
+
+		err = a.allocationCache.counter.Run(ctx, 0)
+		assert.Nil(t, err)
+
+		gsa := &allocationv1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: defaultNs,
+			},
+			Spec: allocationv1.GameServerAllocationSpec{
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "thereisnofleet"}}}},
+			}}
+		gsa.ApplyDefaults()
+		errs := gsa.Validate()
+		require.Len(t, errs, 0)
+
+		reqCtx, reqCancel := context.WithTimeout(context.Background(), time.Millisecond)
+		reqCancel()
+		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response), ctx: reqCtx}
+		a.pendingRequests <- j1
+
+		go a.ListenAndAllocate(ctx, 3)
+
+		res1 := <-j1.response
+		assert.Nil(t, res1.gs)
+		assert.Error(t, res1.err)
+		assert.Equal(t, ErrTotalTimeoutExceeded, res1.err)
+	})
 }
 
 func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
