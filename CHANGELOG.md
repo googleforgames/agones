@@ -1,6 +1,40 @@
 # Changelog
 
-# [v1.54.0](https://github.com/googleforgames/agones/tree/v1.53.0) (2025-12-02)
+# [v1.55.0](https://github.com/googleforgames/agones/tree/v1.55.0) (2026-01-13)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.54.0...v1.55.0)
+
+**Implemented enhancements**
+- feat: promote FleetAutoscaleRequestMetaData to beta by @sugar-cat7 in https://github.com/googleforgames/agones/pull/4365
+- Add Wasm Fleet Autoscaler quickstart documentation by @markmandel in https://github.com/googleforgames/agones/pull/4382
+
+**Fixed bugs**
+- Fix sdkserver updatelist gameserver max items by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4326
+- Fix Site Docsy Theme by @markmandel in https://github.com/googleforgames/agones/pull/4394
+- fix(sdk): validate labels in SetLabel to prevent retry loops by @rajanarahul93 in https://github.com/googleforgames/agones/pull/4386
+
+**Other**
+- Release 1.54.0 (#4374) by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4376
+- Feat: enable remote debugging with minikube by @lacroixthomas in https://github.com/googleforgames/agones/pull/4341
+- Preparation for Release v1.55.0 by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4378
+- Update caBundle Documentation. by @markmandel in https://github.com/googleforgames/agones/pull/4380
+- test: deferred cleanup for GameServer in TestSuperTuxKartGameServerReady by @markmandel in https://github.com/googleforgames/agones/pull/4379
+- Upgrade Golang 1.25 Versions by @Sivasankaran25 in https://github.com/googleforgames/agones/pull/4383
+- Reorganize third-party content documentation and add content by @markmandel in https://github.com/googleforgames/agones/pull/4388
+- Fix flaky TestControllerGameServerCount race condition by @markmandel in https://github.com/googleforgames/agones/pull/4392
+- feat: refactored to use SumGameServerSets by @Ledovecek in https://github.com/googleforgames/agones/pull/4398
+- test: fix flaky TestPortRangeAllocatorSyncDeleteGameServer by @markmandel in https://github.com/googleforgames/agones/pull/4399
+- Refactor metrics controller tests to fix flaky behaviour by @markmandel in https://github.com/googleforgames/agones/pull/4406
+- Fix(build): Upgrade Agones base container images from Debian 12 (Book… by @indurireddy-TF in https://github.com/googleforgames/agones/pull/4387
+- Update third-party content documentation with new articles and podcasts by @markmandel in https://github.com/googleforgames/agones/pull/4410
+- fix(rust-simple): upgrade rust toolchain to 1.92 to fix build failure by @indurireddy-TF in https://github.com/googleforgames/agones/pull/4414
+
+**New Contributors**
+- @sugar-cat7 made their first contribution in https://github.com/googleforgames/agones/pull/4365
+- @Ledovecek made their first contribution in https://github.com/googleforgames/agones/pull/4398
+- @rajanarahul93 made their first contribution in https://github.com/googleforgames/agones/pull/4386
+
+# [v1.54.0](https://github.com/googleforgames/agones/tree/v1.54.0) (2025-12-02)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.53.0...v1.54.0)
 

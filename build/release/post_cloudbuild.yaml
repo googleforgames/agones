@@ -55,7 +55,7 @@ steps:
       - VERSION=${_VERSION}
       - REGISTRY=${_REGISTRY}/release
       - FULL_BUILD=1
-    args: [-j, '1', build]
+    args: [-j, '1', build, "VERSION=${_VERSION}", "FULL_BUILD=1"]
 
   #
   # push all the images
@@ -64,8 +64,12 @@ steps:
     id: push-images
     waitFor: [build-images]
     dir: build
-    env: ['VERSION=${_VERSION}', 'REGISTRY=${_REGISTRY}/release']
-    args: [-j, '1', push]
+    env:
+      - VERSION=${_VERSION}
+      - REGISTRY=${_REGISTRY}/release
+      - FULL_BUILD=1
+    # Pass as arguments to force-override the Makefile's git-describe logic for VERSION
+    args: [-j, '1', push, "VERSION=${_VERSION}", "FULL_BUILD=1"]
 
   #
   # Creating cloud storage bucket
@@ -102,7 +106,10 @@ steps:
     id: push-chart
     waitFor: [build-images, push-images]
     dir: build
-    env: ['VERSION=${_VERSION}', DOCKER_RUN_ARGS=--network=cloudbuild]
+    env:
+      - VERSION=${_VERSION}
+      - DOCKER_RUN_ARGS=--network=cloudbuild
+      - FULL_BUILD=1
     args: [push-chart]
 options:
   machineType: E2_HIGHCPU_32

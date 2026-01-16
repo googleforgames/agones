@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -2462,4 +2463,36 @@ func TestSetLabel_InvalidLabelRejected(t *testing.T) {
 	st, ok := status.FromError(err)
 	require.True(t, ok, "expected gRPC status error")
 	assert.Equal(t, codes.InvalidArgument, st.Code())
+}
+
+func TestSetAnnotation_NilAndOverlimit(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name string
+		kv   *sdk.KeyValue
+	}{
+		{
+			name: "Nil KeyValue Object",
+			kv:   nil,
+		},
+		{
+			name: "Overlimit Key",
+			kv:   &sdk.KeyValue{Key: strings.Repeat("a", 64), Value: "v"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := sc.SetAnnotation(context.Background(), tc.kv)
+			require.Error(t, err, "Case %s should have failed", tc.name)
+			st, ok := status.FromError(err)
+			assert.True(t, ok)
+			assert.Equal(t, codes.InvalidArgument, st.Code())
+		})
+	}
 }
