@@ -600,11 +600,14 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 		}
 
 		if p.Container != nil && gss.Container != "" {
-			_, _, err := gss.FindContainer(*p.Container)
-			if err != nil {
+			if !gss.HasContainer(*p.Container) {
 				allErrs = append(allErrs, field.Invalid(path.Child("container"), *p.Container, ErrContainerNameInvalid))
 			}
 		}
+	}
+	for i, c := range gss.Template.Spec.InitContainers {
+		path := fldPath.Child("template", "spec", "initContainers").Index(i)
+		allErrs = append(allErrs, ValidateResourceRequirements(&c.Resources, path.Child("resources"))...)
 	}
 	for i, c := range gss.Template.Spec.Containers {
 		path := fldPath.Child("template", "spec", "containers").Index(i)
@@ -730,12 +733,42 @@ func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, er
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", name)
 }
 
+// HasContainer determines if the GameServerSpec has a container with the specified name.
+// Init containers with RestartPolicy Always will also be considered.
+func (gss *GameServerSpec) HasContainer(name string) bool {
+	for _, c := range gss.Template.Spec.Containers {
+		if c.Name == name {
+			return true
+		}
+	}
+	for _, c := range gss.Template.Spec.InitContainers {
+		if c.RestartPolicy == nil || *c.RestartPolicy != corev1.ContainerRestartPolicyAlways {
+			continue
+		}
+		if c.Name == name {
+			return true
+		}
+	}
+
+	return false
+}
+
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
+// Init containers with RestartPolicy Always will also be considered.
 // Returns an error if the container is not found.
 func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
 	for i, c := range pod.Spec.Containers {
 		if c.Name == containerName {
 			pod.Spec.Containers[i] = f(c)
+			return nil
+		}
+	}
+	for i, c := range pod.Spec.InitContainers {
+		if c.RestartPolicy == nil || *c.RestartPolicy != corev1.ContainerRestartPolicyAlways {
+			continue
+		}
+		if c.Name == containerName {
+			pod.Spec.InitContainers[i] = f(c)
 			return nil
 		}
 	}
