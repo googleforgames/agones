@@ -1,0 +1,24 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true
+	},
+	"javascript": {
+		"globals": [
+			"afterAll",
+			"afterEach",
+			"beforeAll",
+			"beforeEach",
+			"describe",
+			"expect",
+			"fail",
+			"it",
+			"jasmine",
+			"spyOn"
+		]
+	}
+}
