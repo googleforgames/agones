@@ -619,11 +619,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
-
 	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData)+"=true"))
-	defer func() {
-		require.NoError(t, utilruntime.ParseFeatures(""))
-	}()
 
 	ts := testServer{}
 	server := httptest.NewServer(ts)

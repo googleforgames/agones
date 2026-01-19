@@ -116,9 +116,8 @@ func TestControllerAllocator(t *testing.T) {
 			rec := httptest.NewRecorder()
 			err = c.processAllocationRequest(ctx, rec, r, "default")
 			require.NoError(t, err)
-			if !assert.Equal(t, http.StatusCreated, rec.Code, "Unexpected HTTP Code") {
-				require.Failf(t, "Unexpected HTTP Code Body: %s", rec.Body.String())
-			}
+			require.Equal(t, http.StatusCreated, rec.Code, "Response body: %s", rec.Body.String())
+
 			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
 			require.NoError(t, err)
