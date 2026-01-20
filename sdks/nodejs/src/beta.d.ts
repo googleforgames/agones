@@ -13,31 +13,31 @@
 // limitations under the License.
 
 declare class Beta {
-	getCounterCount(key: string): Promise<number>
+	getCounterCount(key: string): Promise<number>;
 
-	incrementCounter(key: string, amount: number): Promise<void>
+	incrementCounter(key: string, amount: number): Promise<void>;
 
-	decrementCounter(key: string, amount: number): Promise<void>
+	decrementCounter(key: string, amount: number): Promise<void>;
 
-	setCounterCount(key: string, amount: number): Promise<void>
+	setCounterCount(key: string, amount: number): Promise<void>;
 
-	getCounterCapacity(key: string): Promise<number>
+	getCounterCapacity(key: string): Promise<number>;
 
-	setCounterCapacity(key: string, amount: number): Promise<void>
+	setCounterCapacity(key: string, amount: number): Promise<void>;
 
-	getListCapacity(key: string): Promise<number>
+	getListCapacity(key: string): Promise<number>;
 
-	setListCapacity(key: string, amount: number): Promise<void>
+	setListCapacity(key: string, amount: number): Promise<void>;
 
-	listContains(key: string, value: string): Promise<boolean>
+	listContains(key: string, value: string): Promise<boolean>;
 
-	getListLength(key: string): Promise<number>
+	getListLength(key: string): Promise<number>;
 
-	getListValues(key: string): Promise<string[]>
+	getListValues(key: string): Promise<string[]>;
 
-	appendListValue(key: string, value: string): Promise<void>
+	appendListValue(key: string, value: string): Promise<void>;
 
-	deleteListValue(key:string , value: string): Promise<void>
+	deleteListValue(key: string, value: string): Promise<void>;
 }
 
 export default Beta;

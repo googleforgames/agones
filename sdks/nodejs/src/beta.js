@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const grpc = require('@grpc/grpc-js');
-const fieldMask = require('google-protobuf/google/protobuf/field_mask_pb');
-const jspbWrappers = require('google-protobuf/google/protobuf/wrappers_pb');
+const grpc = require("@grpc/grpc-js");
+const fieldMask = require("google-protobuf/google/protobuf/field_mask_pb");
+const jspbWrappers = require("google-protobuf/google/protobuf/wrappers_pb");
 
-const messages = require('../lib/beta/beta_pb');
-const servicesPackageDefinition = require('../lib/beta/beta_grpc_pb');
+const messages = require("../lib/beta/beta_pb");
+const servicesPackageDefinition = require("../lib/beta/beta_grpc_pb");
 
 class Beta {
 	constructor(address, credentials) {
@@ -78,7 +78,7 @@ class Beta {
 	}
 
 	async setCounterCount(key, amount) {
-		let count = new jspbWrappers.Int64Value();
+		const count = new jspbWrappers.Int64Value();
 		count.setValue(amount);
 		const updateRequest = new messages.CounterUpdateRequest();
 		updateRequest.setName(key);
@@ -151,7 +151,7 @@ class Beta {
 		const list = new messages.List();
 		list.setName(key);
 		list.setCapacity(amount);
-		const updateMask = new fieldMask.FieldMask({Name: 'capacity'});
+		const updateMask = new fieldMask.FieldMask({ Name: "capacity" });
 		const request = new messages.UpdateListRequest();
 		request.setList(list);
 		request.setUpdateMask(updateMask);
