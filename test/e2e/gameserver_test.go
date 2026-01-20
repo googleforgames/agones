@@ -39,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/ptr"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -820,6 +821,7 @@ func TestGameServerWithPortsMappedToInitSidecarContainers(t *testing.T) {
 							Image:           framework.GameServerImage,
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Args:            []string{"-port", "5000"},
+							RestartPolicy:   ptr.To(corev1.ContainerRestartPolicyAlways),
 						},
 					},
 				},

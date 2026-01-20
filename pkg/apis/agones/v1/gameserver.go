@@ -293,7 +293,7 @@ type GameServerPort struct {
 	// `Passthrough` dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// `None` portPolicy ignores `HostPort` and the `containerPort` (optional) is used to set the port on the GameServer instance.
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
-	// Container is the name of the container on which to open the port. Defaults to the game server container.
+	// Container is the name of the container or sidecar container on which to open the port. Defaults to the game server container.
 	// +optional
 	Container *string `json:"container,omitempty"`
 	// ContainerPort is the port that is being opened on the specified container's process
@@ -577,9 +577,8 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 	}
 
 	// make sure the container value points to a valid container
-	_, _, err := gss.FindContainer(gss.Container)
-	if err != nil {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("container"), gss.Container, err.Error()))
+	if !gss.HasContainer(gss.Container, false) {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("container"), gss.Container, "Could not find a container named " + gss.Container))
 	}
 
 	// no host port when using dynamic PortPolicy
@@ -600,7 +599,7 @@ func (gss *GameServerSpec) Validate(apiHooks APIHooks, devAddress string, fldPat
 		}
 
 		if p.Container != nil && gss.Container != "" {
-			if !gss.HasContainer(*p.Container) {
+			if !gss.HasContainer(*p.Container, true) {
 				allErrs = append(allErrs, field.Invalid(path.Child("container"), *p.Container, ErrContainerNameInvalid))
 			}
 		}
@@ -723,6 +722,8 @@ func (gs *GameServer) IsActive() bool {
 
 // FindContainer returns the container specified by the name parameter. Returns the index and the value.
 // Returns an error if not found.
+//
+// Deprecated: use HasContainer instead.
 func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, error) {
 	for i, c := range gss.Template.Spec.Containers {
 		if c.Name == name {
@@ -734,13 +735,17 @@ func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, er
 }
 
 // HasContainer determines if the GameServerSpec has a container with the specified name.
-// Init containers with RestartPolicy Always will also be considered.
-func (gss *GameServerSpec) HasContainer(name string) bool {
+// Init containers with RestartPolicy `Always` will be considered if `includeSidecar` is true.
+func (gss *GameServerSpec) HasContainer(name string, includeSidecar bool) bool {
 	for _, c := range gss.Template.Spec.Containers {
 		if c.Name == name {
 			return true
 		}
 	}
+	if !includeSidecar {
+		return false
+	}
+
 	for _, c := range gss.Template.Spec.InitContainers {
 		if c.RestartPolicy == nil || *c.RestartPolicy != corev1.ContainerRestartPolicyAlways {
 			continue
@@ -749,7 +754,6 @@ func (gss *GameServerSpec) HasContainer(name string) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
