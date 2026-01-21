@@ -101,8 +101,7 @@ func TestAddress(t *testing.T) {
 
 	for name, fixture := range fixture {
 		t.Run(name, func(t *testing.T) {
-			err := runtime.ParseFeatures(fixture.featureFlags)
-			assert.NoError(t, err)
+			require.NoError(t, runtime.ParseFeatures(fixture.featureFlags))
 
 			addr, addrs, err := address(fixture.node)
 			require.NoError(t, err)

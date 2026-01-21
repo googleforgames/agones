@@ -280,7 +280,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	// NOTE: CountsAndLists has different behavior for Distributed, and the game server list is not random.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=false"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=false"))
 
 	controller, m := newFakeController()
 	c := controller.allocator.allocationCache

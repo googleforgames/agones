@@ -21,15 +21,13 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConvert(t *testing.T) {
 	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
 
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,7 +81,9 @@ func TestConvert(t *testing.T) {
 	}
 
 	t.Run(string(runtime.FeaturePlayerTracking)+" disabled", func(t *testing.T) {
-		assert.NoError(t, runtime.ParseFeatures(""))
+		runtime.FeatureTestMutex.Lock()
+		defer runtime.FeatureTestMutex.Unlock()
+		require.NoError(t, runtime.ParseFeatures(""))
 
 		gs := fixture.DeepCopy()
 
@@ -94,7 +94,9 @@ func TestConvert(t *testing.T) {
 	})
 
 	t.Run(string(runtime.FeaturePlayerTracking)+" enabled", func(t *testing.T) {
-		assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+		runtime.FeatureTestMutex.Lock()
+		defer runtime.FeatureTestMutex.Unlock()
+		require.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 
 		gs := fixture.DeepCopy()
 		gs.Status.Players = &agonesv1.PlayerStatus{Capacity: 10, Count: 5, IDs: []string{"one", "two"}}
@@ -108,7 +110,9 @@ func TestConvert(t *testing.T) {
 	})
 
 	t.Run(string(runtime.FeatureCountsAndLists)+" disabled", func(t *testing.T) {
-		assert.NoError(t, runtime.ParseFeatures(""))
+		runtime.FeatureTestMutex.Lock()
+		defer runtime.FeatureTestMutex.Unlock()
+		require.NoError(t, runtime.ParseFeatures(""))
 
 		gs := fixture.DeepCopy()
 
@@ -120,7 +124,9 @@ func TestConvert(t *testing.T) {
 	})
 
 	t.Run(string(runtime.FeatureCountsAndLists)+" enabled", func(t *testing.T) {
-		assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+		runtime.FeatureTestMutex.Lock()
+		defer runtime.FeatureTestMutex.Unlock()
+		require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 		gs := fixture.DeepCopy()
 		gs.Status.Counters = map[string]agonesv1.CounterStatus{
