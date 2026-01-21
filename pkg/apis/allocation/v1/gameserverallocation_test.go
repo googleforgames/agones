@@ -52,7 +52,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	gsa = &GameServerAllocation{}
 	gsa.ApplyDefaults()
@@ -125,7 +125,7 @@ func TestGameServerSelectorApplyDefaults(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true",
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true",
 		runtime.FeaturePlayerAllocationFilter,
 		runtime.FeatureCountsAndLists)))
 
@@ -187,7 +187,7 @@ func TestGameServerSelectorValidate(t *testing.T) {
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=true", runtime.FeaturePlayerAllocationFilter, runtime.FeatureCountsAndLists)))
 
 	allocated := agonesv1.GameServerStateAllocated
 	starting := agonesv1.GameServerStateStarting
@@ -855,7 +855,7 @@ func TestGameServerCounterActions(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	DECREMENT := "Decrement"
 	INCREMENT := "Increment"
@@ -970,7 +970,7 @@ func TestGameServerListActions(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	testScenarios := map[string]struct {
 		la      ListAction
@@ -1078,7 +1078,7 @@ func TestValidatePriorities(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	fieldPath := field.NewPath("spec.Priorities")
 
@@ -1167,7 +1167,7 @@ func TestValidateCounterActions(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	fieldPath := field.NewPath("spec.Counters")
 	decrement := agonesv1.GameServerPriorityDecrement
@@ -1246,7 +1246,7 @@ func TestValidateListActions(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	fieldPath := field.NewPath("spec.Lists")
 
@@ -1297,7 +1297,7 @@ func TestGameServerAllocationValidate(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=false",
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true&%s=false",
 		runtime.FeaturePlayerAllocationFilter,
 		runtime.FeatureCountsAndLists)))
 
@@ -1400,7 +1400,7 @@ func TestSortKey(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=true", runtime.FeatureCountsAndLists)))
 
 	gameServerAllocation1 := &GameServerAllocation{
 		Spec: GameServerAllocationSpec{

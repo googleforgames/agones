@@ -12,148 +12,152 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const stream = require('stream');
+const stream = require("node:stream");
 
-const grpc = require('@grpc/grpc-js');
+const grpc = require("@grpc/grpc-js");
 
-const messages = require('../lib/sdk_pb');
+const messages = require("../lib/sdk_pb");
 
-const AgonesSDK = require('../src/agonesSDK');
-const Alpha = require('../src/alpha');
+const AgonesSDK = require("../src/agonesSDK");
+const Alpha = require("../src/alpha");
 
-describe('AgonesSDK', () => {
+describe("AgonesSDK", () => {
 	let agonesSDK;
 
 	beforeEach(() => {
 		agonesSDK = new AgonesSDK();
 	});
 
-	describe('port', () => {
-		it('returns the default port if $AGONES_SDK_GRPC_PORT is not defined', async () => {
-			let port = agonesSDK.port;
-			expect(port).toEqual('9357');
+	describe("port", () => {
+		it("returns the default port if $AGONES_SDK_GRPC_PORT is not defined", async () => {
+			const port = agonesSDK.port;
+			expect(port).toEqual("9357");
 		});
 
-		it('returns a valid port set in $AGONES_SDK_GRPC_PORT', async () => {
-			process.env.AGONES_SDK_GRPC_PORT = '6789';
-			let port = agonesSDK.port;
-			expect(port).toEqual('6789');
+		it("returns a valid port set in $AGONES_SDK_GRPC_PORT", async () => {
+			process.env.AGONES_SDK_GRPC_PORT = "6789";
+			const port = agonesSDK.port;
+			expect(port).toEqual("6789");
 			delete process.env.AGONES_SDK_GRPC_PORT;
 		});
 
-		it('returns an invalid port set in $AGONES_SDK_GRPC_PORT', async () => {
-			process.env.AGONES_SDK_GRPC_PORT = 'foo';
-			let port = agonesSDK.port;
-			expect(port).toEqual('foo');
+		it("returns an invalid port set in $AGONES_SDK_GRPC_PORT", async () => {
+			process.env.AGONES_SDK_GRPC_PORT = "foo";
+			const port = agonesSDK.port;
+			expect(port).toEqual("foo");
 			delete process.env.AGONES_SDK_GRPC_PORT;
 		});
 	});
 
-	describe('connect', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'waitForReady').and.callFake((deadline, callback) => {
-				let result = new messages.Empty();
-				callback(undefined, result);
-			});
-			let result = await agonesSDK.connect();
+	describe("connect", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "waitForReady").and.callFake(
+				(_deadline, callback) => {
+					const result = new messages.Empty();
+					callback(undefined, result);
+				},
+			);
+			const result = await agonesSDK.connect();
 			expect(agonesSDK.client.waitForReady).toHaveBeenCalled();
 			expect(result).toEqual(undefined);
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'waitForReady').and.callFake((deadline, callback) => {
-				callback('error', undefined);
-			});
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "waitForReady").and.callFake(
+				(_deadline, callback) => {
+					callback("error", undefined);
+				},
+			);
 			try {
 				await agonesSDK.connect();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.waitForReady).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('ready', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'ready').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+	describe("ready", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "ready").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
-			let result = await agonesSDK.ready();
+			const result = await agonesSDK.ready();
 			expect(agonesSDK.client.ready).toHaveBeenCalled();
 			expect(result).toEqual({});
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'ready').and.callFake((request, callback) => {
-				callback('error', undefined);
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "ready").and.callFake((_request, callback) => {
+				callback("error", undefined);
 			});
 			try {
 				await agonesSDK.ready();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.ready).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('allocate', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+	describe("allocate", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "allocate").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
-			let result = await agonesSDK.allocate();
+			const result = await agonesSDK.allocate();
 			expect(agonesSDK.client.allocate).toHaveBeenCalled();
 			expect(result).toEqual({});
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
-				callback('error', undefined);
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "allocate").and.callFake((_request, callback) => {
+				callback("error", undefined);
 			});
 			try {
 				await agonesSDK.allocate();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.allocate).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('shutdown', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'shutdown').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+	describe("shutdown", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "shutdown").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.shutdown();
+			const result = await agonesSDK.shutdown();
 			expect(agonesSDK.client.shutdown).toHaveBeenCalled();
 			expect(result).toEqual({});
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'shutdown').and.callFake((request, callback) => {
-				callback('error', undefined);
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "shutdown").and.callFake((_request, callback) => {
+				callback("error", undefined);
 			});
 			try {
 				await agonesSDK.shutdown();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.shutdown).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('health', () => {
-		it('calls the server and passes calls to stream', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+	describe("health", () => {
+		it("calls the server and passes calls to stream", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 
@@ -162,9 +166,9 @@ describe('AgonesSDK', () => {
 			expect(stream.write).toHaveBeenCalled();
 		});
 
-		it('uses the same stream for subsequent calls', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+		it("uses the same stream for subsequent calls", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 
@@ -174,42 +178,42 @@ describe('AgonesSDK', () => {
 			expect(stream.write.calls.count()).toEqual(2);
 		});
 
-		it('calls the server and silently handles the internal error message', async () => {
-			spyOn(agonesSDK.client, 'health').and.callFake((callback) => {
-				callback('error', undefined);
+		it("calls the server and silently handles the internal error message", async () => {
+			spyOn(agonesSDK.client, "health").and.callFake((callback) => {
+				callback("error", undefined);
 			});
 			try {
 				agonesSDK.health();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.health).toHaveBeenCalled();
-				expect(error).not.toEqual('error');
+				expect(error).not.toEqual("error");
 			}
 		});
 
-		it('calls the server and handles stream write error if callback provided', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			stream.write.and.callFake((chunk, encoding, callback) => {
-				callback('error');
+		it("calls the server and handles stream write error if callback provided", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			stream.write.and.callFake((_chunk, _encoding, callback) => {
+				callback("error");
 			});
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 			try {
 				agonesSDK.health((error) => {
-					expect(error).toEqual('error');
+					expect(error).toEqual("error");
 				});
 			} catch (error) {
-				fail();
+				fail(error);
 			}
 		});
 
-		it('calls the server and re throws stream write error if no callback', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			stream.write.and.callFake((chunk, encoding, callback) => {
-				callback('error');
+		it("calls the server and re throws stream write error if no callback", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			stream.write.and.callFake((_chunk, _encoding, callback) => {
+				callback("error");
 			});
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 			try {
@@ -217,16 +221,16 @@ describe('AgonesSDK', () => {
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.health).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 
-		it('does not call error callback if there was no stream error', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			stream.write.and.callFake((chunk, encoding, callback) => {
+		it("does not call error callback if there was no stream error", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			stream.write.and.callFake((_chunk, _encoding, callback) => {
 				callback();
 			});
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 			agonesSDK.health(() => {
@@ -234,10 +238,10 @@ describe('AgonesSDK', () => {
 			});
 		});
 
-		it('calls the server and handles stream completing', async () => {
-			let stream = jasmine.createSpyObj('stream', ['write', 'on']);
-			spyOn(agonesSDK.client, 'health').and.callFake((callback) => {
-				let result = new messages.Empty();
+		it("calls the server and handles stream completing", async () => {
+			const stream = jasmine.createSpyObj("stream", ["write", "on"]);
+			spyOn(agonesSDK.client, "health").and.callFake((callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 				return stream;
 			});
@@ -247,220 +251,230 @@ describe('AgonesSDK', () => {
 		});
 	});
 
-	describe('getGameServer', () => {
-		it('calls the server and handles the response', async () => {
-			spyOn(agonesSDK.client, 'getGameServer').and.callFake((request, callback) => {
-				let status = new messages.GameServer.Status();
-				status.setState('up');
-				let gameServer = new messages.GameServer();
-				gameServer.setStatus(status);
-				callback(undefined, gameServer);
-			});
+	describe("getGameServer", () => {
+		it("calls the server and handles the response", async () => {
+			spyOn(agonesSDK.client, "getGameServer").and.callFake(
+				(_request, callback) => {
+					const status = new messages.GameServer.Status();
+					status.setState("up");
+					const gameServer = new messages.GameServer();
+					gameServer.setStatus(status);
+					callback(undefined, gameServer);
+				},
+			);
 
-			let gameServer = await agonesSDK.getGameServer();
+			const gameServer = await agonesSDK.getGameServer();
 			expect(agonesSDK.client.getGameServer).toHaveBeenCalled();
 			expect(gameServer).toBeDefined();
 			expect(gameServer.status).toBeDefined();
-			expect(gameServer.status.state).toEqual('up');
+			expect(gameServer.status.state).toEqual("up");
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'getGameServer').and.callFake((request, callback) => {
-				callback('error', undefined);
-			});
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "getGameServer").and.callFake(
+				(_request, callback) => {
+					callback("error", undefined);
+				},
+			);
 			try {
 				await agonesSDK.getGameServer();
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.getGameServer).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('watchGameServer', () => {
-		it('calls the server and passes events to the callback', async () => {
-			let serverStream = stream.Readable({read: () => undefined});
-			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
+	describe("watchGameServer", () => {
+		it("calls the server and passes events to the callback", async () => {
+			const serverStream = stream.Readable({ read: () => undefined });
+			spyOn(agonesSDK.client, "watchGameServer").and.callFake(() => {
 				return serverStream;
 			});
 
-			let callback = jasmine.createSpy('callback');
+			const callback = jasmine.createSpy("callback");
 			agonesSDK.watchGameServer(callback);
 			expect(agonesSDK.client.watchGameServer).toHaveBeenCalled();
 
-			let status = new messages.GameServer.Status();
-			status.setState('up');
-			let gameServer = new messages.GameServer();
+			const status = new messages.GameServer.Status();
+			status.setState("up");
+			const gameServer = new messages.GameServer();
 			gameServer.setStatus(status);
-			serverStream.emit('data', gameServer);
+			serverStream.emit("data", gameServer);
 
 			expect(callback).toHaveBeenCalled();
-			let callbackArgs = callback.calls.argsFor(0)[0];
+			const callbackArgs = callback.calls.argsFor(0)[0];
 			expect(callbackArgs.status).toBeDefined();
-			expect(callbackArgs.status.state).toEqual('up');
+			expect(callbackArgs.status.state).toEqual("up");
 		});
-		it('calls the server and passes errors to the optional error callback', async () => {
-			let serverStream = stream.Readable({read: () => undefined});
-			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
+		it("calls the server and passes errors to the optional error callback", async () => {
+			const serverStream = stream.Readable({ read: () => undefined });
+			spyOn(agonesSDK.client, "watchGameServer").and.callFake(() => {
 				return serverStream;
 			});
 
-			let callback = jasmine.createSpy('callback');
-			let errorCallback = jasmine.createSpy('errorCallback');
+			const callback = jasmine.createSpy("callback");
+			const errorCallback = jasmine.createSpy("errorCallback");
 			agonesSDK.watchGameServer(callback, errorCallback);
 
-			let error = {
-				code: grpc.status.CANCELLED
+			const error = {
+				code: grpc.status.CANCELLED,
 			};
-			serverStream.emit('error', error);
+			serverStream.emit("error", error);
 			expect(errorCallback).toHaveBeenCalled();
-			let errorCallbackArgs = errorCallback.calls.argsFor(0)[0];
+			const errorCallbackArgs = errorCallback.calls.argsFor(0)[0];
 			expect(errorCallbackArgs).toEqual(error);
 		});
 	});
 
-	describe('setLabel', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'setLabel').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+	describe("setLabel", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "setLabel").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.setLabel('key', 'value');
+			const result = await agonesSDK.setLabel("key", "value");
 			expect(agonesSDK.client.setLabel).toHaveBeenCalled();
 			expect(result).toEqual({});
 		});
 
-		it('passes arguments to the server', async () => {
-			spyOn(agonesSDK.client, 'setLabel').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+		it("passes arguments to the server", async () => {
+			spyOn(agonesSDK.client, "setLabel").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
 
-			await agonesSDK.setLabel('key', 'value');
+			await agonesSDK.setLabel("key", "value");
 			expect(agonesSDK.client.setLabel).toHaveBeenCalled();
-			let request = agonesSDK.client.setLabel.calls.argsFor(0)[0];
-			expect(request.getKey()).toEqual('key');
-			expect(request.getValue()).toEqual('value');
+			const request = agonesSDK.client.setLabel.calls.argsFor(0)[0];
+			expect(request.getKey()).toEqual("key");
+			expect(request.getValue()).toEqual("value");
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'setLabel').and.callFake((request, callback) => {
-				callback('error', undefined);
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "setLabel").and.callFake((_request, callback) => {
+				callback("error", undefined);
 			});
 			try {
-				await agonesSDK.setLabel('key', 'value');
+				await agonesSDK.setLabel("key", "value");
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.setLabel).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('setAnnotation', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'setAnnotation').and.callFake((request, callback) => {
-				let result = new messages.Empty();
-				callback(undefined, result);
-			});
+	describe("setAnnotation", () => {
+		it("calls the server and handles success", async () => {
+			spyOn(agonesSDK.client, "setAnnotation").and.callFake(
+				(_request, callback) => {
+					const result = new messages.Empty();
+					callback(undefined, result);
+				},
+			);
 
-			let result = await agonesSDK.setAnnotation('key', 'value');
+			const result = await agonesSDK.setAnnotation("key", "value");
 			expect(agonesSDK.client.setAnnotation).toHaveBeenCalled();
 			expect(result).toEqual({});
 		});
 
-		it('passes arguments to the server', async () => {
-			spyOn(agonesSDK.client, 'setAnnotation').and.callFake((request, callback) => {
-				let result = new messages.Empty();
-				callback(undefined, result);
-			});
+		it("passes arguments to the server", async () => {
+			spyOn(agonesSDK.client, "setAnnotation").and.callFake(
+				(_request, callback) => {
+					const result = new messages.Empty();
+					callback(undefined, result);
+				},
+			);
 
-			await agonesSDK.setAnnotation('key', 'value');
+			await agonesSDK.setAnnotation("key", "value");
 			expect(agonesSDK.client.setAnnotation).toHaveBeenCalled();
-			let request = agonesSDK.client.setAnnotation.calls.argsFor(0)[0];
-			expect(request.getKey()).toEqual('key');
-			expect(request.getValue()).toEqual('value');
+			const request = agonesSDK.client.setAnnotation.calls.argsFor(0)[0];
+			expect(request.getKey()).toEqual("key");
+			expect(request.getValue()).toEqual("value");
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'setAnnotation').and.callFake((request, callback) => {
-				callback('error', undefined);
-			});
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "setAnnotation").and.callFake(
+				(_request, callback) => {
+					callback("error", undefined);
+				},
+			);
 			try {
-				await agonesSDK.setAnnotation('key', 'value');
+				await agonesSDK.setAnnotation("key", "value");
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.setAnnotation).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('close', () => {
-		it('closes the client connection when called', async () => {
-			spyOn(agonesSDK.client, 'close');
+	describe("close", () => {
+		it("closes the client connection when called", async () => {
+			spyOn(agonesSDK.client, "close");
 			await agonesSDK.close();
 			expect(agonesSDK.client.close).toHaveBeenCalled();
 		});
-		it('ends the health stream if set', async () => {
-			let stream = jasmine.createSpyObj('stream', ['end', 'write', 'on']);
-			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+		it("ends the health stream if set", async () => {
+			const stream = jasmine.createSpyObj("stream", ["end", "write", "on"]);
+			spyOn(agonesSDK.client, "health").and.callFake(() => {
 				return stream;
 			});
 			agonesSDK.health();
-			spyOn(agonesSDK.client, 'close').and.callFake(() => {});
+			spyOn(agonesSDK.client, "close").and.callFake(() => {});
 			await agonesSDK.close();
 			expect(stream.end).toHaveBeenCalled();
 		});
-		it('cancels any watchers', async () => {
-			let serverStream = stream.Readable({read: () => undefined});
-			spyOn(serverStream, 'destroy').and.callThrough();
-			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
+		it("cancels any watchers", async () => {
+			const serverStream = stream.Readable({ read: () => undefined });
+			spyOn(serverStream, "destroy").and.callThrough();
+			spyOn(agonesSDK.client, "watchGameServer").and.callFake(() => {
 				return serverStream;
 			});
 
-			let callback = jasmine.createSpy('callback');
+			const callback = jasmine.createSpy("callback");
 			agonesSDK.watchGameServer(callback);
 
-			spyOn(agonesSDK.client, 'close');
+			spyOn(agonesSDK.client, "close");
 			await agonesSDK.close();
 			expect(serverStream.destroy).toHaveBeenCalled();
 		});
 	});
 
-	describe('reserve', () => {
-		it('calls the server with duration parameter and handles success', async () => {
-			spyOn(agonesSDK.client, 'reserve').and.callFake((request, callback) => {
-				let result = new messages.Empty();
+	describe("reserve", () => {
+		it("calls the server with duration parameter and handles success", async () => {
+			spyOn(agonesSDK.client, "reserve").and.callFake((_request, callback) => {
+				const result = new messages.Empty();
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.reserve(10);
+			const result = await agonesSDK.reserve(10);
 			expect(agonesSDK.client.reserve).toHaveBeenCalled();
 			expect(result).toEqual({});
 
-			let request = agonesSDK.client.reserve.calls.argsFor(0)[0];
+			const request = agonesSDK.client.reserve.calls.argsFor(0)[0];
 			expect(request.getSeconds()).toEqual(10);
 		});
 
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'reserve').and.callFake((request, callback) => {
-				callback('error', undefined);
+		it("calls the server and handles failure", async () => {
+			spyOn(agonesSDK.client, "reserve").and.callFake((_request, callback) => {
+				callback("error", undefined);
 			});
 			try {
 				await agonesSDK.reserve(10);
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.reserve).toHaveBeenCalled();
-				expect(error).toEqual('error');
+				expect(error).toEqual("error");
 			}
 		});
 	});
 
-	describe('alpha', () => {
-		it('returns the alpha features class', () => {
+	describe("alpha", () => {
+		it("returns the alpha features class", () => {
 			expect(agonesSDK.alpha).toBeInstanceOf(Alpha);
 		});
 	});
