@@ -22,6 +22,10 @@ weight: 20
 
 ## Blogs
 
+### 2026
+
+- Jan 22 - [Making and Scaling a Game Server in Kubernetes using Agones](https://noe-t.dev/posts/making-and-scaling-a-game-server-in-k8s-using-agones/)
+
 ### 2025
 
 - Jan 09 - (Amazon Web Services) [Developer’s Guide to operate game servers on Kubernetes – Part 2](https://aws.amazon.com/blogs/gametech/developers-guide-to-operate-game-servers-on-kubernetes-part-2/)
