@@ -13,7 +13,8 @@ weight: 20
 - Sept 10 [Bandai Namco and Google Cloud Partner to Launch 'DRAGON BALL GEKISHIN SQUADRA,' a New Cross-Platform Multiplayer Action Game](https://www.googlecloudpresscorner.com/2025-09-10-Bandai-Namco-and-Google-Cloud-Partner-to-Launch-DRAGON-BALL-GEKISHIN-SQUADRA,-a-New-Cross-Platform-Multiplayer-Action-Game,1)
 - Nov 5 - [Sonic Rumble Open Source Licences](https://sonicrumble.sega.com/rules/en/copyright/) (This is mostly
   because I can't find a recording of
-  [Sonic Rumbleのグローバルなマルチプレイ対戦サービスの裏側 ～Unity/Agones/AWS/EKSを用いてシンプルで疲労の少ない開発・運用を目指す～](https://cedec.cesa.or.jp/2025/timetable/detail/s67a473fd79c0d/))
+  [Sonic Rumbleのグローバルなマルチプレイ対戦サービスの裏側 ～Unity/Agones/AWS/EKSを用いてシンプルで疲労の少ない開発・運用を目指す～](https://cedec.cesa.or.jp/2025/timetable/detail/s67a473fd79c0d/),
+  but you can find slides at [CEDIL](https://cedil.cesa.or.jp/cedil_sessions/view/3096) (registration required))
 
 ### 2023
 
