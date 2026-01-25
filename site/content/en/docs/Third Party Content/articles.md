@@ -28,7 +28,8 @@ weight: 20
 
 ### 2024
 
-- Jul 18 - (Amazon Web Services) [Developer’s Guide to operate game servers on Kubernetes – Part 1](https://aws.amazon.com/blogs/gametech/developers-guide-to-operate-game-servers-on-kubernetes-part-1/)
+- Apr 03 - (Singularity 6) [The Software Architecture of Palia](https://www.singularity6.com/news/software-architecture-of-palia)
+- Jul 18 - (Amazon Web Services) [Developer's Guide to operate game servers on Kubernetes – Part 1](https://aws.amazon.com/blogs/gametech/developers-guide-to-operate-game-servers-on-kubernetes-part-1/)
 
 ### 2021
 
