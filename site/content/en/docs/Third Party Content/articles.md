@@ -19,6 +19,7 @@ weight: 20
 ### 2023
 
 - Feb 1 - (Japanese) [Nintendo: Building a new general-purpose game server using Google Kubernetes Engine, Cloud Spanner, and more](https://cloud.google.com/blog/ja/topics/customers/nintendo-new-game-servers-built-with-gke-cloud-spanner?hl=ja)
+- Apr 4 - (Google Doodle) [Making online containerized games with managed services](https://cloud.google.com/blog/products/containers-kubernetes/making-online-containerized-games-with-managed-services/)
 - Jul 18 - [Optimizing Gaijin Ent.'s Crossout for cost-efficiency and reliability using EKS, Karpenter and Agones](https://repost.aws/articles/AR6qA3beFySdu3zEPeQd-ffQ/optimizing-gaijin-ent-s-crossout-for-cost-efficiency-and-reliability-using-eks-karpenter-and-agones)
 
 ## Blogs
