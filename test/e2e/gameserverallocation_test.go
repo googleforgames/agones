@@ -1363,8 +1363,8 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 	require.NoError(t, err)
-
 	assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
+	require.NotNil(t, gsa.Status.Metadata, "allocation metadata should not be nil for allocated state")
 	assert.Equal(t, t.Name(), gsa.Status.Metadata.Labels[role])
 	assert.Equal(t, flt.ObjectMeta.Name, gsa.Status.Metadata.Labels[agonesv1.FleetNameLabel])
 	assert.Equal(t, annotationValue, gsa.Status.Metadata.Annotations[annotationKey])
