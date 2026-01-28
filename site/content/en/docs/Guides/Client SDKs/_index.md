@@ -150,7 +150,14 @@ restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Gui
 If the SDK server receives a TERM signal before calling SDK.Shutdown(),
 the SDK server will stay alive for the period of the `terminationGracePeriodSeconds` until `SDK.Shutdown()` has been called.
 
+{{% feature expiryVersion="1.56.0" %}}
 {{< alpha title="Sidecar Containers" gate="SidecarContainers" >}}
+{{% /feature %}}
+
+{{% feature publishVersion="1.56.0" %}}
+{{< beta title="Sidecar Containers" gate="SidecarContainers" >}}
+{{% /feature %}}
+
 
 When enabling the `SidecarContainers` feature gate, the Agones SDK server will be run as a sidecar container in the same
 Pod as the game server, and the container restart and Health checking rules are more simplified from the above.
