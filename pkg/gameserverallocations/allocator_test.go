@@ -670,7 +670,7 @@ func TestAllocatorRunLocalAllocationsCountsAndLists(t *testing.T) {
 
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
+	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	a, m := newFakeAllocator()
 
