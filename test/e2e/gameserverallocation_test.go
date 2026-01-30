@@ -1344,7 +1344,6 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	annotationValue := "someValue"
 	annotations := map[string]string{annotationKey: annotationValue}
 
-	
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Replicas = 1
 	flt.Spec.Template.ObjectMeta.Labels = label
@@ -1354,10 +1353,8 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint
 	require.NoError(t, err)
 
-	
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	
 	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "allocation-",
@@ -1379,7 +1376,6 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 		Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 	require.NoError(t, err)
 
-
 	require.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
 	require.NotEmpty(t, gsa.Status.GameServerName)
 
@@ -1394,7 +1390,6 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 			gs.ObjectMeta.Annotations[annotationKey] == annotationValue
 	}, 20*time.Second, 300*time.Millisecond)
 }
-
 
 func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 	t.Parallel()
