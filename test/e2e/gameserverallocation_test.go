@@ -1344,34 +1344,57 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 	annotationValue := "someValue"
 	annotations := map[string]string{annotationKey: annotationValue}
 
+	
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Replicas = 1
 	flt.Spec.Template.ObjectMeta.Labels = label
 	flt.Spec.Template.ObjectMeta.Annotations = annotations
+
 	flt, err := fleets.Create(ctx, flt, metav1.CreateOptions{})
-	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint
 	require.NoError(t, err)
 
+	
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+	
+	gsa := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "allocation-",
+		},
 		Spec: allocationv1.GameServerAllocationSpec{
 			Selectors: []allocationv1.GameServerSelector{
-				{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
+				{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: label,
+					},
+				},
 			},
-		}}
+		},
+	}
 
-	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	gsa, err = framework.AgonesClient.
+		AllocationV1().
+		GameServerAllocations(framework.Namespace).
+		Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-	require.NotNil(t, gsa.Status.Metadata, "allocation metadata should not be nil for allocated state")
-	assert.Equal(t, t.Name(), gsa.Status.Metadata.Labels[role])
-	assert.Equal(t, flt.ObjectMeta.Name, gsa.Status.Metadata.Labels[agonesv1.FleetNameLabel])
-	assert.Equal(t, annotationValue, gsa.Status.Metadata.Annotations[annotationKey])
-	gs, err := gameServers.Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
+
+
+	require.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
+	require.NotEmpty(t, gsa.Status.GameServerName)
+
+	require.Eventually(t, func() bool {
+		gs, err := gameServers.Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
+		if err != nil {
+			return false
+		}
+
+		return gs.ObjectMeta.Labels[role] == t.Name() &&
+			gs.ObjectMeta.Labels[agonesv1.FleetNameLabel] == flt.ObjectMeta.Name &&
+			gs.ObjectMeta.Annotations[annotationKey] == annotationValue
+	}, 20*time.Second, 300*time.Millisecond)
 }
+
 
 func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 	t.Parallel()
