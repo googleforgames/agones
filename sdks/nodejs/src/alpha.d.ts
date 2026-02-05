@@ -15,19 +15,19 @@
 type PlayerId = string;
 
 declare class Alpha {
-	playerConnect(playerID: PlayerId): Promise<boolean>
+	playerConnect(playerID: PlayerId): Promise<boolean>;
 
-	playerDisconnect(playerID: PlayerId): Promise<boolean>
+	playerDisconnect(playerID: PlayerId): Promise<boolean>;
 
-	setPlayerCapacity(capacity: number): Promise<Record<string, any>>
+	setPlayerCapacity(capacity: number): Promise<Record<string, unknown>>;
 
-	getPlayerCapacity(): Promise<number>
+	getPlayerCapacity(): Promise<number>;
 
-	getPlayerCount(): Promise<number>
+	getPlayerCount(): Promise<number>;
 
-	isPlayerConnected(playerID: PlayerId): Promise<boolean>
+	isPlayerConnected(playerID: PlayerId): Promise<boolean>;
 
-	getConnectedPlayers(): Promise<PlayerId[]>
+	getConnectedPlayers(): Promise<PlayerId[]>;
 }
 
 export default Alpha;

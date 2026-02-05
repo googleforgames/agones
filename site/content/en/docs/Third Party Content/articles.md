@@ -13,14 +13,20 @@ weight: 20
 - Sept 10 [Bandai Namco and Google Cloud Partner to Launch 'DRAGON BALL GEKISHIN SQUADRA,' a New Cross-Platform Multiplayer Action Game](https://www.googlecloudpresscorner.com/2025-09-10-Bandai-Namco-and-Google-Cloud-Partner-to-Launch-DRAGON-BALL-GEKISHIN-SQUADRA,-a-New-Cross-Platform-Multiplayer-Action-Game,1)
 - Nov 5 - [Sonic Rumble Open Source Licences](https://sonicrumble.sega.com/rules/en/copyright/) (This is mostly
   because I can't find a recording of
-  [Sonic Rumbleのグローバルなマルチプレイ対戦サービスの裏側 ～Unity/Agones/AWS/EKSを用いてシンプルで疲労の少ない開発・運用を目指す～](https://cedec.cesa.or.jp/2025/timetable/detail/s67a473fd79c0d/))
+  [Sonic Rumbleのグローバルなマルチプレイ対戦サービスの裏側 ～Unity/Agones/AWS/EKSを用いてシンプルで疲労の少ない開発・運用を目指す～](https://cedec.cesa.or.jp/2025/timetable/detail/s67a473fd79c0d/),
+  but you can find slides at [CEDIL](https://cedil.cesa.or.jp/cedil_sessions/view/3096) (registration required))
 
 ### 2023
 
 - Feb 1 - (Japanese) [Nintendo: Building a new general-purpose game server using Google Kubernetes Engine, Cloud Spanner, and more](https://cloud.google.com/blog/ja/topics/customers/nintendo-new-game-servers-built-with-gke-cloud-spanner?hl=ja)
+- Apr 4 - (Google Doodle) [Making online containerized games with managed services](https://cloud.google.com/blog/products/containers-kubernetes/making-online-containerized-games-with-managed-services/)
 - Jul 18 - [Optimizing Gaijin Ent.'s Crossout for cost-efficiency and reliability using EKS, Karpenter and Agones](https://repost.aws/articles/AR6qA3beFySdu3zEPeQd-ffQ/optimizing-gaijin-ent-s-crossout-for-cost-efficiency-and-reliability-using-eks-karpenter-and-agones)
 
 ## Blogs
+
+### 2026
+
+- Jan 22 - [Making and Scaling a Game Server in Kubernetes using Agones](https://noe-t.dev/posts/making-and-scaling-a-game-server-in-k8s-using-agones/)
 
 ### 2025
 
@@ -28,7 +34,8 @@ weight: 20
 
 ### 2024
 
-- Jul 18 - (Amazon Web Services) [Developer’s Guide to operate game servers on Kubernetes – Part 1](https://aws.amazon.com/blogs/gametech/developers-guide-to-operate-game-servers-on-kubernetes-part-1/)
+- Apr 03 - (Singularity 6) [The Software Architecture of Palia](https://www.singularity6.com/news/software-architecture-of-palia)
+- Jul 18 - (Amazon Web Services) [Developer's Guide to operate game servers on Kubernetes – Part 1](https://aws.amazon.com/blogs/gametech/developers-guide-to-operate-game-servers-on-kubernetes-part-1/)
 
 ### 2021
 

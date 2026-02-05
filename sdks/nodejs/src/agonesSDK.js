@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const grpc = require('@grpc/grpc-js');
+const grpc = require("@grpc/grpc-js");
 
-const Alpha = require('./alpha');
-const Beta = require('./beta');
+const Alpha = require("./alpha");
+const Beta = require("./beta");
 
-const messages = require('../lib/sdk_pb');
-const servicesPackageDefinition = require('../lib/sdk_grpc_pb');
+const messages = require("../lib/sdk_pb");
+const servicesPackageDefinition = require("../lib/sdk_grpc_pb");
 
 class AgonesSDK {
 	constructor() {
@@ -33,7 +33,7 @@ class AgonesSDK {
 	}
 
 	get port() {
-		return process.env.AGONES_SDK_GRPC_PORT || '9357';
+		return process.env.AGONES_SDK_GRPC_PORT || "9357";
 	}
 
 	async connect() {
@@ -52,7 +52,9 @@ class AgonesSDK {
 		if (this.healthStream !== undefined) {
 			this.healthStream.end();
 		}
-		this.streams.forEach(stream => stream.destroy());
+		for (const stream of this.streams) {
+			stream.destroy();
+		}
 		this.client.close();
 	}
 
@@ -68,7 +70,7 @@ class AgonesSDK {
 			});
 		});
 	}
-	
+
 	async allocate() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
@@ -100,7 +102,7 @@ class AgonesSDK {
 			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
-			this.healthStream.on('error', () => {
+			this.healthStream.on("error", () => {
 				// ignore error, prevent from being uncaught
 			});
 		}
@@ -132,11 +134,11 @@ class AgonesSDK {
 	watchGameServer(callback, errorCallback) {
 		const request = new messages.Empty();
 		const stream = this.client.watchGameServer(request);
-		stream.on('data', (data) => {
+		stream.on("data", (data) => {
 			callback(data.toObject());
 		});
 		if (errorCallback) {
-			stream.on('error', (error) => {
+			stream.on("error", (error) => {
 				errorCallback(error);
 			});
 		}

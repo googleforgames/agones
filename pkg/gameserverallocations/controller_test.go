@@ -32,6 +32,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/apiserver"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -58,6 +59,9 @@ const (
 
 func TestControllerAllocator(t *testing.T) {
 	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	t.Run("successful allocation", func(t *testing.T) {
 		f, gsList := defaultFixtures(4)
@@ -95,14 +99,12 @@ func TestControllerAllocator(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.allocationCache.gameServerSynced)
 		defer cancel()
 
-		if err := c.Run(ctx, 1); err != nil {
-			assert.FailNow(t, err.Error())
-		}
-		// wait for it to be up and running
-		err := wait.PollUntilContextTimeout(context.Background(), time.Second, 10*time.Second, true, func(_ context.Context) (done bool, err error) {
-			return c.allocator.allocationCache.workerqueue.RunCount() == 1, nil
-		})
-		assert.NoError(t, err)
+		err := c.Run(ctx, 1)
+		require.NoError(t, err)
+
+		require.EventuallyWithT(t, func(e *assert.CollectT) {
+			assert.Equal(e, 1, c.allocator.allocationCache.workerqueue.RunCount())
+		}, 10*time.Second, 100*time.Millisecond, "allocation cache worker queue did not start")
 
 		test := func(gsa *allocationv1.GameServerAllocation, expectedState allocationv1.GameServerAllocationState) {
 			buf := bytes.NewBuffer(nil)
@@ -114,7 +116,8 @@ func TestControllerAllocator(t *testing.T) {
 			rec := httptest.NewRecorder()
 			err = c.processAllocationRequest(ctx, rec, r, "default")
 			require.NoError(t, err)
-			require.Equal(t, http.StatusCreated, rec.Code)
+			require.Equal(t, http.StatusCreated, rec.Code, "Response body: %s", rec.Body.String())
+
 			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
 			require.NoError(t, err)
@@ -126,7 +129,7 @@ func TestControllerAllocator(t *testing.T) {
 				require.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 			}
 
-			require.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
+			require.Equal(t, expectedState, ret.Status.State)
 		}
 
 		test(gsaSelectors.DeepCopy(), allocationv1.GameServerAllocationAllocated)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Alpha from './alpha';
+import Alpha from "./alpha";
 
 type Seconds = number;
 
@@ -38,13 +38,13 @@ type GameServer = {
 	};
 	status: {
 		state:
-		| 'Scheduled'
-		| 'Reserved'
-		| 'RequestReady'
-		| 'Ready'
-		| 'Shutdown'
-		| 'Allocated'
-		| 'Unhealthy';
+			| "Scheduled"
+			| "Reserved"
+			| "RequestReady"
+			| "Ready"
+			| "Shutdown"
+			| "Allocated"
+			| "Unhealthy";
 		address: string;
 		portsList: {
 			name: string;
@@ -56,31 +56,34 @@ type GameServer = {
 export declare class AgonesSDK {
 	constructor();
 
-	alpha: Alpha
+	alpha: Alpha;
 
-	get port(): string
+	get port(): string;
 
-	connect(): Promise<void>
+	connect(): Promise<void>;
 
-	close(): void
+	close(): void;
 
-	ready(): Promise<Record<string, any>>
+	ready(): Promise<Record<string, unknown>>;
 
-	allocate(): Promise<Record<string, any>>
+	allocate(): Promise<Record<string, unknown>>;
 
-	shutdown(): Promise<Record<string, any>>
+	shutdown(): Promise<Record<string, unknown>>;
 
-	health(errorCallback: (error: any) => any): void
+	health(errorCallback: (error: unknown) => void): void;
 
-	getGameServer(): Promise<GameServer>
+	getGameServer(): Promise<GameServer>;
 
-	watchGameServer(callback: (gameServer: GameServer) => any, errorCallback: (error: any) => any): void
+	watchGameServer(
+		callback: (gameServer: GameServer) => void,
+		errorCallback: (error: unknown) => void,
+	): void;
 
-	setLabel(key: string, value: string): Promise<Record<string, any>>
+	setLabel(key: string, value: string): Promise<Record<string, unknown>>;
 
-	setAnnotation(key: string, value: string): Promise<Record<string, any>>
+	setAnnotation(key: string, value: string): Promise<Record<string, unknown>>;
 
-	reserve(duration: Seconds): Promise<Record<string, any>>
+	reserve(duration: Seconds): Promise<Record<string, unknown>>;
 }
 
-export default AgonesSDK
+export default AgonesSDK;

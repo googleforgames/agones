@@ -29,6 +29,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -618,12 +619,7 @@ func TestApplyWebhookPolicyWithMetadata(t *testing.T) {
 
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
-
-	err := utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData) + "=true")
-	assert.NoError(t, err)
-	defer func() {
-		_ = utilruntime.ParseFeatures("")
-	}()
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFleetAutoscaleRequestMetaData)+"=true"))
 
 	ts := testServer{}
 	server := httptest.NewServer(ts)
@@ -1690,8 +1686,7 @@ func TestApplyCounterPolicy(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
+			require.NoError(t, utilruntime.ParseFeatures(tc.featureFlags))
 
 			m := agtesting.NewMocks()
 			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
@@ -2415,8 +2410,7 @@ func TestApplyListPolicy(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
+			require.NoError(t, utilruntime.ParseFeatures(tc.featureFlags))
 
 			m := agtesting.NewMocks()
 			m.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
@@ -2638,8 +2632,7 @@ func TestApplySchedulePolicy(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
+			require.NoError(t, utilruntime.ParseFeatures(tc.featureFlags))
 
 			ctx := context.Background()
 			fas, f := defaultFixtures()
@@ -2830,8 +2823,7 @@ func TestApplyChainPolicy(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := utilruntime.ParseFeatures(tc.featureFlags)
-			assert.NoError(t, err)
+			require.NoError(t, utilruntime.ParseFeatures(tc.featureFlags))
 
 			ctx := context.Background()
 			fas, f := defaultFixtures()

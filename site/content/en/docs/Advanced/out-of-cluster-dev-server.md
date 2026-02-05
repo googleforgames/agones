@@ -79,7 +79,7 @@ Obviously, this document does not know what every developer's specific network c
 The developer will need to figure out which steps are necessary for their specific configuration.
 
 If attempting to connect via the internet, the developer needs to set the `GameServer`'s `metadata:annotations:agones.dev/dev-address` field to their public IP.
-This can be found by going to [whatsmyip.org](https://www.whatsmyip.org/) or [whatismyip.com](https://www.whatismyip.com/) in a web browser.
+This can be found by going to [whatsmyip.org](https://www.whatsmyip.org/) or <a href="https://www.whatismyip.com/" data-proofer-ignore>whatismyip.com</a> in a web browser.
 
 The  `GameServer`'s `spec:ports:hostPort`/`spec:ports:containerPort` should be set to whichever port the game server binary's logic will bind to -- the port used by `simple-game-server` is 7654 (by default).
 The local network's router must also be configured to forward this port to the desired machine; allowing inbound external requests (from the internet) to be directed to the machine on the network that is running the game server.

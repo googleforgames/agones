@@ -128,11 +128,11 @@ The `agones.dev/last-allocated` annotation will be set on the GameServer to an R
 
 Note that if using `SDK.Allocate()` in combination with [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}})s, it's possible for the `agones.dev/last-allocated` timestamp to move backwards if clocks are not synchronized between the Agones controller and the GameServer pod.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info"%}}
 Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 #### Shutdown()
 This tells Agones to shut down the currently running game server. The GameServer state will be set `Shutdown` and the 

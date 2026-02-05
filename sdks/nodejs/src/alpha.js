@@ -13,10 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const grpc = require('@grpc/grpc-js');
+const grpc = require("@grpc/grpc-js");
 
-const messages = require('../lib/alpha/alpha_pb');
-const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
+const messages = require("../lib/alpha/alpha_pb");
+const servicesPackageDefinition = require("../lib/alpha/alpha_grpc_pb");
 
 class Alpha {
 	constructor(address, credentials) {

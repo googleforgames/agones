@@ -5,9 +5,9 @@ Add styles or override variables from the theme here.
 */
 
 
-$primary: rgb(255, 255,255)  !default;
+$primary: rgb(255, 255,255);
 $primary-light: lighten($primary, 75%) !default;
-$secondary: #2D70DE !default;
+$secondary: #2D70DE;
 $light: rgb(255, 255,255) !default;
 $grey:  #888 !default;
 $orange: $secondary;
@@ -27,6 +27,8 @@ $td-sidebar-tree-root-color: #222 !default;
         display: block !important;
     }
 }
+
+$link-color: #2D70DE;
 
 .control-bar {
     display: none;

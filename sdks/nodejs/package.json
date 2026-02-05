@@ -9,8 +9,7 @@
     },
     "description": "Game Server SDK for Agones, the open source project for hosting dedicated game servers on Kubernetes",
     "devDependencies": {
-        "eslint": "^9.39.2",
-        "globals": "^17.0.0",
+        "@biomejs/biome": "^2.3.11",
         "jasmine": "^5.13.0",
         "nyc": "^17.1.0"
     },
@@ -21,7 +20,7 @@
     "repository": "googleforgames/agones",
     "scripts": {
         "cover": "nyc jasmine",
-        "lint": "eslint --fix src spec",
+        "lint": "biome check --write src spec",
         "test": "jasmine"
     },
     "publishConfig": {
