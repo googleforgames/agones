@@ -1,0 +1,27 @@
+/* Dark mode overrides for the custom Agones navbar and UI */
+
+/* Navbar background + text */
+[data-bs-theme="dark"] .td-navbar {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Search bar */
+[data-bs-theme="dark"] .form-control {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+/* Dropdown menu */
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Active dropdown item */
+[data-bs-theme="dark"] .dropdown-item.active,
+[data-bs-theme="dark"] .dropdown-item:active {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-body-color) !important;
+}
