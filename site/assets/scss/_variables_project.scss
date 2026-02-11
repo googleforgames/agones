@@ -18,7 +18,27 @@ $td-sidebar-tree-root-color: #222 !default;
 }
 
 .navbar-brand {
-    color: black !important
+    color: var(--bs-body-color) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.dropdown-item {
+    color: var(--bs-body-color) !important;
+}
+
+// Center dropdown under theme toggle
+.td-navbar__light-dark-menu {
+  position: relative;
+}
+
+.td-navbar__light-dark-menu .dropdown-menu {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: 100% !important;
 }
 
 .navbar-bg-onscroll {

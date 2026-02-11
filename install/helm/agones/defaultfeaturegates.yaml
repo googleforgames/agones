@@ -28,12 +28,12 @@ PortPolicyNone: true
 PortRanges: true
 ScheduledAutoscaler: true
 RollingUpdateFix: true
+SidecarContainers: true
 FleetAutoscaleRequestMetaData: true
 
 # Alpha features
 PlayerAllocationFilter: false
 PlayerTracking: false
-SidecarContainers: false
 WasmAutoscaler: false
 
 # Dev features
