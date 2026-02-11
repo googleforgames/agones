@@ -60,6 +60,9 @@ const (
 	// FeatureScheduledAutoscaler is a feature flag to enable/disable scheduled fleet autoscaling.
 	FeatureScheduledAutoscaler Feature = "ScheduledAutoscaler"
 
+	// FeatureSidecarContainers is a feature flag to enable/disable k8s sidecar containers for the sdkserver
+	FeatureSidecarContainers = "SidecarContainers"
+
 	// FeatureFleetAutoscaleRequestMetaData is a feature flag that enables/disables fleet metadata on webhook autoscaler request.
 	FeatureFleetAutoscaleRequestMetaData Feature = "FleetAutoscaleRequestMetaData"
 
@@ -72,9 +75,6 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
-
-	// FeatureSidecarContainers is a feature flag to enable/disable k8s sidecar containers for the sdkserver
-	FeatureSidecarContainers = "SidecarContainers"
 
 	// FeatureWasmAutoscaler is a feature flag to enable/disable the script based autoscaler.
 	FeatureWasmAutoscaler Feature = "WasmAutoscaler"
@@ -161,11 +161,11 @@ var (
 		FeatureRollingUpdateFix:                 true,
 		FeatureScheduledAutoscaler:              true,
 		FeatureFleetAutoscaleRequestMetaData:    true,
+		FeatureSidecarContainers:                true,
 
 		// Alpha features
 		FeaturePlayerAllocationFilter: false,
 		FeaturePlayerTracking:         false,
-		FeatureSidecarContainers:      false,
 		FeatureWasmAutoscaler:         false,
 
 		// Dev features
