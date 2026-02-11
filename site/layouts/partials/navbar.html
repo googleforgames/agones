@@ -1,5 +1,5 @@
 {{ $cover := .HasShortcode "blocks/cover" }}
-<nav class="js-navbar-scroll navbar navbar-expand navbar-light {{ if not $cover }} nav-shadow {{ end }}flex-column flex-md-row td-navbar">
+<nav class="js-navbar-scroll navbar navbar-expand-lg {{ if not $cover }} nav-shadow {{ end }} flex-column flex-md-row td-navbar" data-bs-theme="auto">
 
 	<a id="agones-top" {{ if $cover }} style="display: none;" {{end}} class="navbar-brand" href="{{ .Site.Home.RelPermalink }}">
 		{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }} {{ end }}<span class="text-uppercase fw-bold">{{ .Site.Title }}</span>
@@ -47,6 +47,12 @@
 					<a class="dropdown-item" href="https://1-37-0.agones.dev">1.37.0</a>
 				</div>
 			</li>
+			{{- $darkMode := partialCached "dark-mode-config.html" "dark-mode-global" -}}
+			{{ if $darkMode.showMenu -}}
+			<li class="nav-item td-navbar__light-dark-menu d-none d-lg-block">
+				{{ partial "theme-toggler" . }}
+			</li>
+			{{ end -}}
 			{{ if  (gt (len .Site.Home.Translations) 0) }}
 			<li class="nav-item dropdown d-none d-lg-block">
 				{{ partial "navbar-lang-selector.html" . }}
