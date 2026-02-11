@@ -17,6 +17,9 @@ package gameserverallocations
 import (
 	"bufio"
 	"context"
+	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"testing"
@@ -146,7 +149,6 @@ func TestAllocationMetrics(t *testing.T) {
 		PrometheusMetrics: true,
 	}
 	server := &httpserver.Server{
-		Port:   "3001",
 		Logger: framework.TestLogger(t),
 	}
 
@@ -196,16 +198,21 @@ func TestAllocationMetrics(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	ctxHTTP, cancelHTTP := context.WithCancel(context.Background())
-	defer cancelHTTP()
+	metricsURL := startMetricsServerForTest(t, server)
 
-	// Start the HTTP server
-	go func() {
-		_ = server.Run(ctxHTTP, 0)
-	}()
-	time.Sleep(300 * time.Millisecond)
+	err = wait.PollUntilContextTimeout(context.Background(), 10*time.Millisecond, 5*time.Second, true, func(_ context.Context) (bool, error) {
+		resp, err := http.Get(metricsURL)
+		if err != nil {
+			return false, nil
+		}
+		defer func() {
+			assert.NoError(t, resp.Body.Close())
+		}()
+		return resp.StatusCode == http.StatusOK, nil
+	})
+	require.NoError(t, err, "Failed waiting for metrics endpoint readiness")
 
-	resp, err := http.Get("http://localhost:3001/metrics")
+	resp, err := http.Get(metricsURL)
 	require.NoError(t, err, "Failed to GET metrics endpoint")
 	defer func() {
 		assert.NoError(t, resp.Body.Close())
@@ -219,6 +226,61 @@ func TestAllocationMetrics(t *testing.T) {
 	for _, metric := range expectedMetrics {
 		assert.Contains(t, metricsSet, metric, "Missing expected metric: %s", metric)
 	}
+}
+
+func TestStartMetricsServer(t *testing.T) {
+	t.Parallel()
+
+	server := &httpserver.Server{
+		Logger: framework.TestLogger(t),
+	}
+	server.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	metricsURL := startMetricsServerForTest(t, server)
+
+	err := wait.PollUntilContextTimeout(context.Background(), 10*time.Millisecond, time.Second, true, func(_ context.Context) (bool, error) {
+		resp, err := http.Get(metricsURL)
+		if err != nil {
+			return false, nil
+		}
+		defer func() {
+			assert.NoError(t, resp.Body.Close())
+		}()
+		return resp.StatusCode == http.StatusOK, nil
+	})
+	require.NoError(t, err)
+}
+
+func startMetricsServerForTest(t *testing.T, handler http.Handler) string {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	srv := &http.Server{
+		Handler: handler,
+	}
+
+	var serveErr error
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if err := srv.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serveErr = err
+		}
+	}()
+
+	t.Cleanup(func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		assert.NoError(t, srv.Shutdown(shutdownCtx))
+		<-done
+		assert.NoError(t, serveErr)
+	})
+
+	return fmt.Sprintf("http://%s/metrics", listener.Addr().String())
 }
 
 // getMetricNames returns all metric view names.
