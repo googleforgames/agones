@@ -226,7 +226,8 @@ Once created the `GameServerAllocation` will have a `status` field consisting of
   - `Annotations` containing the annotations of the underlying game server at allocation time.
 - `Counters` (Beta, "CountsAndLists" feature flag) is a map of [CounterStatus][counterstatus] of the game server at allocation time.
 - `Lists` (Beta, "CountsAndLists" feature flag) is a map of [ListStatus][liststatus] of the game server at allocation time.
-{{< alert title="Info" color="info" >}}
+
+{{% alert title="Info" color="info" %}}
 
 For performance reasons, the query cache for a `GameServerAllocation` is _eventually consistent_.
 
@@ -234,24 +235,51 @@ Usually, the cache is populated practically immediately on `GameServer` change, 
 control plane, it may take some time for updates to `GameServer` selectable features to be populated into the cache
 (although this doesn't affect the atomicity of the Allocation operation).
 
+{{% /alert %}}
+
+## Allocation Batching
+
+To provide high throughput for allocation requests, Agones batches allocations together. This allows Agones to perform multiple allocations without having to wait for each one to be committed to the Kubernetes API server before starting the next one.
+
+The batching process works as follows:
+
+1. When an allocation request is received, it is added to a pending queue.
+2. The allocator waits for a short period (`500ms` by default) to allow more requests to arrive and be processed as a batch.
+3. The allocator then processes the batch of requests by selecting available `GameServers` from its local cache.
+4. Each selected `GameServer` is immediately removed from the local cache to ensure it is not allocated multiple times within the same batch.
+5. The actual update to the `GameServer` status in the Kubernetes API is performed concurrently by a pool of workers.
+
+### Configuration
+
+You can configure the batching behavior using the following Helm configuration options:
+
+- `agones.controller.allocationBatchWaitTime`: The wait time between each allocation batch when performing allocations in controller mode (default `500ms`).
+- `agones.allocator.allocationBatchWaitTime`: The wait time between each allocation batch when performing allocations via the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) (default `500ms`).
+
+### Trade-offs
+
+- Higher `allocationBatchWaitTime`:
+  - **Pros**: Potentially higher throughput under very high load, as more requests are processed in a single batch, reducing the frequency of cache refreshes.
+  - **Cons**: Increases the minimum latency for each allocation request, as it will always wait for at least this period before being processed.
+- Lower `allocationBatchWaitTime`:
+  - **Pros**: Lower latency for allocation requests.
+  - **Cons**: Higher CPU usage for the Agones controller/allocator due to more frequent batch processing loops and cache refreshes under load.
+
 While Agones will do a small series of retries when an allocatable `GameServer` is not available in its cache,
 depending on your game requirements, it may be worth implementing your own more extend retry mechanism for
 Allocation requests for high load scenarios.
-
-{{< /alert >}}
 
 Each `GameServerAllocation` will allocate from a single [namespace][namespace]. The namespace can be specified outside of
 the spec, either with the `--namespace` flag when using the command line / `kubectl` or
 [in the url]({{% ref "/docs/Guides/access-api.md#allocate-a-gameserver-from-a-fleet-named-simple-game-server-with-gameserverallocation"  %}})
 when using an API call. If not specified when using the command line, the [namespace][namespace] will be automatically set to `default`.
 
+## Next Steps:
+
+- Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
 
 [gameserverselector]: {{% ref "/docs/Reference/agones_crd_api_reference.html#allocation.agones.dev/v1.GameServerSelector"  %}}
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
 [addresses]: {{% k8s-api-version href="#nodeaddress-v1-core" %}}
 [counterstatus]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.CounterStatus" %}}
 [liststatus]: {{% ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.ListStatus" %}}
-
-## Next Steps:
-
-- Check out the [Allocator Service]({{< ref "/docs/Advanced/allocator-service.md" >}}) as a richer alternative to `GameServerAllocation`.
