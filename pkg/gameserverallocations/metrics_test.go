@@ -200,17 +200,14 @@ func TestAllocationMetrics(t *testing.T) {
 
 	metricsURL := startMetricsServerForTest(t, server)
 
-	err = wait.PollUntilContextTimeout(context.Background(), 10*time.Millisecond, 5*time.Second, true, func(_ context.Context) (bool, error) {
+	require.EventuallyWithT(t, func(e *assert.CollectT) {
 		resp, err := http.Get(metricsURL)
-		if err != nil {
-			return false, nil
-		}
+		require.NoError(e, err, "Failed waiting for metrics endpoint readiness")
 		defer func() {
-			assert.NoError(t, resp.Body.Close())
+			assert.NoError(e, resp.Body.Close())
 		}()
-		return resp.StatusCode == http.StatusOK, nil
-	})
-	require.NoError(t, err, "Failed waiting for metrics endpoint readiness")
+		assert.Equal(e, http.StatusOK, resp.StatusCode)
+	}, 5*time.Second, 10*time.Millisecond, "Failed waiting for metrics endpoint readiness")
 
 	resp, err := http.Get(metricsURL)
 	require.NoError(t, err, "Failed to GET metrics endpoint")
