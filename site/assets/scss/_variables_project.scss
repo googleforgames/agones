@@ -18,7 +18,27 @@ $td-sidebar-tree-root-color: #222 !default;
 }
 
 .navbar-brand {
-    color: black !important
+    color: var(--bs-body-color) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.dropdown-item {
+    color: var(--bs-body-color) !important;
+}
+
+// Center dropdown under theme toggle
+.td-navbar__light-dark-menu {
+  position: relative;
+}
+
+.td-navbar__light-dark-menu .dropdown-menu {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: 100% !important;
 }
 
 .navbar-bg-onscroll {
@@ -48,7 +68,44 @@ $link-color: #2D70DE;
 }
 
 .showcase img {
-    margin: 0 30px;
+    margin: 10px 30px;
+}
+
+.add-logo {
+    width: 100px;
+    height: 100px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: normal;
+    padding: 10px;
+    border: 2px dashed #ccc !important;
+    border-radius: 8px;
+    white-space: normal;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.02);
+    color: #666;
+    text-decoration: none;
+
+    i {
+        font-size: 1.5rem;
+        color: #999;
+    }
+
+    &:hover {
+        border-color: $secondary !important;
+        background-color: rgba($secondary, 0.05);
+        color: $secondary;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+        i {
+            color: $secondary;
+        }
+    }
 }
 
 #cover-title {
