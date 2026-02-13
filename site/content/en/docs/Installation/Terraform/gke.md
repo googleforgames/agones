@@ -102,7 +102,7 @@ Configurable parameters:
 - max_node_count - the maximum number of nodes for a nodepool when autoscale is enabled (default is "5")
 - enable_agones_metrics_nodepool - whether you want to enable `"agones-metrics"` for the gameserver nodepool (default is false)
 
-{{% alert title="Warning" color="warning"%}}
+{{% alert title="Warning" color="warning" %}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"`
 make sure to change `?ref=main` to match your targeted Agones release, as Terraform modules can change between
 releases.

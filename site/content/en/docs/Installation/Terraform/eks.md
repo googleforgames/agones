@@ -77,10 +77,10 @@ terraform destroy -target module.helm_agones.helm_release.agones -auto-approve &
 terraform destroy
 ```
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 There is an issue with the AWS Terraform provider:
 https://github.com/terraform-providers/terraform-provider-aws/issues/9101
 Due to this issue you should remove helm release first (as stated above), 
 otherwise `terraform destroy` will timeout and never succeed.
 Remove all created resources manually in that case, namely: 3 Auto Scaling groups, EKS cluster, and a VPC with all dependent resources.
-{{< /alert >}}
+{{% /alert %}}

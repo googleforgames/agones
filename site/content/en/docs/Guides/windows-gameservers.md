@@ -7,10 +7,10 @@ description: >
   Run `GameServers` on Kubernetes nodes with the Windows operating system.
 ---
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 Running `GameServers` on Windows nodes is currently Alpha, and any feedback
 would be appreciated.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Prerequisites
 
@@ -25,9 +25,9 @@ Ensure that you have some nodes to your cluster that are running Windows.
 
 ### 1. Create a GameServer
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Starting with version 0.3, the {{< ghlink href="examples/simple-game-server/" >}}simple-game-server{{< /ghlink >}} example is compiled as a multi-arch docker image that will run on both Linux and Windows. To ensure that the game server runs on a Windows node, a nodeSelector of `"kubernetes.io/os": windows` must be added to the game server specification.
-{{< /alert >}}
+{{% /alert %}}
 
 Create a GameServer using the following command:
 
@@ -60,18 +60,18 @@ For the full details of the YAML file head to the [GameServer Specification Guid
 
 ### 2. Connect to the GameServer
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If you have Agones installed on Google Kubernetes Engine, and are using
   Cloud Shell for your terminal, UDP is blocked. For this step, we recommend
   SSH'ing into a running VM in your project, such as a Kubernetes node.
   You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
   page to do this.
   Run `toolbox` on GKE Node to run docker container with tools and then `nc` command would be available.
-{{< /alert >}}
+{{% /alert %}}
 
 You can now communicate with the Game Server:
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
@@ -79,7 +79,7 @@ If you do not have netcat installed
 If you are on Windows, you can alternatively install netcat on
 [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
 or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
-{{< /alert >}}
+{{% /alert %}}
 
 ```
 nc -u {IP} {PORT}
