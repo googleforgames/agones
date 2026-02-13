@@ -237,17 +237,14 @@ func TestStartMetricsServer(t *testing.T) {
 
 	metricsURL := startMetricsServerForTest(t, server)
 
-	err := wait.PollUntilContextTimeout(context.Background(), 10*time.Millisecond, time.Second, true, func(_ context.Context) (bool, error) {
+	require.EventuallyWithT(t, func(e *assert.CollectT) {
 		resp, err := http.Get(metricsURL)
-		if err != nil {
-			return false, nil
-		}
+		require.NoError(e, err)
 		defer func() {
-			assert.NoError(t, resp.Body.Close())
+			assert.NoError(e, resp.Body.Close())
 		}()
-		return resp.StatusCode == http.StatusOK, nil
-	})
-	require.NoError(t, err)
+		assert.Equal(e, http.StatusOK, resp.StatusCode)
+	}, time.Second, 10*time.Millisecond)
 }
 
 func startMetricsServerForTest(t *testing.T, handler http.Handler) string {
