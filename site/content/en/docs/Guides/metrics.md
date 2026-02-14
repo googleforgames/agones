@@ -136,6 +136,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 helm upgrade --install --wait prom prometheus-community/prometheus --namespace metrics --create-namespace \
+    --version 28.9.0 \
     --set server.global.scrape_interval=30s \
     --set server.persistentVolume.enabled=true \
     --set server.persistentVolume.size=64Gi \
@@ -172,7 +173,7 @@ kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
 
 Now you can access the prometheus dashboard [http://localhost:9090](http://localhost:9090).
 
-On the landing page you can start exploring metrics by creating [queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). You can also verify what [targets](http://localhost:9090/targets) Prometheus currently monitors (Header Status > Targets), you should see Agones controller pod in the `kubernetes-pods` section.
+On the landing page you can start exploring metrics by creating [queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). You can also verify what [targets](http://localhost:9090/targets) Prometheus currently monitors (Header Status > Targets), you should see Agones controller pod in the `kubernetes-pods-agones` section.
 
 {{< alert title="Note" color="info">}}
 Metrics will be first registered when you will start using Agones.
