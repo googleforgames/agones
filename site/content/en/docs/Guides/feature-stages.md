@@ -70,11 +70,11 @@ The current set of `alpha` and `beta` feature gates:
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 If you aren't sure if Feature Flags have been set correctly, have a look at the
 _[The Feature Flag I enabled/disabled isn't working as expected]({{% relref "troubleshooting.md#the-feature-flag-i-enableddisabled-isnt-working-as-expected" %}})_
 troubleshooting section.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Description of Stages
 
@@ -88,10 +88,10 @@ An `Alpha` feature means:
 * The API may change in incompatible ways in a later software release without notice.
 * Recommended for use only in short-lived testing clusters, due to increased risk of bugs and lack of long-term support.
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 Please do try `Alpha` features and give feedback on them. This is important to ensure less breaking changes
 through the `Beta` period.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Beta
 
@@ -107,10 +107,10 @@ A `Beta` feature means:
 * Recommended for only non-business-critical uses because of potential for incompatible changes in subsequent releases.
   If you have multiple clusters that can be upgraded independently, you may be able to relax this restriction.
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 Note: Please do try `Beta` features and give feedback on them! After they exit beta, it may not be practical for us
 to make more changes.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Stable
 

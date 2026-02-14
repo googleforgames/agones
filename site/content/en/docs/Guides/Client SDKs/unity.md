@@ -205,7 +205,7 @@ This returns a list of the playerIDs that are currently connected to the GameSer
 List<string> players = await agones.GetConnectedPlayers();
 ```
 
-{{% alert title="Warning" color="warning"%}}
+{{% alert title="Warning" color="warning" %}}
 The following code causes deadlock. Do not use a `Wait` method with the returned Task.
 ```csharp
 void Deadlock()
