@@ -8,7 +8,7 @@ description: >
 
 ## Installing Agones
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning"%}}
 Installing Agones with the `install.yaml` file will use pre-generated, well known TLS
 certificates stored in this repository for securing Kubernetes webhooks communication.
 
@@ -17,7 +17,7 @@ For production workloads, we **strongly** recommend using the
 new, unique certificates or provide your own certificates. Alternatively,
 you can use `helm template` as described [below]({{< relref "yaml.md" >}}#customizing-your-install)
 to generate a custom yaml installation file with unique certificates.
-{{< /alert >}}
+{{% /alert %}}
 
 Installing Agones using the pre-generated `install.yaml` file is the quickest,
 simplest way to get Agones up and running in your Kubernetes cluster:

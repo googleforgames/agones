@@ -44,10 +44,10 @@ use a non-default port.
 
 Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning"%}}
 The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
 contain some retry logic to take this into account.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Generating clients
 

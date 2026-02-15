@@ -299,10 +299,10 @@ If you run game servers on Windows, you
 need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC_CONTAINERD`) is the recommended image for Windows
 game servers. Note that GKE Autopilot does not support Windows nodes.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning"%}}
 Running `GameServers` on Windows nodes is currently Alpha. Feel free to file feedback
 through [Github issues](https://github.com/googleforgames/agones/issues).
-{{< /alert >}}
+{{% /alert %}}
 
 ```bash
 gcloud container node-pools create windows \

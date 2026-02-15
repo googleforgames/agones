@@ -54,11 +54,11 @@ CMake is used to build SDK for all supported platforms (Linux/Window/macOS).
 
 Agones SDK only depends on the [gRPC](https://grpc.io/) library.
 
-{{< alert title="Warning" color="warning" >}}
+{{% alert title="Warning" color="warning" %}}
 Prior to Agones release 1.39.0 if the gRPC dependency was not found locally installed, the CMake system would install
 the supported gRPC version for you. Unfortunately this process was very brittle and often broke with gRPC updates,
 therefore this functionality has been removed, and a manual installation of gRPC is now required.
-{{< /alert >}}
+{{% /alert %}}
 
 This version of the Agones C++ SDK has been tested with gRPC 1.76.0. To install it from source 
 [follow the instructions](https://grpc.io/docs/languages/cpp/quickstart/#build-and-install-grpc-and-protocol-buffers).

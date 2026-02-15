@@ -10,11 +10,11 @@ To allocate a game server, Agones provides a gRPC and REST service with mTLS aut
 
 Both gRPC and REST are accessible through a Kubernetes service that can be externalized using a load balancer. By default, gRPC and REST are served from the same port. However, either service can be disabled or the services can be served from separate ports using the [helm configuration]({{< relref "/docs/Installation/Install Agones/helm.md" >}}).
 
-{{< alert title="Warning" color="warning" >}}
+{{% alert title="Warning" color="warning" %}}
 If gRPC and REST are served using the same port, then an http multi-plexer is used along with an [experimental gRPC server](https://github.com/grpc/grpc-go/blob/2608e38e6386be7400720fecf2ece176c4cbc1b2/server.go#L933-L960) which has [noticeably worse performance](https://github.com/grpc/grpc-go/issues/586#issuecomment-286257439) than using the standard gRPC server.
 
 If you require a fully compatible or feature compatible gRPC server implementation, you must separate the gRPC port from the REST port or disable the REST service.
-{{< /alert >}}
+{{% /alert %}}
 
 For requests to either service to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 The remainder of this article describes how to manually make a successful allocation request using the API.
@@ -58,13 +58,13 @@ helm upgrade my-release agones/agones -n agones-system --wait \
    ...
 ```
 
-{{< alert title="Warning" color="warning">}} The parameter used to automatically
+{{% alert title="Warning" color="warning"%}} The parameter used to automatically
 replace the certificate changed in Agones 1.18.0. If you are using an older
 version of Agones you should pass the parameter
 `agones.allocator.http.loadBalancerIP` instead. If you need your script to work
 with both older and newer versions of Agones, you can pass both parameters as
 only one of them will effect the helm chart templates.
-{{< /alert >}}
+{{% /alert %}}
 
 Another approach is to replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
 
