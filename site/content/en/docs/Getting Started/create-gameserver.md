@@ -145,11 +145,11 @@ NAME                       STATE   ADDRESS         PORT   NODE     AGE
 simple-game-server-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info"%}}
 If you have Agones installed on minikube, or other local Kubernetes tooling, and you are having issues connecting
 to the `GameServer`, please check the
 [Minikube local connection workarounds]({{% ref "/docs/Installation/Creating Cluster/minikube.md#local-connection-workarounds" %}}).
-{{< /alert >}}
+{{% /alert %}}
 
 ### 3. Connect to the GameServer
 
@@ -173,7 +173,7 @@ To exit `nc` you can press `<ctrl>+c`.
 
 If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info"%}}
 If you do not have netcat installed
 (i.e. you get a response of `nc: command not found`),
 you can install netcat by running `sudo apt install netcat`.
@@ -181,7 +181,7 @@ you can install netcat by running `sudo apt install netcat`.
 If you are on Windows, you can alternatively install netcat on
 [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
 or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
-{{< /alert >}}
+{{% /alert %}}
 
 ## Next Step
 

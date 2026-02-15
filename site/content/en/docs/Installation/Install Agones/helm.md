@@ -42,9 +42,9 @@ fields set by the user. In the event this validation schema marks a valid edge c
 please [file a bug](https://github.com/googleforgames/agones/issues), and you can still attempt a
 Helm install or Helm upgrade with the Helm flag `--skip-schema-validation`.
 
-{{< alert title="Tip" color="info">}}
+{{% alert title="Tip" color="info"%}}
 List all releases using `helm list --all-namespaces`
-{{< /alert >}}
+{{% /alert %}}
 
 ### Namespaces
 
@@ -58,9 +58,9 @@ kubectl create namespace xbox
 helm install my-release agones/agones --set "gameservers.namespaces={default,xbox}" --namespace agones-system
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info"%}}
 You need to create your namespaces before installing Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 If you want to add a new namespace afterward upgrade your release:
 
@@ -412,18 +412,18 @@ installing the chart. For example,
 helm install my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
-{{< alert title="Tip" color="info">}}
+{{% alert title="Tip" color="info"%}}
 You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
-{{< /alert >}}
+{{% /alert %}}
 
 ## Helm test
 
 This test would create a `GameServer` resource and delete it afterwards.
 
-{{< alert title="Tip" color="info">}}
+{{% alert title="Tip" color="info"%}}
 In order to use `helm test` command described in this section you need to set `helm.installTests`
 helm parameter to `true`.
-{{< /alert >}}
+{{% /alert %}}
 
 Check the Agones installation by running the following command:
 
@@ -456,10 +456,10 @@ For most use cases the controller would have required a restart anyway (eg: cont
 However if you really need to avoid restarts we suggest that you turn off tls automatic generation
 (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
-{{< alert title="Tip" color="info">}}
+{{% alert title="Tip" color="info"%}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}}
 to generate them.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Cert-Manager
 

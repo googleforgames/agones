@@ -14,7 +14,7 @@ These are full examples for each of the resource types of Agones
 - {{< ghlink href="examples/gameserverallocation.yaml" >}}Full GameServer Allocation Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleetautoscaler.yaml" >}}Full Autoscaler Configuration with Buffer Strategy{{< /ghlink >}}
 - {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}Full Autoscaler Configuration with Webhook Strategy{{< /ghlink >}}
-- {{< ghlink href="examples/webhookfleetautoscalertls.yaml" >}}Full Autoscaler Configuration with Webhook Strategy + TLS{{< /ghlink >}}
+- {{< ghlink href="examples/webhookfleetautoscalertls.yaml" %}}Full Autoscaler Configuration with Webhook Strategy + TLS{{< /ghlink >}}
 
 ## Game server implementations
 

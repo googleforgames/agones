@@ -13,10 +13,10 @@ are being sent to them.
 
 ![Reserved Lifecycle Sequence Diagram](../../../diagrams/gameserver-reserved.puml.png)
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning"%}}
 This does relinquish control over how `GameServers` are packed across the cluster to the external matchmaker. It is likely
 it will not do as good a job at packing and scaling as Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Next Steps:
 
