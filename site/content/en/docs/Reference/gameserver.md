@@ -165,6 +165,10 @@ The GameServer resource does not support updates. If you need to make regular up
 Agones supports the use of [Sidecar Containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) with exposed ports.
 This requires the `RestartPolicy` to be set to `Always` and can be referenced in the `ports.*.container` field. Typically they used to run
 services that need to run alongside the GameServer container, such as log shippers, monitoring agents, allocators and other supporting services.
+
+{{< alert title="Warning" color="warning">}}
+Some CNIs (Container Network Interface) may not support the use of init containers with host ports. Please check CNI for compatibility.
+{{< /alert >}}
 {{% /feature %}}
 
 ## Stable Network ID

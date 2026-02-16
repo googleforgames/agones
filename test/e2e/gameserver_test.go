@@ -783,6 +783,8 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 }
 
 func TestGameServerWithPortsMappedToInitSidecarContainers(t *testing.T) {
+	t.Skip("Skip test. Only works on some CNIs. The current e2e platform does not support ports on init containers.")
+
 	t.Parallel()
 	ctx := context.Background()
 
