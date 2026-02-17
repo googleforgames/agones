@@ -1372,23 +1372,17 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 
 	require.EventuallyWithT(t, func(c *assert.CollectT) {
 		currGsa, err := framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
-		if !assert.NoError(c, err, "API call to allocate should not fail") {
-			return
-		}
-		if !assert.Equal(c, allocationv1.GameServerAllocationAllocated, currGsa.Status.State, "Allocation should be 'Allocated' state") {
-			return
-		}
-		if !assert.NotEmpty(c, currGsa.Status.GameServerName, "Allocated GS name should not be empty") {
-			return
-		}
-		gs, err := gameServers.Get(ctx, currGsa.Status.GameServerName, metav1.GetOptions{})
-		if !assert.NoError(c, err, "Should be able to get the allocated GameServer") {
-			return
-		}
 
-		assert.Equal(c, t.Name(), gs.ObjectMeta.Labels[role], "Role label should match test name")
-		assert.Equal(c, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel], "Fleet name label should match")
-		assert.Equal(c, annotationValue, gs.ObjectMeta.Annotations[annotationKey], "Annotation value should match")
+		require.NoError(c, err, "API call to allocate should not fail")
+		require.Equal(c, allocationv1.GameServerAllocationAllocated, currGsa.Status.State, "Allocation should be 'Allocated' state")
+		require.NotEmpty(c, currGsa.Status.GameServerName, "Allocated GS name should not be empty")
+
+		gs, err := gameServers.Get(ctx, currGsa.Status.GameServerName, metav1.GetOptions{})
+		require.NoError(c, err, "Should be able to get the allocated GameServer")
+
+		require.Equal(c, t.Name(), gs.ObjectMeta.Labels[role], "Role label should match test name")
+		require.Equal(c, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel], "Fleet name label should match")
+		require.Equal(c, annotationValue, gs.ObjectMeta.Annotations[annotationKey], "Annotation value should match")
 
 	}, 30*time.Second, 1*time.Second)
 }
