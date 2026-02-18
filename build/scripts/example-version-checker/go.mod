@@ -2,7 +2,7 @@ module github.com/agones/agones/build/scripts/example-version-checker
 
 go 1.25.0
 
-require github.com/go-git/go-git/v5 v5.16.4
+require github.com/go-git/go-git/v5 v5.16.5
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
