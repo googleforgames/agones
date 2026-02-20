@@ -96,10 +96,10 @@ kubectl get gs gen-ai-server-manual -o jsonpath='{.status.address}:{.status.port
 
 You can now send requests to the GenAI endpoint:
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 If you do not have netcat installed (i.e. you get a response of `nc: command not found`), you can
 install netcat by running `sudo apt install netcat`.
-{{< /alert >}}
+{{% /alert %}}
 
 
 ```

@@ -87,7 +87,7 @@ kubectl create -f gameserver.yaml
 kubectl apply -f gameserver.yaml
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If you changed `main.go` again and want to apply the changes to the new game servers, then you also need 
 to modify the `gamerserver.yaml` file's
 [`imagePullPolicy`](https://kubernetes.io/docs/concepts/containers/images/#updating-images) to be `Always`,
@@ -103,7 +103,7 @@ or the node may use a cached copy of the image, which doesn't have the new chang
 
 Alternatively, you can also manually increment the `version` field in the `Makefile` file and change the `TAG`
 variable accordingly.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Check the GameServer Status
 ```bash
@@ -119,11 +119,11 @@ kubectl get gs -o jsonpath='{.items[0].status.address}:{.items[0].status.ports[0
 
 You can now communicate with the Game Server :
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
-{{< /alert >}}
+{{% /alert %}}
 
 ```
 nc -u {IP} {PORT}

@@ -35,14 +35,14 @@ minikube start --kubernetes-version v{{% minikube-example-cluster-version %}} -p
 Check the official [minikube start](https://minikube.sigs.k8s.io/docs/commands/start/) reference for more options that
 may be required for your platform of choice.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 You may need to increase the `--cpu` or `--memory` values for your minikube instance, depending on what resources are
 available on the host and/or how many GameServers you wish to run locally.
 
 Depending on your Operating System, you may also need to change the `--driver`
 ([driver list](https://minikube.sigs.k8s.io/docs/drivers/)) to enable `GameServer` connectivity with or without
 some workarounds listed below. 
-{{< /alert >}}
+{{% /alert %}}
 
 ### Known working drivers
 
@@ -145,11 +145,11 @@ helm install my-release --namespace agones-system --create-namespace \
 
 Once you have a `GameServer` running, try connecting to its port either on 127.0.0.1 or WSL's IP (`wsl hostname -I`).
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info"%}}
 The port range 7000-7100 will likely allow Minikube to start consistently, but you can narrow or widen this range
 to whatever works on your system. Make sure it is consistent between both the `minikube start` command shown above and
 the Helm configuration.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Create a service
 
@@ -181,11 +181,11 @@ Running `minikube service list -p agones` will show you the IP and port to conne
 To connect to a different `GameServer`, run `kubectl edit service agones-gameserver` and edit the `${GAMESERVER_NAME}`
 value to point to the new `GameServer` instance and/or the `${GAMESERVER_CONTAINER_PORT}` value as appropriate.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 `minikube tunnel` ([docs](https://minikube.sigs.k8s.io/docs/handbook/accessing/))
 does not support UDP ([Github Issue](https://github.com/kubernetes/minikube/issues/12362)) on some combination of
 operating system, platforms and drivers, but is required when using the `Service` workaround.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Use a different driver
 

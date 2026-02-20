@@ -432,9 +432,9 @@ spec:
       seconds: 30
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 While it's possible to use multiple FleetAutoscalers to perform the same actions on a fleet, this approach can result in unpredictable scaling behavior and overwhelm the controller. Multiple FleetAutoscalers pointing to the same fleet can lead to conflicting schedules and complex management. To avoid these issues, it's recommended to use the Chain Policy for defining scheduled scaling. This simplifies management and prevents unexpected scaling fluctuations.
-{{< /alert >}}
+{{% /alert %}}
 
 A Chain-based autoscaler can be used to autoscale `GameServers` based on a list of policies. The index of each policy within the list determines its priority, with the first item in the chain having the highest priority and being evaluated first, followed by the second item, and so on. The order in the list is crucial as it directly affects the sequence in which policies are evaluated and applied.
 
