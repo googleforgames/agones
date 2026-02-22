@@ -58,9 +58,9 @@ kubectl create namespace xbox
 helm install my-release agones/agones --set "gameservers.namespaces={default,xbox}" --namespace agones-system
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 You need to create your namespaces before installing Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 If you want to add a new namespace afterward upgrade your release:
 

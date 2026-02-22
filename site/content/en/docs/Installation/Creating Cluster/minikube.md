@@ -145,7 +145,7 @@ helm install my-release --namespace agones-system --create-namespace \
 
 Once you have a `GameServer` running, try connecting to its port either on 127.0.0.1 or WSL's IP (`wsl hostname -I`).
 
-{{% alert title="Note" color="info"%}}
+{{% alert title="Note" color="info" %}}
 The port range 7000-7100 will likely allow Minikube to start consistently, but you can narrow or widen this range
 to whatever works on your system. Make sure it is consistent between both the `minikube start` command shown above and
 the Helm configuration.

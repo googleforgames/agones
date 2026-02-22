@@ -227,11 +227,11 @@ two main reasons:
    run within it, limiting exposure if the game server becomes compromised is worth the extra 
    development friction that comes with having this prefix in place.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 
 You will need to take them into account when combined with the label prefix above. 
-{{< /alert >}}
+{{% /alert %}}
 
 Setting `GameServer` labels can be useful if you want information from your running game server process to be 
 observable or searchable through the Kubernetes API.  
