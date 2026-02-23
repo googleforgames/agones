@@ -155,9 +155,9 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `lists` (Beta, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
 - `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
-{{< /alert >}}
+{{% /alert %}}
 
 {{% feature publishVersion="1.56.0" %}}
 ## Sidecar Containers

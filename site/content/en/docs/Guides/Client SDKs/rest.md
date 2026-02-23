@@ -44,10 +44,10 @@ use a non-default port.
 
 Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
 contain some retry logic to take this into account.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Generating clients
 
@@ -114,11 +114,11 @@ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://lo
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
 For those scenarios, this SDK functionality exists.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios,
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 ##### Example
 

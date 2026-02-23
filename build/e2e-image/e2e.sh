@@ -17,6 +17,7 @@
 FEATURES=$1
 CLOUD_PRODUCT=$2
 REGISTRY=$3
+GS_TEST_IMAGE=$4
 
 echo $FEATURES
 echo $REGISTRY
@@ -24,5 +25,5 @@ set -e
 echo "installing current release"
 DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"' REGISTRY='"'$REGISTRY'"' 
 echo "starting e2e test"
-DOCKER_RUN= make test-e2e ARGS=-parallel=16 E2E_USE_GOTESTSUM=true GOTESTSUM_VERBOSE=true FEATURE_GATES='"'$FEATURES'"' CLOUD_PRODUCT='"'$CLOUD_PRODUCT'"'
+DOCKER_RUN= make test-e2e ARGS=-parallel=16 E2E_USE_GOTESTSUM=true GOTESTSUM_VERBOSE=true FEATURE_GATES='"'$FEATURES'"' CLOUD_PRODUCT='"'$CLOUD_PRODUCT'"' GS_TEST_IMAGE='"'$GS_TEST_IMAGE'"'
 echo "completed e2e test"

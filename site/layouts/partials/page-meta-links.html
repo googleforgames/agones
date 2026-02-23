@@ -8,7 +8,7 @@
 {{ if $path }}
 {{ $gh_repo := ($.Param "github_repo") }}
 {{ if $gh_repo }}
-<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+<div class="td-page-meta ms-2 pb-1 pt-2 mb-0">
 {{ $editURL := printf "%s/edit/main/site/content/%s/%s" $gh_repo ($.Site.Language.Lang) $path }}
 {{ $pageURL := .Page.Permalink }}
 

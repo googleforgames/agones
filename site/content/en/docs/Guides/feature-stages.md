@@ -26,6 +26,7 @@ be disabled.
 
 The current set of `alpha` and `beta` feature gates:
 
+{{% feature publishVersion="1.56.0" %}}
 
 | Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
 |----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
@@ -39,20 +40,41 @@ The current set of `alpha` and `beta` feature gates:
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
 | [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
-| [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Enabled | `Beta`   | 1.54.0 |
+| [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Enabled  | `Beta`   | 1.54.0 |
+| [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Enabled  | `Beta`   | 1.56.0 |
+| [Wasm Autoscaler](https://github.com/googleforgames/agones/issues/4080)                                                    | `WasmAutoscaler`                   | Disabled | `Alpha`  | 1.54.0 |
+| Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
+
+{{% /feature %}}
+
+{{% feature expiryVersion="1.56.0" %}}
+
+| Feature Name                                                                                                               | Gate                               | Default  | Stage    | Since  |
+|----------------------------------------------------------------------------------------------------------------------------|------------------------------------|----------|----------|--------|
+| [CountsAndLists](https://github.com/googleforgames/agones/issues/2716)                                                     | `CountsAndLists`                   | Enabled  | `Beta`   | 1.41.0 |
+| [DisableResyncOnSDKServer](https://github.com/googleforgames/agones/issues/3377)                                           | `DisableResyncOnSDKServer`         | Enabled  | `Stable` | 1.49.0 |
+| [Support Passthrough on GKE Autopilot](https://github.com/googleforgames/agones/issues/3721)                               | `AutopilotPassthroughPort`         | Enabled  | `Stable` | 1.54.0 |
+| [Support for Extended Duration Pods on GKE Autopilot (*1.28+ only*)](https://github.com/googleforgames/agones/issues/3386) | `GKEAutopilotExtendedDurationPods` | Enabled  | `Beta`   | 1.44.0 |
+| [Port Policy None](https://github.com/googleforgames/agones/issues/3804)                                                   | `PortPolicyNone`                   | Enabled  | `Beta`   | 1.49.0 |
+| [Multiple dynamic port ranges](https://github.com/googleforgames/agones/issues/1911)                                       | `PortRanges`                       | Enabled  | `Beta`   | 1.49.0 |
+| [Rolling Update Fixes](https://github.com/googleforgames/agones/issues/3688)                                               | `RollingUpdateFix`                 | Enabled  | `Beta`   | 1.50.0 |
+| [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239)      | `PlayerAllocationFilter`           | Disabled | `Alpha`  | 1.14.0 |
+| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}})                                                           | `PlayerTracking`                   | Disabled | `Alpha`  | 1.6.0  |
+| [Scheduled Fleet Autoscaling](https://github.com/googleforgames/agones/issues/3008)                                        | `ScheduledAutoscaler`              | Enabled  | `Beta`   | 1.51.0 |
+| [Extend Webhook autoscaler to send fleet metadata with the request](https://github.com/googleforgames/agones/issues/3951)  | `FleetAutoscaleRequestMetaData`    | Enabled  | `Beta`   | 1.54.0 |
 | [Sidecar Containers](https://github.com/googleforgames/agones/issues/3642)                                                 | `SidecarContainers`                | Disabled | `Alpha`  | 1.49.0 |
 | [Wasm Autoscaler](https://github.com/googleforgames/agones/issues/4080)                                                    | `WasmAutoscaler`                   | Disabled | `Alpha`  | 1.54.0 |
 | Example Gate (not in use)                                                                                                  | `Example`                          | Disabled | None     | 0.13.0 |
 
-
+{{% /feature %}}
 
 [fleet-updates]: {{% relref "./fleet-updates.md#notifying-gameservers-on-fleet-updatedownscale" %}}
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 If you aren't sure if Feature Flags have been set correctly, have a look at the
 _[The Feature Flag I enabled/disabled isn't working as expected]({{% relref "troubleshooting.md#the-feature-flag-i-enableddisabled-isnt-working-as-expected" %}})_
 troubleshooting section.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Description of Stages
 
@@ -66,10 +88,10 @@ An `Alpha` feature means:
 * The API may change in incompatible ways in a later software release without notice.
 * Recommended for use only in short-lived testing clusters, due to increased risk of bugs and lack of long-term support.
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 Please do try `Alpha` features and give feedback on them. This is important to ensure less breaking changes
 through the `Beta` period.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Beta
 
@@ -85,10 +107,10 @@ A `Beta` feature means:
 * Recommended for only non-business-critical uses because of potential for incompatible changes in subsequent releases.
   If you have multiple clusters that can be upgraded independently, you may be able to relax this restriction.
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 Note: Please do try `Beta` features and give feedback on them! After they exit beta, it may not be practical for us
 to make more changes.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Stable
 

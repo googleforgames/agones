@@ -1,0 +1,42 @@
+// Copyright 2026 Google LLC All Rights Reserved
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+/* Dark mode overrides for the custom Agones navbar and UI */
+
+/* Navbar background + text */
+[data-bs-theme="dark"] .td-navbar {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Search bar */
+[data-bs-theme="dark"] .form-control {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+/* Dropdown menu */
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Active dropdown item */
+[data-bs-theme="dark"] .dropdown-item.active,
+[data-bs-theme="dark"] .dropdown-item:active {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-body-color) !important;
+}

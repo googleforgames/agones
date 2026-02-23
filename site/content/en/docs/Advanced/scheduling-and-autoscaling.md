@@ -117,10 +117,10 @@ Under the "Packed" strategy, Pods will be scheduled using the [`PodAffinity`](ht
 with a `preferredDuringSchedulingIgnoredDuringExecution` affinity with [hostname](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#interlude-built-in-node-labels)
 topology. This attempts to group together `GameServer` Pods within as few nodes in the cluster as it can.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 The default Kubernetes scheduler doesn't do a perfect job of packing, but it's a good enough job for what we need -
   at least at this stage.
-{{< /alert >}}
+{{% /alert %}}
 
 #### Fleet Scale Down Strategy
 

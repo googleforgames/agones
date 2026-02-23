@@ -176,6 +176,20 @@ steps:
     args: [-j, '4', --output-sync=recurse, build-sdks]
 
   #
+  # Build and push simple-game-server for e2e tests
+  #
+  - name: make-docker
+    id: build-push-simple-game-server
+    dir: /workspace/examples/simple-game-server
+    waitFor: [push-images]
+    env:
+      - 'REPOSITORY=${_REGISTRY}'
+      - 'VERSION=${COMMIT_SHA}'
+      - 'WITH_WINDOWS=0'
+      - 'WITH_ARM64=0'
+    args: [push]
+
+  #
   # Example version checks
   #
   # - name: make-docker
@@ -308,11 +322,15 @@ steps:
 
         # Keep in sync with the inverse of 'alpha' and 'beta' features in
         # pkg/util/runtime/features.go:featureDefaults
-        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=false&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=true&WasmAutoscaler=true&Example=true"
+        featureWithGate="PlayerAllocationFilter=true&FleetAutoscaleRequestMetaData=false&PlayerTracking=true&CountsAndLists=false&RollingUpdateFix=false&PortRanges=false&PortPolicyNone=false&ScheduledAutoscaler=false&GKEAutopilotExtendedDurationPods=false&SidecarContainers=false&WasmAutoscaler=true&Example=true"
         featureWithoutGate=""
 
         # Use this if specific feature gates can only be supported on specific Kubernetes versions.
         declare -A featureWithGateByVersion=( [1.32]="${featureWithGate}" [1.33]="${featureWithGate}" [1.34]="${featureWithGate}")
+
+        # simple-game-server image for e2e tests
+        sgs_image="${_REGISTRY}/simple-game-server:${COMMIT_SHA}"
+        echo "Using simple-game-server image: ${sgs_image}"
 
         for cloudProduct in ${cloudProducts[@]}
         do
@@ -328,7 +346,7 @@ steps:
             fi
             testClusterLocation="${region}"
             { stdbuf -oL -eL gcloud builds submit . --suppress-logs --config=./ci/e2e-test-cloudbuild.yaml \
-              --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID} \
+              --substitutions _FEATURE_WITH_GATE=$withGate,_FEATURE_WITHOUT_GATE=$featureWithoutGate,_CLOUD_PRODUCT=$cloudProduct,_TEST_CLUSTER_NAME=$testCluster,_TEST_CLUSTER_LOCATION=$testClusterLocation,_REGISTRY=${_REGISTRY},_PARENT_COMMIT_SHA=${COMMIT_SHA},_PARENT_BUILD_ID=${BUILD_ID},_GS_TEST_IMAGE=${sgs_image} \
               |& stdbuf -i0 -oL -eL grep -v " tarball " \
               |& stdbuf -i0 -oL -eL sed "s/^/${cloudProduct}-${version}: /"; } &
             pids+=($!)
@@ -354,6 +372,7 @@ steps:
         echo "all done"
     waitFor:
       - cancel-orphan-e2e-tests
+      - build-push-simple-game-server
 
   #
   # Store caches, to speed up subsequent builds (considerably)
