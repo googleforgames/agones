@@ -103,12 +103,12 @@ flexible approach if utilising Counters or Lists is not a viable option.
 <img src="../../../diagrams/high-density-label-lock.puml.png" alt="High Density Allocation Diagram (Label Lock)" />
 </a>
 
-{{< alert title="Info" color="info">}}
+{{% alert title="Info" color="info" %}}
 To watch for Allocation events, there is the initial `GameServer.status.state` change from `Ready` to `Allocated`,
 but it is also useful to know that the value of `GameServer.metadata.annotations["agones.dev/last-allocated"]` will
 change as it is set by Agones with each allocation with the current timestamp, regardless of if there
 is a state change or not.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Example `GameServerAllocation`
 

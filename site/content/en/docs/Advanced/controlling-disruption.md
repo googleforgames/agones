@@ -54,13 +54,13 @@ In words:
       * Yes to both: Set `safe: OnUpgrade`, and configure [terminationGracePeriodSeconds](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution) to the session length or cleanup time.
       * No to either: Set `safe: Never`. If your game server does not terminate within an hour, see [below](#considerations-for-long-sessions).
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 To maintain backward compatibility with Agones prior to the introduction of `eviction` API, if your game server previously configured the `cluster-autoscaler.kubernetes.io/safe-to-evict: true` annotation, we assume `eviction.safe: Always` is intended.
-{{</ alert >}}
+{{% /alert %}}
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 GKE Autopilot supports only `Never` and `Always`, not `OnUpgrade`. However, with Kubernetes 1.27, Autopilot introduces support for `extended duration pods` that can run for up to `7 days`, helping to maintain game server sessions without disruption during this period.
-{{< /alert >}}
+{{% /alert %}}
 
 ## What's special about ten minutes and one hour?
 

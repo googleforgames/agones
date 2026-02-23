@@ -87,11 +87,11 @@ events for `WatchGameServer()`. This is a useful way of testing functionality, s
 
 It's important to note that during local development, only specific parts of the GameServer configuration can be modified through SDK calls. For instance, `counters` and `lists` should be placed within the `gameserver.status` section of the configuration file. By making this change, the relevant parts of the configuration are properly exposed and can be accessed through the SDK calls.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 File modification events can fire more than one for each save (for a variety of reasons),
 but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
 happen when live as well.
-{{< /alert >}}
+{{% /alert %}}
 
 For example:
 
@@ -114,9 +114,9 @@ Here is a complete list of these commands: ready, allocate, setlabel, setannotat
 
 For example call to Reserve() for 30 seconds would change the GameServer state to Reserve and if no call to Allocate() occurs it would return back to Ready state after this period.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 All state transitions are supported for local SDK server, however not all of them are valid in the real scenario. For instance, you cannot make a transition of a GameServer from Shutdown to a Ready state, but can do using local SDK server.
-{{< /alert >}}
+{{% /alert %}}
 
 All changes to the GameServer state could be observed and retrieved using Watch() or GameServer() methods using GameServer SDK.
 
