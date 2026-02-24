@@ -842,27 +842,18 @@ func TestGameServerWithPortsMappedToInitSidecarContainers(t *testing.T) {
 	timeOut := 60 * time.Second
 
 	expectedMsg1 := "Ping 1"
-	errPoll := wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, firstPort, expectedMsg1)
-		if err != nil {
-			t.Logf("Could not message GameServer on %s: %v. Will try again...", firstPort, err)
-		}
-		return err == nil && strings.Contains(res, expectedMsg1), nil
-	})
-	if errPoll != nil {
-		assert.FailNow(t, errPoll.Error(), "expected no errors after polling a port: %s", firstPort)
-	}
+		require.NoError(c, err, "expected no errors after messaging GameServer a port: %s", firstPort)
+		assert.Contains(c, res, expectedMsg1)
+	}, timeOut, interval)
 
 	expectedMsg2 := "Ping 2"
-	errPoll = wait.PollUntilContextTimeout(context.Background(), interval, timeOut, true, func(_ context.Context) (done bool, err error) {
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		res, err := framework.SendGameServerUDPToPort(t, readyGs, secondPort, expectedMsg2)
-		if err != nil {
-			t.Logf("Could not message GameServer on %s: %v. Will try again...", secondPort, err)
-		}
-		return err == nil && strings.Contains(res, expectedMsg2), nil
-	})
-
-	assert.NoError(t, errPoll, "expected no errors after polling a port: %s", secondPort)
+		require.NoError(c, err, "expected no errors after messaging GameServer a port: %s", secondPort)
+		assert.Contains(c, res, expectedMsg2)
+	}, timeOut, interval)
 }
 
 func TestGameServerReserve(t *testing.T) {

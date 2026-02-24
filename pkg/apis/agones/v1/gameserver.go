@@ -720,20 +720,6 @@ func (gs *GameServer) IsActive() bool {
 	return false
 }
 
-// FindContainer returns the container specified by the name parameter. Returns the index and the value.
-// Returns an error if not found.
-//
-// Deprecated: use HasContainer instead.
-func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, error) {
-	for i, c := range gss.Template.Spec.Containers {
-		if c.Name == name {
-			return i, c, nil
-		}
-	}
-
-	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", name)
-}
-
 // HasContainer determines if the GameServerSpec has a container with the specified name.
 // Init containers with RestartPolicy `Always` will be considered if `includeSidecar` is true.
 func (gss *GameServerSpec) HasContainer(name string, includeSidecar bool) bool {
