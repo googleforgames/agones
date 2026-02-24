@@ -122,11 +122,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverLabels`           | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint. | \`\`    |
 | `agones.metrics.serviceMonitor.interval`     | Default scraping interval for ServiceMonitor                                                                                                                                                                        | `30s`   |
 
-{{% feature publishVersion="1.56.0" %}}
 | Parameter                                        | Description                                      | Default |
 | ------------------------------------------------ | ------------------------------------------------ | ------- |
 | `agones.metrics.serviceMonitor.additionalLabels` | Extra labels to provide for the ServiceMonitors  |   `{}`  |
-{{% /feature %}}
 
 ### Service Accounts
 
