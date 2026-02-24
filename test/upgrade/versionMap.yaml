@@ -32,6 +32,7 @@ data:
           "1.53.0",
           "1.54.0",
           "1.55.0",
+          "1.56.0",
           "Dev"
         ],
         "1.33": [
@@ -41,11 +42,13 @@ data:
           "1.53.0",
           "1.54.0",
           "1.55.0",
+          "1.56.0",
           "Dev"
         ],
         "1.34": [
           "1.54.0",
           "1.55.0",
+          "1.56.0",
           "Dev"
         ]
       },
@@ -113,6 +116,10 @@ data:
         "1.55.0": {
           "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "SidecarContainers", "WasmAutoscaler"],
           "betaGates": ["CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler", "FleetAutoscaleRequestMetaData"]
+        },
+        "1.56.0": {
+          "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "WasmAutoscaler"],
+          "betaGates": ["CountsAndLists", "GKEAutopilotExtendedDurationPods", "PortPolicyNone", "PortRanges", "RollingUpdateFix", "ScheduledAutoscaler",  "FleetAutoscaleRequestMetaData", "SidecarContainers"]
         },
         "Dev": {
           "alphaGates": ["PlayerAllocationFilter", "PlayerTracking", "WasmAutoscaler"],
