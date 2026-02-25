@@ -582,9 +582,8 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 	loggerForGameServer(gs, c.baseLogger).Debug("Syncing Create State")
 
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
-	_, err := c.gameServerPod(gs)
+	pod, err := c.gameServerPod(gs)
 	if k8serrors.IsNotFound(err) {
-
 		for i := range gs.Spec.Ports {
 			if gs.Spec.Ports[i].PortPolicy == agonesv1.Static && gs.Spec.Ports[i].Protocol == agonesv1.ProtocolTCPUDP {
 				name := gs.Spec.Ports[i].Name
@@ -613,6 +612,9 @@ func (c *Controller) syncGameServerCreatingState(ctx context.Context, gs *agones
 	}
 
 	gsCopy := gs.DeepCopy()
+
+	gsCopy, _ = applyGameServerPodIP(gsCopy, pod)
+
 	gsCopy.Status.State = agonesv1.GameServerStateStarting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
@@ -924,11 +926,6 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 		return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 	}
 
-	// Ensure the pod IPs are populated
-	if len(pod.Status.PodIPs) == 0 {
-		return gs, workerqueue.NewTraceError(errors.Errorf("pod IPs not yet populated for Pod %s", pod.ObjectMeta.Name))
-	}
-
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
@@ -938,6 +935,8 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	if err != nil {
 		return gs, err
 	}
+
+	gsCopy, _ = applyGameServerPodIP(gsCopy, pod)
 
 	gsCopy.Status.State = agonesv1.GameServerStateScheduled
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
@@ -972,12 +971,28 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		return nil, err
 	}
 
+	var gsUpdated bool
+
+	gsCopy, podIPUpdated := applyGameServerPodIP(gsCopy, pod)
+	if podIPUpdated {
+		// defer the update of the GameServer until the end of this function
+		// in case there is no gs state update and the podIP is available and populated
+		defer func(gs *agonesv1.GameServer, alreadyUpdated *bool) {
+			// Only update if the GameServer is not already updated
+			if alreadyUpdated == nil || *alreadyUpdated {
+				return
+			}
+			_, _ = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+		}(gsCopy, &gsUpdated)
+	}
+
 	// if the address hasn't been populated, and the Ready request comes
 	// before the controller has had a chance to do it, then
 	// do it here instead
 	addressPopulated := false
-	if gs.Status.NodeName == "" {
+	if gsCopy.Status.NodeName == "" {
 		addressPopulated = true
+
 		if pod.Spec.NodeName == "" {
 			return gs, workerqueue.NewTraceError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
 		}
@@ -995,6 +1010,9 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	if err != nil {
 		return gs, err
 	}
+
+	// if the address is already populated, then we don't need to re-update for podIPs
+	gsUpdated = true
 
 	gsCopy.Status.State = agonesv1.GameServerStateReady
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
