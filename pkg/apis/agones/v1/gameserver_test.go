@@ -1083,6 +1083,280 @@ func TestGameServerValidate(t *testing.T) {
 				),
 			},
 		},
+		{
+			description: "Init CPU Request > Limit",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "sidecar",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("50m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests"),
+					"50m",
+					"must be less than or equal to cpu limit of 30m",
+				),
+			},
+		},
+		{
+			description: "Init CPU negative request",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "sidecar",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("-30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
+				),
+			},
+		},
+		{
+			description: "Init CPU negative limit",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "testing",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("-30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "limits").Key("cpu"),
+					"-30m",
+					"must be greater than or equal to 0",
+				),
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests"),
+					"30m",
+					"must be less than or equal to cpu limit of -30m",
+				),
+			},
+		},
+		{
+			description: "Init Memory Request > Limit",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "testing",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("55Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests"),
+					"55Mi",
+					"must be less than or equal to memory limit of 32Mi",
+				),
+			},
+		},
+		{
+			description: "Init Memory negative request",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "testing",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("-32Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
+				),
+			},
+		},
+		{
+			description: "Init Memory negative limit",
+			gs: GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dev-game",
+					Namespace: "default",
+				},
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+					}},
+					Container: "testing",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}},
+							InitContainers: []corev1.Container{
+								{
+									Name:  "testing",
+									Image: "testing/image",
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("32Mi"),
+										},
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("30m"),
+											corev1.ResourceMemory: resource.MustParse("-32Mi"),
+										},
+									},
+								},
+							}},
+					},
+				},
+			},
+			applyDefaults: false,
+			want: field.ErrorList{
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "limits").Key("memory"),
+					"-32Mi",
+					"must be greater than or equal to 0",
+				),
+				field.Invalid(
+					field.NewPath("spec", "template", "spec", "initContainers").Index(0).Child("resources", "requests"),
+					"32Mi",
+					"must be less than or equal to memory limit of -32Mi",
+				),
+			},
+		},
 	}
 
 	for _, tc := range testCases {
