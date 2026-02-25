@@ -352,6 +352,14 @@ func (ext *Extensions) creationMutationHandlerPod(review admissionv1.AdmissionRe
 		return review, errors.Wrapf(err, "could not unmarshal annotation %q (value %q)", passthroughPortAssignmentMap, annotation)
 	}
 
+	for _, container := range pod.Spec.InitContainers {
+		if container.RestartPolicy == nil || *container.RestartPolicy != corev1.ContainerRestartPolicyAlways {
+			continue
+		}
+		for _, portIdx := range passthroughPortAssignmentMap[container.Name] {
+			container.Ports[portIdx].ContainerPort = container.Ports[portIdx].HostPort
+		}
+	}
 	for _, container := range pod.Spec.Containers {
 		for _, portIdx := range passthroughPortAssignmentMap[container.Name] {
 			container.Ports[portIdx].ContainerPort = container.Ports[portIdx].HostPort
