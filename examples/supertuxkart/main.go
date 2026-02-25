@@ -106,6 +106,7 @@ func main() {
 		}
 	}
 	defer t.Cleanup()
+	var isAllocated bool
 	for line := range t.Lines {
 		// Don't use the logger here. This would add multiple prefixes to the logs. We just want
 		// to show the supertuxkart logs as they are, and layer the wrapper logs in with them.
@@ -120,6 +121,15 @@ func main() {
 			if player == nil {
 				log.Print("could not determine player")
 				break
+			}
+
+			if !isAllocated {
+				if err := s.Allocate(); err != nil {
+					log.Printf("failed to allocate server: %v", err)
+				} else {
+					isAllocated = true
+					log.Println("GameServer marked as Allocated")
+				}
 			}
 			if *enablePlayerTracking {
 				result, err := s.Alpha().PlayerConnect(*player)
