@@ -35,7 +35,7 @@ So when a Fleet is edited (any field other than `replicas`, see note below), eit
 By default, a Fleet will wait for new `GameServers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
 This ensures that a Fleet cannot accidentally have zero `GameServers` in the `Ready` state if something goes wrong during a Rolling Update or if `GameServers` have a long delay before moving to the `Ready` state.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 When `Fleet` update contains only changes to the `replicas` parameter, then new GameServers will be created/deleted straight away,
 which means in that case `maxSurge` and `maxUnavailable` parameters for a RollingUpdate will not be used.
 The RollingUpdate strategy takes place when you update `spec` parameters other than `replicas`.
@@ -44,7 +44,7 @@ If you are using a Fleet which is scaled by a FleetAutoscaler, [read the Fleetau
 
 You could also check the behaviour of the Fleet with a RollingUpdate strategy on a test `Fleet` to preview your upcoming updates.
 Use `kubectl describe fleet` to track scaling events in a Fleet.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Recreate Strategy
 
@@ -76,10 +76,10 @@ up and the older `Fleet` down as required by your specific rollout strategy.
 This also allows you to rollback if issues arise with the newer version, as you can delete the newer `Fleet`
 and scale up the old Fleet to its previous levels, resulting in minimal impact to the players.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 For GameServerAllocation, you will need to have at least a single shared label between the `GameServers` in each
 Fleet.
-{{< /alert >}}
+{{% /alert %}}
 
 ### GameServerAllocation Across Fleets
 
@@ -180,8 +180,8 @@ See the [Fleet reference]({{% relref "../Reference/fleet.md" %}}) for more detai
 
 
 <!-- This is the only way I could get the alert to work in a feature code -->
-{{< alert title="Note" color="info" >}}This works the same across Fleet resizing and Rolling/Recreate Updates, in that the implementation responds to the
+{{% alert title="Note" color="info" %}}This works the same across Fleet resizing and Rolling/Recreate Updates, in that the implementation responds to the
 underlying `GameServerSet`'s replicas being shrunk to a value smaller than the number of `Allocated`
 `GameServers` it controls. Therefore, this functionality works equally well with a rolling update as it does with an
 update strategy that requires at least two `Fleets`.
-{{< /alert >}}
+{{% /alert %}}

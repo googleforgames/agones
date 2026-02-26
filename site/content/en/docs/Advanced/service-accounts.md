@@ -23,13 +23,13 @@ of the Kubernetes API.
 
 If needed, you can provide your own service account on the `Pod` specification in the `GameServer` configuration.
 
-{{< alert title="Warning" color="warning" >}}
+{{% alert title="Warning" color="warning" %}}
 If you bring your own Service Account, it's your responsibility to ensure it matches all the RBAC permissions
 the `GameServer` `Pod` usually acquires from Agones by default, otherwise `GameServers` can fail.
 
 The default RBAC permissions for can be found in the {{< ghlink href="install/helm/agones/templates/serviceaccounts/sdk.yaml" >}}installation
 YAML on GitHub{{< /ghlink >}} and can be used for a reference.
-{{</ alert >}}
+{{% /alert %}}
 
 For example:
 

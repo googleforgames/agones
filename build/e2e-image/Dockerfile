@@ -1,8 +1,15 @@
 FROM gcr.io/cloud-builders/gcloud
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc make gcc jq zip && \
-    apt-get clean
+    apt-get install -y --no-install-recommends \
+    wget \
+    psmisc \
+    make \
+    gcc \
+    jq \
+    zip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # install go
 WORKDIR /usr/local

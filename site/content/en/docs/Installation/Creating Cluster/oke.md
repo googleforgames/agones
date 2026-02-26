@@ -9,9 +9,9 @@ description: >
 
 Create your OKE Cluster using the [Getting Started Guide](https://docs.oracle.com/en-us/iaas/Content/ContEng/home.htm).
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 To create a cluster, you must either belong to the tenancy's Administrators group, or belong to a group to which a policy grants the CLUSTER_MANAGE permission. See <a href="https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengpolicyconfig.htm#Policy_Configuration_for_Cluster_Creation_and_Deployment">Policy Configuration for Cluster Creation and Deployment</a>.
-{{< /alert >}}
+{{% /alert %}}
 
 Possible steps to create OKE cluster through [OCI web console](https://cloud.oracle.com/) are the following:
 

@@ -21,7 +21,7 @@ The `agones-extensions` binary has a similar `helm` configuration to `agones-con
 
 To change `controller.numWorkers` to 200 from 100 values and through the use of `helm --set`, add the follow to the `helm` command:
 
-{{< alert color="warning" >}} Important: This will not have any effect on any `extensions` values! {{< /alert >}}
+{{% alert color="warning" %}} Important: This will not have any effect on any `extensions` values! {{% /alert %}}
 ```
  ...
  --set agones.controller.numWorkers=200

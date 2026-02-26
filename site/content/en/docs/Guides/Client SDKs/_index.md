@@ -128,7 +128,7 @@ The `agones.dev/last-allocated` annotation will be set on the GameServer to an R
 
 Note that if using `SDK.Allocate()` in combination with [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}})s, it's possible for the `agones.dev/last-allocated` timestamp to move backwards if clocks are not synchronized between the Agones controller and the GameServer pod.
 
-{{% alert title="Note" color="info"%}}
+{{% alert title="Note" color="info" %}}
 Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
@@ -150,13 +150,8 @@ restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Gui
 If the SDK server receives a TERM signal before calling SDK.Shutdown(),
 the SDK server will stay alive for the period of the `terminationGracePeriodSeconds` until `SDK.Shutdown()` has been called.
 
-{{% feature expiryVersion="1.56.0" %}}
-{{< alpha title="Sidecar Containers" gate="SidecarContainers" >}}
-{{% /feature %}}
 
-{{% feature publishVersion="1.56.0" %}}
 {{< beta title="Sidecar Containers" gate="SidecarContainers" >}}
-{{% /feature %}}
 
 
 When enabling the `SidecarContainers` feature gate, the Agones SDK server will be run as a sidecar container in the same
@@ -227,11 +222,11 @@ two main reasons:
    run within it, limiting exposure if the game server becomes compromised is worth the extra 
    development friction that comes with having this prefix in place.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 
 You will need to take them into account when combined with the label prefix above. 
-{{< /alert >}}
+{{% /alert %}}
 
 Setting `GameServer` labels can be useful if you want information from your running game server process to be 
 observable or searchable through the Kubernetes API.  
@@ -394,10 +389,10 @@ connected playerIDs will be left unchanged.
 An error will be returned if the playerID was not already in the list of connected playerIDs but the player capacity for
 the server has been reached. The playerID will not be added to the list of playerIDs.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Do not use this method if you are manually managing `GameServer.Status.Players.IDs` and `GameServer.Status.Players.Count`
 through the Kubernetes API, as indeterminate results will occur.  
-{{< /alert >}}
+{{% /alert %}}
 
 #### Alpha().PlayerDisconnect(playerID)
 
@@ -414,10 +409,10 @@ playerID value exists within the list.
 If the playerID was not in the list of connected playerIDs, the call will return false, and the connected playerID list
 will be left unchanged.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Do not use this method if you are manually managing `GameServer.Status.Players.IDs` and `GameServer.Status.Players.Count`
 through the Kubernetes API, as indeterminate results will occur.  
-{{< /alert >}}
+{{% /alert %}}
 
 #### Alpha().SetPlayerCapacity(count)
 
@@ -428,10 +423,10 @@ Update the [`GameServer.Status.Players.Capacity`][playerstatus] value with a new
 This function retrieves the current player capacity. This is always accurate from what has been set through this SDK,
 even if the value has yet to be updated on the GameServer status resource.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If `GameServer.Status.Players.Capacity` is set manually through the Kubernetes API, use `SDK.GameServer()` or
 `SDK.WatchGameServer()` instead to view this value.
-{{< /alert >}}
+{{% /alert %}}
 
 #### Alpha().GetPlayerCount()
 
@@ -439,10 +434,10 @@ This function retrieves the current player count.
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the
 GameServer status resource.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to retrieve the current player count.
-{{< /alert >}}
+{{% /alert %}}
 
 #### Alpha().IsPlayerConnected(playerID)
 
@@ -450,20 +445,20 @@ This function returns if the playerID is currently connected to the GameServer. 
 been set through this SDK,
 even if the value has yet to be updated on the GameServer status resource.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to determine connected status.
-{{< /alert >}}
+{{% /alert %}}
 
 #### Alpha().GetConnectedPlayers()
 
 This function returns the list of the currently connected player ids. This is always accurate from what has been set
 through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer()
 or SDK.WatchGameServer() instead to list the connected players.
-{{< /alert >}}
+{{% /alert %}}
 
 [playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.PlayerStatus" >}}
 

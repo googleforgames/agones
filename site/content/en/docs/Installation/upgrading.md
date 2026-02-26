@@ -7,10 +7,10 @@ description: >
   Strategies and techniques for managing Agones and Kubernetes upgrades in a safe manner.
 ---
 
-{{< alert color="info" title="Note" >}}
+{{% alert color="info" title="Note" %}}
 Whichever approach you take to upgrading Agones, make sure to test it in your development environment
 before applying it to production.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Upgrading Agones
 
@@ -20,12 +20,12 @@ your particular game architecture but should provide a solid foundation for upda
 The recommended approach is to use [multiple clusters](#upgrading-agones-multiple-clusters), such that the upgrade can be tested
 gradually with production load and easily rolled back if the need arises.
 
-{{< alert color="warning" title="Warning" >}}
+{{% alert color="warning" title="Warning" %}}
 Changing [Feature Gates]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}) within your Agones install
 can constitute an "upgrade" as it may create or remove functionality
 in the Agones installation that may not be forward or backward compatible with installed resources in an existing
 installation.
-{{< /alert >}}
+{{% /alert %}}
 
 ### Upgrading Agones: Multiple Clusters
 
@@ -54,7 +54,7 @@ for the period of your upgrade, as there will be a short period in which Agones 
 #### In-Place Agones Upgrades
 
 
-{{< alert color="warning" title="Warning" >}}
+{{% alert color="warning" title="Warning" %}}
 Work is ongoing for [In-Place Agones Upgrades](https://github.com/googleforgames/agones/issues/3766),
 and the feature is currently in `Beta`. Please continue to use the multi-cluster strategy for
 production critical upgrades. Feedback on this `Beta` feature is welcome and appreciated.
@@ -64,7 +64,7 @@ from the continuous integration pipeline until such time
 that it can be entered back in a stable state.**
 
 We recommend testing thoroughly before applying to production.
-{{< /alert >}}
+{{% /alert %}}
 
 For In-Place Agones Upgrades we highly recommend installing using Helm. Helm has a significant
 advantage over `install.yaml` in that Helm automatically rolls back the upgrade if the agones-system
