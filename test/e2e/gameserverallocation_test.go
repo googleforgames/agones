@@ -1383,8 +1383,6 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 		gs, err := gameServers.Get(ctx, currGsa.Status.GameServerName, metav1.GetOptions{})
 		require.NoError(c, err, "Should be able to get the allocated GameServer")
 		require.Equal(c, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel], "Fleet name label should match")
-		
-		
 	}, 30*time.Second, 1*time.Second)
 }
 
