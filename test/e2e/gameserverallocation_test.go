@@ -1376,14 +1376,15 @@ func TestGameServerAllocationReturnLabels(t *testing.T) {
 		require.NoError(c, err, "API call to allocate should not fail")
 		require.Equal(c, allocationv1.GameServerAllocationAllocated, currGsa.Status.State, "Allocation should be 'Allocated' state")
 		require.NotEmpty(c, currGsa.Status.GameServerName, "Allocated GS name should not be empty")
+		require.Equal(c, t.Name(), currGsa.Status.Metadata.Labels[role], "Role label should match test name")
+		require.Equal(c, flt.ObjectMeta.Name, currGsa.Status.Metadata.Labels[agonesv1.FleetNameLabel], "Fleet name label should match")
+		require.Equal(c, annotationValue, currGsa.Status.Metadata.Annotations[annotationKey], "Annotation value should match")
 
 		gs, err := gameServers.Get(ctx, currGsa.Status.GameServerName, metav1.GetOptions{})
 		require.NoError(c, err, "Should be able to get the allocated GameServer")
-
-		require.Equal(c, t.Name(), gs.ObjectMeta.Labels[role], "Role label should match test name")
 		require.Equal(c, flt.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel], "Fleet name label should match")
-		require.Equal(c, annotationValue, gs.ObjectMeta.Annotations[annotationKey], "Annotation value should match")
-
+		
+		
 	}, 30*time.Second, 1*time.Second)
 }
 
