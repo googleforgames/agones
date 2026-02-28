@@ -540,6 +540,7 @@ func (f *Framework) SendGameServerUDP(t *testing.T, gs *agonesv1.GameServer, msg
 
 // SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
 // returns error if no Ports were allocated or a port of the specified name doesn't exist
+// nolint:dupl
 func (f *Framework) SendGameServerUDPToPort(t *testing.T, gs *agonesv1.GameServer, portName string, msg string) (string, error) {
 	log := TestLogger(t)
 	if len(gs.Status.Ports) == 0 {
@@ -610,7 +611,8 @@ func (f *Framework) SendUDP(t *testing.T, address, msg string) (string, error) {
 // SendGameServerTCP sends a message to a gameserver and returns its reply
 // finds the first tcp port from the spec to send the message to,
 // returns error if no Ports were allocated
-func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
+// nolint:dupl
+func (f *Framework) SendGameServerTCP(t *testing.T, gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -618,7 +620,7 @@ func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
 	// use first tcp port
 	for _, p := range gs.Spec.Ports {
 		if p.Protocol == corev1.ProtocolTCP {
-			return SendGameServerTCPToPort(gs, p.Name, msg)
+			return f.SendGameServerTCPToPort(t, gs, p.Name, msg)
 		}
 	}
 	return "", errors.New("No TCP ports")
@@ -626,7 +628,9 @@ func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
 
 // SendGameServerTCPToPort sends a message to a gameserver at the named port and returns its reply
 // returns error if no Ports were allocated or a port of the specified name doesn't exist
-func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+// nolint:dupl
+func (f *Framework) SendGameServerTCPToPort(t *testing.T, gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	log := TestLogger(t)
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -637,36 +641,57 @@ func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg strin
 		}
 	}
 	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
-	return SendTCP(address, msg)
+	reply, err := f.SendTCP(t, address, msg)
+
+	if err != nil {
+		log.WithField("gs", gs.ObjectMeta.Name).WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("Failed to send TCP packet to GameServer. Dumping Events!")
+		f.LogEvents(t, log, gs.ObjectMeta.Namespace, gs)
+	}
+
+	return reply, err
 }
 
 // SendTCP sends a message to an address, and returns its reply if
-// it returns one in 30 seconds
-func SendTCP(address, msg string) (string, error) {
-	conn, err := net.Dial("tcp", address)
-	if err != nil {
-		return "", err
-	}
-
-	if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
-		return "", err
-	}
-
-	defer func() {
-		if err := conn.Close(); err != nil {
-			logrus.Warn("Could not close TCP connection")
+// it returns one in 30 seconds. Will retry 5 times, in case TCP packets drop.
+func (f *Framework) SendTCP(t *testing.T, address, msg string) (string, error) {
+	log := TestLogger(t).WithField("address", address)
+	var response string
+	// sometimes we get I/O timeout, so let's do a retry
+	err := wait.PollUntilContextTimeout(context.Background(), 2*time.Second, time.Minute, true, func(_ context.Context) (bool, error) {
+		conn, err := net.Dial("tcp", address)
+		if err != nil {
+			log.WithError(err).Info("could not dial address")
+			return false, nil
 		}
-	}()
 
-	// writes to the tcp connection
-	_, err = fmt.Fprintln(conn, msg)
-	if err != nil {
-		return "", err
-	}
+		defer func() {
+			if err := conn.Close(); err != nil {
+				log.Warn("Could not close TCP connection")
+			}
+		}()
 
-	response, err := bufio.NewReader(conn).ReadString('\n')
+		if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+			log.WithError(err).Info("Could not set read deadline")
+			return false, nil
+		}
+
+		// writes to the tcp connection
+		_, err = fmt.Fprintln(conn, msg)
+		if err != nil {
+			log.WithError(err).Info("could not write message to address")
+			return false, nil
+		}
+
+		response, err = bufio.NewReader(conn).ReadString('\n')
+		if err != nil {
+			log.WithError(err).Info("Could not read from address")
+		}
+
+		return err == nil, nil
+	})
+
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "timed out attempting to send TCP message to address")
 	}
 
 	return response, nil

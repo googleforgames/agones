@@ -1043,7 +1043,7 @@ func TestGameServerTcpProtocol(t *testing.T) {
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	require.NoError(t, err)
 
-	replyTCP, err := e2eframework.SendGameServerTCP(readyGs, "Hello World !")
+	replyTCP, err := framework.SendGameServerTCP(t, readyGs, "Hello World !")
 	require.NoError(t, err)
 	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 }
@@ -1088,7 +1088,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
 
-	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+	replyTCP, err := framework.SendGameServerTCPToPort(t, readyGs, tcpPort.Name, "Hello World !")
 	if err != nil {
 		t.Fatalf("Could not ping TCP GameServer: %v", err)
 	}
@@ -1137,7 +1137,7 @@ func TestGameServerStaticTcpUdpProtocol(t *testing.T) {
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
 
-	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+	replyTCP, err := framework.SendGameServerTCPToPort(t, readyGs, tcpPort.Name, "Hello World !")
 	if err != nil {
 		t.Fatalf("Could not ping TCP GameServer: %v", err)
 	}
@@ -1164,7 +1164,7 @@ func TestGameServerStaticTcpProtocol(t *testing.T) {
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("sending TCP ping")
 
-	replyTCP, err := e2eframework.SendGameServerTCP(readyGs, "Hello World !")
+	replyTCP, err := framework.SendGameServerTCP(t, readyGs, "Hello World !")
 	require.NoError(t, err)
 	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 
