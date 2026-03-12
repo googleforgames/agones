@@ -70,3 +70,8 @@ Agones is in active development - we would love your help in shaping its future!
 ## Licence
 
 Apache 2.0
+
+---
+
+Copyright Agones a Series of LF Projects, LLC.  
+For website terms of use, trademark policy and other project policies please see https://lfprojects.org/policies/.
