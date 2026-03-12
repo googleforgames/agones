@@ -8,7 +8,7 @@ description: >
     and shutdown.
 ---
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 These examples will use the `GameServerAllocation` resource for convenience, but these same patterns can be applied 
 when using the [Allocation Service]({{% ref "/docs/Advanced/allocator-service.md" %}}) instead.
-{{< /alert >}}
+{{% /alert %}}

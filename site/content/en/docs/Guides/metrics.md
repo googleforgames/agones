@@ -115,9 +115,9 @@ Dashboard screenshots :
 
 ![grafana dashboard controller](../../../images/grafana-dashboard-controller.png)
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 You can import our dashboards by copying the json content from {{< ghlink href="/build/grafana" branch="main" >}}each config map{{< /ghlink >}} into your own instance of Grafana (+ > Create > Import > Or paste json) or follow the [installation]({{< relref "metrics.md" >}}#installation) guide.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Installation
 
@@ -136,6 +136,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 helm upgrade --install --wait prom prometheus-community/prometheus --namespace metrics --create-namespace \
+    --version 28.9.0 \
     --set server.global.scrape_interval=30s \
     --set server.persistentVolume.enabled=true \
     --set server.persistentVolume.size=64Gi \
@@ -172,11 +173,11 @@ kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
 
 Now you can access the prometheus dashboard [http://localhost:9090](http://localhost:9090).
 
-On the landing page you can start exploring metrics by creating [queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). You can also verify what [targets](http://localhost:9090/targets) Prometheus currently monitors (Header Status > Targets), you should see Agones controller pod in the `kubernetes-pods` section.
+On the landing page you can start exploring metrics by creating [queries](https://prometheus.io/docs/prometheus/latest/querying/basics/). You can also verify what [targets](http://localhost:9090/targets) Prometheus currently monitors (Header Status > Targets), you should see Agones controller pod in the `kubernetes-pods-agones` section.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Metrics will be first registered when you will start using Agones.
-{{< /alert >}}
+{{% /alert %}}
 
 Now let's install some Grafana dashboards.
 
@@ -241,9 +242,9 @@ You need to grant all the necessary permissions to the users (see [Access Contro
 gcloud projects add-iam-policy-binding [PROJECT_ID] --member serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com --role roles/monitoring.metricWriter
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 Cloud Operations for GKE (including Cloud Monitoring) is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/stackdriver/docs/solutions/gke/installing#upgrade-instructions) if it is currently disabled in your GKE cluster.
-{{< /alert >}}
+{{% /alert %}}
 
 Before proceeding, ensure you have created a metrics node pool as mentioned in the Google Cloud [installation guide]({{< ref "/docs/Installation/Creating Cluster/gke.md" >}}).
 
@@ -252,9 +253,9 @@ The default metrics exporter installed with Agones is Prometheus. If you are usi
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 If you are using the [YAML installation]({{< ref "/docs/Installation/Install Agones/yaml.md" >}}), follow the instructions on the page to change the above parameters by using helm to generate a custom YAML file locally.
-{{< /alert >}}
+{{% /alert %}}
 
 With this configuration only the Cloud Monitoring exporter would be used instead of Prometheus exporter.
 

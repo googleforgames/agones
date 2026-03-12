@@ -138,7 +138,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
     - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
     - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
     - `None` means the `hostPort` is ignored and if defined, the `containerPort` (optional) is used to set the port on the GameServer instance.
-  - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
+  - `container` the name of the container {{% feature publishVersion="1.57.0" %}}or sidecar container {{% /feature %}}to open the port on. Defaults to the game server container if omitted or empty.
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
@@ -155,9 +155,21 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `lists` (Beta, requires "CountsAndLists" feature flag) are lists of values stored against this GameServer that can be added and deleted from. Key must be declared at GameServer creation time.
 - `template` the [pod spec template]({{% k8s-api-version href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
-{{< alert title="Note" color="info">}}
+{{% alert title="Note" color="info" %}}
 The GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
+{{% /alert %}}
+
+{{% feature publishVersion="1.57.0" %}}
+## Sidecar Containers
+
+Agones supports the use of [Sidecar Containers](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) with exposed ports.
+This requires the `RestartPolicy` to be set to `Always` and can be referenced in the `ports.*.container` field. Typically they used to run
+services that need to run alongside the GameServer container, such as log shippers, monitoring agents, allocators and other supporting services.
+
+{{< alert title="Warning" color="warning">}}
+Some CNIs (Container Network Interface) may not support the use of init containers with host ports. Please check CNI for compatibility.
 {{< /alert >}}
+{{% /feature %}}
 
 ## Stable Network ID
 

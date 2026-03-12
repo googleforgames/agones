@@ -49,6 +49,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -131,6 +132,105 @@ func TestControllerSyncGameServer(t *testing.T) {
 					{Address: ipv6Fixture, Type: "PodIP"},
 				}, gs.Status.Addresses)
 				assert.NotEmpty(t, gs.Status.Ports[0].Port)
+			}
+
+			return true, gs, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		defer cancel()
+
+		err := c.portAllocator.Run(ctx)
+		assert.Nil(t, err)
+
+		err = c.syncGameServer(ctx, "default/test")
+		assert.Nil(t, err)
+		assert.Equal(t, 3, updateCount, "update reactor should fire thrice")
+		assert.True(t, podCreated, "pod should be created")
+	})
+
+	t.Run("When a GameServer has been deleted, the sync operation should be a noop", func(t *testing.T) {
+		runReconcileDeleteGameServer(t, &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec:   newSingleContainerSpec(),
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}})
+	})
+}
+
+func TestControllerSyncGameServerWithInitSidecar(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Creating a new GameServer", func(t *testing.T) {
+		c, mocks := newFakeController()
+		updateCount := 0
+		podCreated := false
+		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{
+					{ContainerPort: 7777},
+					{ContainerPort: 8888, Container: ptr.To("sidecar")},
+				},
+				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{{Name: "sidecar", Image: "container/image", RestartPolicy: ptr.To(corev1.ContainerRestartPolicyAlways)}},
+					Containers:     []corev1.Container{{Name: "container", Image: "container/image"}},
+				},
+				},
+			},
+		}
+
+		node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+			Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
+
+		fixture.ApplyDefaults()
+
+		watchPods := watch.NewFake()
+		mocks.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(watchPods, nil))
+
+		mocks.KubeClient.AddReactor("list", "nodes", func(_ k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
+		})
+		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ca := action.(k8stesting.CreateAction)
+			pod := ca.GetObject().(*corev1.Pod)
+			pod.Spec.NodeName = node.ObjectMeta.Name
+			pod.Status.PodIPs = []corev1.PodIP{{IP: ipv6Fixture}}
+			podCreated = true
+			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
+			watchPods.Add(pod)
+			// wait for the change to propagate
+			require.Eventually(t, func() bool {
+				list, err := c.podLister.List(labels.Everything())
+				assert.NoError(t, err)
+				return len(list) == 1
+			}, 5*time.Second, time.Second)
+			return true, pod, nil
+		})
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(_ k8stesting.Action) (bool, runtime.Object, error) {
+			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
+			return true, gameServers, nil
+		})
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			updateCount++
+			expectedState := agonesv1.GameServerState("notastate")
+			switch updateCount {
+			case 1:
+				expectedState = agonesv1.GameServerStateCreating
+			case 2:
+				expectedState = agonesv1.GameServerStateStarting
+			case 3:
+				expectedState = agonesv1.GameServerStateScheduled
+			}
+
+			assert.Equal(t, expectedState, gs.Status.State)
+			if expectedState == agonesv1.GameServerStateScheduled {
+				assert.Equal(t, ipFixture, gs.Status.Address)
+				assert.Equal(t, []corev1.NodeAddress{
+					{Address: ipFixture, Type: "ExternalIP"},
+					{Address: ipv6Fixture, Type: "PodIP"},
+				}, gs.Status.Addresses)
+				assert.NotEmpty(t, gs.Status.Ports[0].Port)
+				assert.NotEmpty(t, gs.Status.Ports[1].Port)
 			}
 
 			return true, gs, nil

@@ -18,9 +18,9 @@ We recommend using [Release Channels](https://cloud.google.com/kubernetes-engine
 * Clusters on a Release Channel are allowed to use the `No minor upgrades` and `No minor or node upgrades` [scope of maintenance exclusions](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#limitations-maint-exclusions) - in other words, enrolling a cluster in a Release Channel gives you _more control_ over node upgrades.
 * Clusters enrolled in `rapid` channel have access to the newest Kubernetes version first. Agones strives to [support the newest release in `rapid` channel]({{< relref "Installation#agones-and-kubernetes-supported-versions" >}}) to allow you to test the newest Kubernetes soon after it's available in GKE.
 
-{{< alert title="Note" color="info" >}}
+{{% alert title="Note" color="info" %}}
 GKE Autopilot clusters must be on Release Channels.
-{{< /alert >}}
+{{% /alert %}}
 
 ### What channel should I use?
 

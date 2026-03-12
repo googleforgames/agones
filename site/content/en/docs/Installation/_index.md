@@ -21,9 +21,9 @@ description: >
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
-{{< alert title="Warning" color="warning">}}
+{{% alert title="Warning" color="warning" %}}
 This release has been tested against Kubernetes versions {{% k8s-version %}} on GKE. Other versions may work, but are unsupported. It is also likely that not all of these versions are supported by other cloud providers.
-{{< /alert >}}
+{{% /alert %}}
 
 ## Supported Container Architectures
 
@@ -47,7 +47,8 @@ The following table lists recent Agones versions and their corresponding require
 
 | Agones version | Kubernetes version(s) |
 | -------------- | ------------------    |
-| 1.55           | {{% k8s-version %}}   |
+| 1.56           | {{% k8s-version %}}   |
+| 1.55           | 1.32, 1.33, 1.34      |
 | 1.54           | 1.32, 1.33, 1.34      |
 | 1.53           | 1.31, 1.32, 1.33      |
 | 1.52           | 1.31, 1.32, 1.33      |
