@@ -441,6 +441,52 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGameServerUnhealthyBeforeReadyCrash(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureSidecarContainers) {
+		t.SkipNow()
+	}
+
+	t.Parallel()
+	ctx := t.Context()
+	additionalContainerName := "additional"
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs.Spec.Template.Spec.Containers[0].Image = "alpine:latest"
+	gs.Spec.Template.Spec.Containers[0].Command = []string{"/bin/sh", "-c", "sleep 2; exit 23"}
+	gs.Spec.Template.Spec.Containers = append(gs.Spec.Template.Spec.Containers, corev1.Container{
+		Name:            additionalContainerName,
+		Image:           "registry.k8s.io/pause:3.10",
+		ImagePullPolicy: corev1.PullIfNotPresent,
+	})
+
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	gs, err := gsClient.Create(ctx, gs, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer gsClient.Delete(ctx, gs.Name, metav1.DeleteOptions{}) //nolint:errcheck
+
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(ctx, gs.Name, metav1.GetOptions{})
+		require.NoError(c, err)
+		assert.Equal(c, corev1.RestartPolicyNever, pod.Spec.RestartPolicy)
+		assert.Equal(c, corev1.PodRunning, pod.Status.Phase)
+		var gameTerminated, additionalRunning bool
+		for _, status := range pod.Status.ContainerStatuses {
+			switch status.Name {
+			case gs.Spec.Container:
+				require.NotNil(c, status.State.Terminated)
+				assert.Equal(c, int32(23), status.State.Terminated.ExitCode)
+				gameTerminated = true
+			case additionalContainerName:
+				additionalRunning = status.State.Running != nil
+			}
+		}
+		assert.True(c, gameTerminated, "game container has not terminated")
+		assert.True(c, additionalRunning, "additional container is not running")
+	}, 3*time.Minute, time.Second)
+
+	_, err = framework.WaitForGameServerState(t, gs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
+	require.NoError(t, err)
+}
+
 func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
