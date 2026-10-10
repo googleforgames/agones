@@ -622,7 +622,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) //nolint:errcheck
 	})
 
 	t.Run("adding and deleting unhealthy gameservers", func(t *testing.T) {
@@ -664,7 +664,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) //nolint:errcheck
 
 		assert.Equal(t, 6, count)
 		assert.True(t, updated, "A game servers should have been updated")
@@ -710,7 +710,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) //nolint:errcheck
 
 		assert.Equal(t, 6, count)
 		assert.True(t, updated, "A game servers should have been updated")
@@ -756,7 +756,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) //nolint:errcheck
 
 		assert.Equal(t, 5, count)
 		assert.False(t, updated, "A game servers should not have been updated")
@@ -782,7 +782,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) //nolint:errcheck
 
 		assert.Equal(t, 5, count)
 	})
