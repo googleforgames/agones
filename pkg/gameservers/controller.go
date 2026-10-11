@@ -782,7 +782,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: "/healthz",
-					Port: intstr.FromInt(8080),
+					Port: intstr.FromInt32(8080),
 				},
 			},
 			InitialDelaySeconds: 3,
@@ -849,7 +849,7 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 				ProbeHandler: corev1.ProbeHandler{
 					HTTPGet: &corev1.HTTPGetAction{
 						Path: "/gshealthz",
-						Port: intstr.FromInt(8080),
+						Port: intstr.FromInt32(8080),
 					},
 				},
 				// The sidecar relies on kubelet to delay by InitialDelaySeconds after the

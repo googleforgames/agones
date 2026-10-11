@@ -111,7 +111,7 @@ func NewWorkerQueueWithRateLimiter(handler Handler, logger *logrus.Entry, keyNam
 	wq := &WorkerQueue{
 		keyName:     string(keyName),
 		logger:      logger.WithField("queue", queueName),
-		queue:       workqueue.NewNamedRateLimitingQueue(rateLimiter, queueName),
+		queue:       workqueue.NewTypedRateLimitingQueueWithConfig(rateLimiter, workqueue.TypedRateLimitingQueueConfig[any]{Name: queueName}),
 		SyncHandler: handler,
 	}
 	wq.errs = errors.FromStruct(wq)
