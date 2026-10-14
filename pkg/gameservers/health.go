@@ -30,6 +30,7 @@ import (
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,6 +55,7 @@ type HealthController struct {
 	gameServerGetter getterv1.GameServersGetter
 	gameServerLister listerv1.GameServerLister
 	workerqueue      *workerqueue.WorkerQueue
+	unhealthyLimiter *rate.Limiter
 	recorder         record.EventRecorder
 	waitOnFreePorts  bool
 }
@@ -76,6 +78,7 @@ func NewHealthController(
 		gameServerGetter: agonesClient.AgonesV1(),
 		gameServerLister: gameserverInformer.Lister(),
 		waitOnFreePorts:  waitOnFreePorts,
+		unhealthyLimiter: newStateUpdateLimiter(),
 	}
 
 	hc.baseLogger = runtime.NewLoggerWithType(hc)
@@ -88,18 +91,19 @@ func NewHealthController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
 
+	// Enqueue without rate limiting, and throttle the Unhealthy write instead; see newStateUpdateLimiter.
 	_, _ = podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj any) {
 			pod := newObj.(*corev1.Pod)
 			if pod.ObjectMeta.DeletionTimestamp.IsZero() && isGameServerPod(pod) && hc.isUnhealthy(pod) {
-				hc.workerqueue.Enqueue(pod)
+				hc.workerqueue.EnqueueImmediately(pod)
 			}
 		},
 		DeleteFunc: func(obj any) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
 			pod, ok := obj.(*corev1.Pod)
 			if ok && isGameServerPod(pod) {
-				hc.workerqueue.Enqueue(pod)
+				hc.workerqueue.EnqueueImmediately(pod)
 			}
 		},
 	})
@@ -272,6 +276,10 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("GameServer is not unhealthy anymore")
 			return nil
 		}
+	}
+
+	if err := hc.unhealthyLimiter.Wait(ctx); err != nil {
+		return hc.errs.Wrap(err, "error waiting to update GameServer to Unhealthy")
 	}
 
 	hc.loggerForGameServer(gs).Debug("Issue with GameServer pod, marking as GameServerStateUnhealthy")
