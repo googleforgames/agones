@@ -958,7 +958,7 @@ func TestBuildURLFromConfiguration(t *testing.T) {
 	}
 }
 
-// nolint:dupl  // Linter errors on lines are duplicate of TestApplyListPolicy
+//nolint:dupl  // Linter errors on lines are duplicate of TestApplyListPolicy
 func TestApplyCounterPolicy(t *testing.T) {
 	t.Parallel()
 
@@ -1695,7 +1695,6 @@ func TestApplyCounterPolicy(t *testing.T) {
 	}
 }
 
-// nolint:dupl  // Linter errors on lines are duplicate of TestApplyCounterPolicy
 // NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateListPolicy)
 func TestApplyListPolicy(t *testing.T) {
 	t.Parallel()
@@ -2524,7 +2523,6 @@ func TestApplyListPolicyFlapping(t *testing.T) {
 	}
 }
 
-// nolint:dupl  // Linter errors on lines are duplicate of TestApplySchedulePolicy
 // NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateSchedulePolicy)
 func TestApplySchedulePolicy(t *testing.T) {
 	t.Parallel()
@@ -2745,7 +2743,6 @@ func TestApplySchedulePolicy(t *testing.T) {
 	}
 }
 
-// nolint:dupl  // Linter errors on lines are duplicate of TestApplyChainPolicy
 // NOTE: Does not test for the validity of a fleet autoscaler policy (ValidateChainPolicy)
 func TestApplyChainPolicy(t *testing.T) {
 	t.Parallel()
