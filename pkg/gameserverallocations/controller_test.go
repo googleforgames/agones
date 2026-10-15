@@ -88,7 +88,7 @@ func TestControllerAllocator(t *testing.T) {
 			gs := ua.GetObject().(*agonesv1.GameServer)
 
 			if _, ok := updated[gs.ObjectMeta.Name]; ok {
-				return true, nil, k8serrors.NewConflict(agonesv1.Resource("gameservers"), gs.ObjectMeta.Name, fmt.Errorf("already updated"))
+				return true, nil, k8serrors.NewConflict(agonesv1.Resource("gameservers"), gs.ObjectMeta.Name, errors.New("already updated"))
 			}
 
 			updated[gs.ObjectMeta.Name] = true
@@ -125,7 +125,7 @@ func TestControllerAllocator(t *testing.T) {
 			if len(gsa.Spec.Selectors) != 0 {
 				require.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 			} else {
-				// nolint:staticcheck
+				//nolint:staticcheck
 				require.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 			}
 
@@ -193,7 +193,7 @@ func TestAllocationApiResource(t *testing.T) {
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close() //nolint:errcheck
 
 	list := &metav1.APIResourceList{}
 	err = json.NewDecoder(resp.Body).Decode(list)

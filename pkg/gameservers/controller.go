@@ -277,7 +277,6 @@ func fastRateLimiter() workqueue.TypedRateLimiter[any] {
 // creationMutationHandler is the handler for the mutating webhook that sets the
 // the default values on the GameServer
 // Should only be called on gameserver create operations.
-// nolint:dupl
 func (ext *Extensions) creationMutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object
 	gs := &agonesv1.GameServer{}
@@ -550,7 +549,7 @@ func (c *Controller) syncGameServerDeletionTimestamp(ctx context.Context, gs *ag
 			if err != nil {
 				return gs, c.errs.Wrapf(err, "error deleting pod for GameServer. Name: %s, Namespace: %s", gs.ObjectMeta.Name, pod.ObjectMeta.Namespace)
 			}
-			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), fmt.Sprintf("Deleting Pod %s", pod.ObjectMeta.Name))
+			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Deleting Pod "+pod.ObjectMeta.Name)
 		}
 
 		// but no removing finalizers until it's truly gone

@@ -20,6 +20,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -72,7 +73,7 @@ func TestLocal(t *testing.T) {
 	defaultGameServer := defaultGs()
 	// do this to adjust for any time differences.
 	// we only care about all the other values to be compared.
-	defaultGameServer.ObjectMeta.CreationTimestamp = gs.GetObjectMeta().CreationTimestamp
+	defaultGameServer.ObjectMeta.CreationTimestamp = gs.GetObjectMeta().GetCreationTimestamp()
 
 	assert.Equal(t, defaultGameServer.GetObjectMeta(), gs.GetObjectMeta())
 	assert.Equal(t, defaultGameServer.GetSpec(), gs.GetSpec())
@@ -113,10 +114,9 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	gs, err := l.GetGameServer(ctx, e)
 	assert.NoError(t, err)
 
-	assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+	assert.Equal(t, fixture.ObjectMeta.Name, gs.GetObjectMeta().GetName())
 }
 
-// nolint:dupl
 func TestLocalSDKWithLogLevel(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
@@ -140,7 +140,7 @@ func TestLocalSDKWithLogLevel(t *testing.T) {
 	assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), l.logger.Logger.Level.String())
 }
 
-// nolint:dupl
+//nolint:dupl
 func TestLocalSDKServerSetLabel(t *testing.T) {
 	t.Parallel()
 
@@ -194,10 +194,10 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 
 			gs, err := l.GetGameServer(ctx, e)
 			assert.NoError(t, err)
-			assert.Equal(t, "bar", gs.ObjectMeta.Labels[metadataPrefix+"foo"])
+			assert.Equal(t, "bar", gs.GetObjectMeta().GetLabels()[metadataPrefix+"foo"])
 
 			assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) any {
-				return gs.ObjectMeta.Labels[metadataPrefix+"foo"]
+				return gs.GetObjectMeta().GetLabels()[metadataPrefix+"foo"]
 			})
 
 			l.Close()
@@ -206,7 +206,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	}
 }
 
-// nolint:dupl
+//nolint:dupl
 func TestLocalSDKServerSetAnnotation(t *testing.T) {
 	t.Parallel()
 
@@ -261,10 +261,10 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 
 			gs, err := l.GetGameServer(ctx, e)
 			assert.NoError(t, err)
-			assert.Equal(t, "foo", gs.ObjectMeta.Annotations[metadataPrefix+"bar"])
+			assert.Equal(t, "foo", gs.GetObjectMeta().GetAnnotations()[metadataPrefix+"bar"])
 
 			assertWatchUpdate(t, stream, "foo", func(gs *sdk.GameServer) any {
-				return gs.ObjectMeta.Annotations[metadataPrefix+"bar"]
+				return gs.GetObjectMeta().GetAnnotations()[metadataPrefix+"bar"]
 			})
 
 			l.Close()
@@ -311,7 +311,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	assert.NoError(t, err)
 
 	assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) any {
-		return gs.ObjectMeta.Annotations["foo"]
+		return gs.GetObjectMeta().GetAnnotations()["foo"]
 	})
 }
 
@@ -1002,7 +1002,7 @@ func TestLocalSDKServerStateUpdates(t *testing.T) {
 
 	gs, err := l.GetGameServer(ctx, e)
 	assert.NoError(t, err)
-	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateReady))
+	assert.Equal(t, gs.GetStatus().GetState(), string(agonesv1.GameServerStateReady))
 
 	seconds := &sdk.Duration{Seconds: 2}
 	_, err = l.Reserve(ctx, seconds)
@@ -1010,21 +1010,21 @@ func TestLocalSDKServerStateUpdates(t *testing.T) {
 
 	gs, err = l.GetGameServer(ctx, e)
 	assert.NoError(t, err)
-	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateReserved))
+	assert.Equal(t, gs.GetStatus().GetState(), string(agonesv1.GameServerStateReserved))
 
 	_, err = l.Allocate(ctx, e)
 	assert.NoError(t, err)
 
 	gs, err = l.GetGameServer(ctx, e)
 	assert.NoError(t, err)
-	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateAllocated))
+	assert.Equal(t, gs.GetStatus().GetState(), string(agonesv1.GameServerStateAllocated))
 
 	_, err = l.Shutdown(ctx, e)
 	assert.NoError(t, err)
 
 	gs, err = l.GetGameServer(ctx, e)
 	assert.NoError(t, err)
-	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateShutdown))
+	assert.Equal(t, gs.GetStatus().GetState(), string(agonesv1.GameServerStateShutdown))
 }
 
 // TestSDKConformanceFunctionality - run a number of record requests in parallel
@@ -1047,7 +1047,7 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	wg := sync.WaitGroup{}
 	for i := range 20 {
 		wg.Add(1)
-		str := fmt.Sprintf("%d", i)
+		str := strconv.Itoa(i)
 		expected = append(expected, str)
 
 		go func() {
