@@ -85,7 +85,8 @@ resource "google_container_node_pool" "windows_ltsc2022" {
   }
 
   management {
-    auto_repair  = true
-    auto_upgrade = false
+    auto_repair = true
+    // Node pools in a release channel must have auto upgrade enabled.
+    auto_upgrade = var.releaseChannel == "UNSPECIFIED" ? false : true
   }
 }
