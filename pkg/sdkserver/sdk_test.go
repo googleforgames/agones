@@ -19,9 +19,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -80,11 +78,7 @@ func TestConvert(t *testing.T) {
 		}
 	}
 
-	t.Run(string(runtime.FeatureCountsAndLists)+" disabled", func(t *testing.T) {
-		runtime.FeatureTestMutex.Lock()
-		defer runtime.FeatureTestMutex.Unlock()
-		require.NoError(t, runtime.ParseFeatures(""))
-
+	t.Run("no Counters or Lists", func(t *testing.T) {
 		gs := fixture.DeepCopy()
 
 		sdkGs := convert(gs)
@@ -94,11 +88,7 @@ func TestConvert(t *testing.T) {
 		assert.Nil(t, sdkGs.GetStatus().GetLists())
 	})
 
-	t.Run(string(runtime.FeatureCountsAndLists)+" enabled", func(t *testing.T) {
-		runtime.FeatureTestMutex.Lock()
-		defer runtime.FeatureTestMutex.Unlock()
-		require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
-
+	t.Run("Counters and Lists", func(t *testing.T) {
 		gs := fixture.DeepCopy()
 		gs.Status.Counters = map[string]agonesv1.CounterStatus{
 			"Games": {
