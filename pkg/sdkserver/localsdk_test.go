@@ -37,7 +37,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/beta"
-	"agones.dev/agones/pkg/util/runtime"
 )
 
 func TestLocal(t *testing.T) {
@@ -117,7 +116,6 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, gs.GetObjectMeta().GetName())
 }
 
-// nolint:dupl
 func TestLocalSDKWithLogLevel(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
@@ -141,7 +139,7 @@ func TestLocalSDKWithLogLevel(t *testing.T) {
 	assert.Equal(t, string(fixture.Spec.SdkServer.LogLevel), l.logger.Logger.Level.String())
 }
 
-// nolint:dupl
+//nolint:dupl
 func TestLocalSDKServerSetLabel(t *testing.T) {
 	t.Parallel()
 
@@ -207,7 +205,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	}
 }
 
-// nolint:dupl
+//nolint:dupl
 func TestLocalSDKServerSetAnnotation(t *testing.T) {
 	t.Parallel()
 
@@ -319,10 +317,6 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 func TestLocalSDKServerGetCounter(t *testing.T) {
 	t.Parallel()
 
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
-
 	counters := map[string]agonesv1.CounterStatus{
 		"sessions": {Count: int64(1), Capacity: int64(100)},
 	}
@@ -390,10 +384,6 @@ func TestLocalSDKServerGetCounter(t *testing.T) {
 
 func TestLocalSDKServerUpdateCounter(t *testing.T) {
 	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	counters := map[string]agonesv1.CounterStatus{
 		"sessions": {Count: 1, Capacity: 100},
@@ -543,10 +533,6 @@ func TestLocalSDKServerUpdateCounter(t *testing.T) {
 func TestLocalSDKServerGetList(t *testing.T) {
 	t.Parallel()
 
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
-
 	lists := map[string]agonesv1.ListStatus{
 		"games": {Capacity: int64(100), Values: []string{"game1", "game2"}},
 	}
@@ -614,10 +600,6 @@ func TestLocalSDKServerGetList(t *testing.T) {
 
 func TestLocalSDKServerUpdateList(t *testing.T) {
 	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"players":  {Capacity: 1000},
@@ -815,10 +797,6 @@ func TestLocalSDKServerUpdateList(t *testing.T) {
 func TestLocalSDKServerAddListValue(t *testing.T) {
 	t.Parallel()
 
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
-
 	lists := map[string]agonesv1.ListStatus{
 		"lemmings": {Capacity: int64(100), Values: []string{"lemming1", "lemming2"}},
 		"hacks":    {Capacity: int64(2), Values: []string{"hack1", "hack2"}},
@@ -906,10 +884,6 @@ func TestLocalSDKServerAddListValue(t *testing.T) {
 
 func TestLocalSDKServerRemoveListValue(t *testing.T) {
 	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	lists := map[string]agonesv1.ListStatus{
 		"players": {Capacity: int64(100), Values: []string{"player1", "player2"}},
@@ -1110,10 +1084,6 @@ func assertInitialWatchUpdate(t *testing.T, stream *gameServerMockStream) {
 // which defaults to defaultMaxListItems rather than being discovered from the GameServer.
 func TestLocalSDKServerUpdateListMaxCapacity(t *testing.T) {
 	t.Parallel()
-
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureCountsAndLists)+"=true"))
 
 	const listMaxCapacity = int64(25)
 
