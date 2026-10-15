@@ -33,10 +33,11 @@ import (
 )
 
 const (
-	retryInterval                = 5 * time.Second
-	retryTimeout                 = 90 * time.Second
-	allocateTimeout              = 15 * time.Second
-	requiredConsecutiveSuccesses = 3
+	retryInterval   = 5 * time.Second
+	retryTimeout    = 45 * time.Second
+	allocateTimeout = 10 * time.Second
+	// one allocation per poll tick, plus the immediate call, so the fleet can't run dry mid-drain
+	fleetReplicas = int32(retryTimeout/retryInterval) + 1
 )
 
 func TestAllocatorAfterDeleteReplica(t *testing.T) {
@@ -62,7 +63,9 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	require.NoError(t, err, "Failed to stabilize agones-allocator")
 
 	// create fleet
-	flt, err := helper.CreateFleet(ctx, framework.Namespace, framework)
+	flt, err := helper.CreateFleetWithOpts(ctx, framework.Namespace, framework, func(f *agonesv1.Fleet) {
+		f.Spec.Replicas = fleetReplicas
+	})
 	require.NoError(t, err)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -90,26 +93,17 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 
-	// Wait and keep making calls till we know the draining time has passed
-	successes := 0
-	var lastResponse *pb.AllocationResponse
-
-	require.EventuallyWithT(t, func(c *assert.CollectT) {
-		callCtx, cancel := context.WithTimeout(ctx, allocateTimeout)
+	// Wait and keep making calls till we know the draining time has passed.
+	// Each call gets its own deadline so a request stuck on a dead connection fails the test
+	// instead of hanging until the go test timeout (#4727).
+	_ = wait.PollUntilContextTimeout(ctx, retryInterval, retryTimeout, true, func(pollCtx context.Context) (bool, error) {
+		callCtx, cancel := context.WithTimeout(pollCtx, allocateTimeout)
 		defer cancel()
 
 		response, err := grpcClient.Allocate(callCtx, request)
-		logger.Infof("err = %v (code = %v), response = %v, consecutive successes = %d",
-			err, status.Code(err), response, successes)
-
-		if !assert.NoError(c, err, "Failed grpc allocation request") {
-			successes = 0
-			return
-		}
-		successes++
-		lastResponse = response
-		assert.GreaterOrEqual(c, successes, requiredConsecutiveSuccesses, "Not enough consecutive successful allocations")
-	}, retryTimeout, retryInterval)
-
-	helper.ValidateAllocatorResponse(t, lastResponse)
+		logger.Infof("err = %v (code = %v), response = %v", err, status.Code(err), response)
+		helper.ValidateAllocatorResponse(t, response)
+		require.NoError(t, err, "Failed grpc allocation request")
+		return false, nil
+	})
 }
