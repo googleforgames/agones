@@ -101,6 +101,15 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(agones_path):$(mount_path) \
 				-v $(build_path)/.gomod:/go/pkg/mod
 
+# In a git worktree, .git is a file pointing at the main repository's .git directory by absolute host path,
+# so mount that directory read-only at the same path for git (and golangci-lint) to work inside the container.
+git_common_dir := $(shell cd $(agones_path) && dir=$$(git rev-parse --git-common-dir 2>/dev/null) && cd "$$dir" && pwd -P)
+ifneq ($(git_common_dir),)
+ifneq ($(git_common_dir),$(agones_path)/.git)
+	common_mounts += -v "$(git_common_dir):$(git_common_dir):ro"
+endif
+endif
+
 # Its possible for this to change in the future, so it gets its own variable.
 REGISTRY ?= local
 CHARTS_REGISTRY ?=
