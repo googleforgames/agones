@@ -96,8 +96,10 @@ func TestAllocatorAfterDeleteReplica(t *testing.T) {
 	// Wait and keep making calls till we know the draining time has passed.
 	// Each call gets its own deadline so a request stuck on a dead connection fails the test
 	// instead of hanging until the go test timeout (#4727).
-	_ = wait.PollUntilContextTimeout(ctx, retryInterval, retryTimeout, true, func(pollCtx context.Context) (bool, error) {
-		callCtx, cancel := context.WithTimeout(pollCtx, allocateTimeout)
+	// The call deadline derives from ctx, not the poll context: the last tick can land just before the
+	// poll deadline, which would leave that call with almost no time and fail it with DeadlineExceeded.
+	_ = wait.PollUntilContextTimeout(ctx, retryInterval, retryTimeout, true, func(context.Context) (bool, error) {
+		callCtx, cancel := context.WithTimeout(ctx, allocateTimeout)
 		defer cancel()
 
 		response, err := grpcClient.Allocate(callCtx, request)
