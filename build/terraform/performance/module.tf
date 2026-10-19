@@ -19,6 +19,9 @@
 // The performance test cluster is hosted in project `agones-images`, i.e:
 //  terraform init -backend-config="bucket=agones-images-performance-infra-bucket-tfstate" -backend-config="prefix=terraform/state"
 //  terraform apply -var project="agones-images"
+// The cluster is not kept running. See build/docs/performance-testing.md for how to provision it,
+// run the tests, and tear it down, including how to handle the firewall rules below, which are also
+// declared in build/terraform/e2e/module.tf.
 
 terraform {
   required_version = ">= 1.0.0"
