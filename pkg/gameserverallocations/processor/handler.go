@@ -42,6 +42,10 @@ import (
 
 var handlerLogger = runtime.NewLoggerWithSource("processorHandler")
 
+// maxInFlightBatches is the maximum number of batches being processed at once for a single client stream
+// Once reached, the handler stops receiving batches until one completes
+const maxInFlightBatches = 10
+
 // GameServerAllocator represents the interface to allocate game servers.
 type GameServerAllocator interface {
 	Allocate(ctx context.Context, gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error)
@@ -59,11 +63,24 @@ type allocationResult struct {
 type lockedStream struct {
 	allocationpb.Processor_StreamBatchesServer
 	mu sync.Mutex
+	// inFlight holds one token per batch being processed, which bounds the work queued for the stream
+	inFlight chan struct{}
 }
 
 // Send sends the message, one at a time
 func (s *lockedStream) Send(msg *allocationpb.ProcessorMessage) error {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.Processor_StreamBatchesServer.Send(msg)
+}
+
+// sendPull sends a pull request, unless the stream is at capacity or busy sending something else, as a
+// pull is not needed then and must not hold up the pulls to the other clients.
+func (s *lockedStream) sendPull(msg *allocationpb.ProcessorMessage) error {
+	if len(s.inFlight) == cap(s.inFlight) || !s.mu.TryLock() {
+		return nil
+	}
 	defer s.mu.Unlock()
 
 	return s.Processor_StreamBatchesServer.Send(msg)
@@ -111,7 +128,11 @@ func (h *Handler) StreamBatches(stream allocationpb.Processor_StreamBatchesServe
 
 	// batch responses and pull requests are sent from different goroutines, and a gRPC stream
 	// does not allow concurrent sends
-	stream = &lockedStream{Processor_StreamBatchesServer: stream}
+	locked := &lockedStream{
+		Processor_StreamBatchesServer: stream,
+		inFlight:                      make(chan struct{}, maxInFlightBatches),
+	}
+	stream = locked
 
 	h.addClient(clientID, stream)
 	defer h.removeClient(clientID, stream)
@@ -155,9 +176,19 @@ func (h *Handler) StreamBatches(stream allocationpb.Processor_StreamBatchesServe
 			logFieldRequestCount: len(requestWrappers),
 		}).Debug("Received batch request")
 
+		// Wait for capacity before starting more work, so that a stalled allocator applies backpressure
+		// to the client instead of piling up goroutines and memory
+		select {
+		case locked.inFlight <- struct{}{}:
+		case <-stream.Context().Done():
+			return stream.Context().Err()
+		}
+
 		// Process the batch on its own, so that a slow request only delays the response of its own batch,
 		// and not the receipt and processing of the next ones.
 		batches.Go(func() {
+			defer func() { <-locked.inFlight }()
+
 			response := h.submitBatch(stream.Context(), batchID, requestWrappers)
 
 			respMsg := &allocationpb.ProcessorMessage{
@@ -210,7 +241,11 @@ func (h *Handler) sendPullRequestsToClients() {
 				Pull: &allocationpb.PullRequest{Message: "pull"},
 			},
 		}
-		if err := stream.Send(pullMsg); err != nil {
+		send := stream.Send
+		if ls, ok := stream.(*lockedStream); ok {
+			send = ls.sendPull
+		}
+		if err := send(pullMsg); err != nil {
 			handlerLogger.WithFields(logrus.Fields{
 				logFieldClientID: clientID,
 				"error":          err,
