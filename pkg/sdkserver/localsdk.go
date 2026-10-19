@@ -76,13 +76,11 @@ func defaultGs() *sdk.GameServer {
 		},
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
-			"rooms": {Count: 1, Capacity: 10},
-		}
-		gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
-			"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
-		}
+	gs.Status.Counters = map[string]*sdk.GameServer_Status_CounterStatus{
+		"rooms": {Count: 1, Capacity: 10},
+	}
+	gs.Status.Lists = map[string]*sdk.GameServer_Status_ListStatus{
+		"players": {Values: []string{"test0", "test1", "test2"}, Capacity: 100},
 	}
 
 	return gs
@@ -165,13 +163,11 @@ func NewLocalSDKServer(filePath string, testSdkName string, listMaxCapacity int6
 		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		if l.gs.Status.Counters == nil {
-			l.gs.Status.Counters = make(map[string]*sdk.GameServer_Status_CounterStatus)
-		}
-		if l.gs.Status.Lists == nil {
-			l.gs.Status.Lists = make(map[string]*sdk.GameServer_Status_ListStatus)
-		}
+	if l.gs.Status.Counters == nil {
+		l.gs.Status.Counters = make(map[string]*sdk.GameServer_Status_CounterStatus)
+	}
+	if l.gs.Status.Lists == nil {
+		l.gs.Status.Lists = make(map[string]*sdk.GameServer_Status_ListStatus)
 	}
 
 	go func() {
@@ -617,10 +613,6 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) GetCounter(_ context.Context, in *beta.GetCounterRequest) (*beta.Counter, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	if in == nil {
 		return nil, l.errs.Errorf("invalid argument. GetCounterRequest cannot be nil")
 	}
@@ -643,10 +635,6 @@ func (l *LocalSDKServer) GetCounter(_ context.Context, in *beta.GetCounterReques
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) UpdateCounter(_ context.Context, in *beta.UpdateCounterRequest) (*beta.Counter, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	if in.GetCounterUpdateRequest() == nil {
 		return nil, l.errs.Errorf("invalid argument. CounterUpdateRequest cannot be nil")
 	}
@@ -702,10 +690,6 @@ func (l *LocalSDKServer) UpdateCounter(_ context.Context, in *beta.UpdateCounter
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) GetList(_ context.Context, in *beta.GetListRequest) (*beta.List, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	l.logger.WithField("name", in.GetName()).Info("Getting List")
 	l.recordRequest("getlist")
 	l.gsMutex.RLock()
@@ -726,10 +710,6 @@ func (l *LocalSDKServer) GetList(_ context.Context, in *beta.GetListRequest) (*b
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) UpdateList(_ context.Context, in *beta.UpdateListRequest) (*beta.List, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	if in.GetList() == nil || in.GetUpdateMask() == nil {
 		return nil, l.errs.Errorf("invalid argument. List: %v and UpdateMask %v cannot be nil", in.GetList(), in.GetUpdateMask())
 	}
@@ -778,10 +758,6 @@ func (l *LocalSDKServer) UpdateList(_ context.Context, in *beta.UpdateListReques
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) AddListValue(_ context.Context, in *beta.AddListValueRequest) (*beta.List, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	l.logger.WithField("name", in.GetName()).Info("Adding Value to List")
 	l.recordRequest("addlistvalue")
 	l.gsMutex.Lock()
@@ -809,10 +785,6 @@ func (l *LocalSDKServer) AddListValue(_ context.Context, in *beta.AddListValueRe
 // [Stage:Beta]
 // [FeatureFlag:CountsAndLists]
 func (l *LocalSDKServer) RemoveListValue(_ context.Context, in *beta.RemoveListValueRequest) (*beta.List, error) {
-	if !runtime.FeatureEnabled(runtime.FeatureCountsAndLists) {
-		return nil, l.errs.Errorf("%s not enabled", runtime.FeatureCountsAndLists)
-	}
-
 	l.logger.WithField("name", in.GetName()).Info("Removing Value from List")
 	l.recordRequest("removelistvalue")
 	l.gsMutex.Lock()
@@ -873,7 +845,7 @@ func (l *LocalSDKServer) compare() {
 		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
 			l.logger.WithField("expected", l.expectedSequence).WithField("received", l.requestSequence).Info("Testing Failed")
 			// we don't care if the mutex gets unlocked on exit, so ignore the warning.
-			// nolint: gocritic
+			//nolint:gocritic
 			os.Exit(1)
 		}
 		l.logger.Info("Received requests match expected list. Test run was successful")
@@ -883,8 +855,8 @@ func (l *LocalSDKServer) compare() {
 func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 	l.logger.WithField("filePath", filePath).Info("Reading GameServer configuration")
 
-	reader, err := os.Open(filePath) // nolint: gosec
-	defer reader.Close()             // nolint: staticcheck,errcheck
+	reader, err := os.Open(filePath) //nolint:gosec
+	defer reader.Close()             //nolint:staticcheck,errcheck
 
 	if err != nil {
 		return err
