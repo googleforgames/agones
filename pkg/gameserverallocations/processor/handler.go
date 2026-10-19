@@ -62,9 +62,9 @@ type allocationResult struct {
 // response once processed) can send at the same time, so the sends must take turns
 type lockedStream struct {
 	allocationpb.Processor_StreamBatchesServer
-	mu sync.Mutex
 	// inFlight holds one token per batch being processed, which bounds the work queued for the stream
 	inFlight chan struct{}
+	mu       sync.Mutex
 }
 
 // Send sends the message, one at a time
