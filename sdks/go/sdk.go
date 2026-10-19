@@ -90,16 +90,30 @@ func NewSDK() (*SDK, error) {
 	return s, s.errs.Wrap(err, "could not set up health check")
 }
 
+// connectivityWaiter is the part of *grpc.ClientConn that waitForReady uses.
+type connectivityWaiter interface {
+	Connect()
+	GetState() connectivity.State
+	WaitForStateChange(ctx context.Context, sourceState connectivity.State) bool
+}
+
 // waitForReady blocks until conn is connected or ctx is done, which is what
-// the deprecated grpc.WithBlock dial option did.
-func waitForReady(ctx context.Context, conn *grpc.ClientConn) error {
-	conn.Connect()
-	for state := conn.GetState(); state != connectivity.Ready; state = conn.GetState() {
+// the deprecated grpc.WithBlock dial option did. Like that option, it
+// reconnects whenever the connection falls back to Idle, since no RPC is
+// in flight yet to trigger one.
+func waitForReady(ctx context.Context, conn connectivityWaiter) error {
+	for {
+		state := conn.GetState()
+		switch state {
+		case connectivity.Ready:
+			return nil
+		case connectivity.Idle:
+			conn.Connect()
+		}
 		if !conn.WaitForStateChange(ctx, state) {
 			return ctx.Err()
 		}
 	}
-	return nil
 }
 
 // Alpha returns the Alpha SDK.
