@@ -166,9 +166,6 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(maxListItemsFlag))
 	runtime.Must(viper.BindEnv(readinessShutdownDuration))
 	runtime.Must(viper.BindEnv(httpUnallocatedStatusCode))
-	runtime.Must(viper.BindEnv(processorGRPCAddress))
-	runtime.Must(viper.BindEnv(processorGRPCPort))
-	runtime.Must(viper.BindEnv(processorMaxBatchSize))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
