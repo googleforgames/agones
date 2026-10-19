@@ -373,7 +373,7 @@ func applyWebhookPolicy(ctx context.Context, state *fasState, w *autoscalingv1.U
 		return faResp.Response.Replicas, false, nil
 	}
 
-	return f.Status.Replicas, false, nil
+	return f.Spec.Replicas, false, nil
 }
 
 func applyBufferPolicy(_ *fasState, b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet, fasLog *FasLogger) (int32, bool, error) {

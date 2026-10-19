@@ -428,6 +428,22 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			},
 		},
 		{
+			description: "Scale down in progress, no scaling",
+			webhookPolicy: &autoscalingv1.URLConfiguration{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            10,
+			statusReplicas:          20,
+			statusAllocatedReplicas: 14,
+			statusReadyReplicas:     6,
+			expected: expected{
+				replicas: 10,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
 			description: "Allocated replicas per cent == 70%, no scaling",
 			webhookPolicy: &autoscalingv1.URLConfiguration{
 				Service: nil,
