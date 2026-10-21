@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -827,16 +828,16 @@ func TestControllerScaleFleet(t *testing.T) {
 		fas, f := defaultFixtures()
 		replicas := f.Spec.Replicas + 5
 
-		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			ca := action.(k8stesting.UpdateAction)
-			return true, ca.GetObject().(*agonesv1.Fleet), errors.New("random-err")
+		m.AgonesClient.AddReactor("update", "fleets", func(_ k8stesting.Action) (bool, runtime.Object, error) {
+			return true, nil, errors.New("random-err")
 		})
 
 		err := c.scaleFleet(context.Background(), fas, f, replicas)
 		if assert.Error(t, err) {
 			assert.ErrorContains(t, err, "error updating replicas for fleet fleet-1: random-err")
 		}
-		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "AutoScalingFleetError")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events,
+			fmt.Sprintf("AutoScalingFleetError Error on scaling fleet fleet-1 from %d to %d.", f.Spec.Replicas, replicas))
 	})
 
 	t.Run("equal replicas, no update", func(t *testing.T) {
