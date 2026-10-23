@@ -16,6 +16,7 @@ package fleets
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -40,7 +41,7 @@ func surgeValue(v intstr.IntOrString) *intstr.IntOrString {
 	return &v
 }
 
-func surgeGameServerSets(f *agonesv1.Fleet, active, inactive surgeGSSFixture) (*agonesv1.GameServerSet, []*agonesv1.GameServerSet) {
+func surgeGameServerSets(f *agonesv1.Fleet, active surgeGSSFixture, inactive ...surgeGSSFixture) (*agonesv1.GameServerSet, []*agonesv1.GameServerSet) {
 	a := f.GameServerSet()
 	a.ObjectMeta.Name = "active"
 	a.Spec.Replicas = active.specReplicas
@@ -49,16 +50,23 @@ func surgeGameServerSets(f *agonesv1.Fleet, active, inactive surgeGSSFixture) (*
 	a.Status.AllocatedReplicas = active.allocatedReplicas
 	a.Status.ReservedReplicas = active.reservedReplicas
 
-	i := f.GameServerSet()
-	i.ObjectMeta.Name = "inactive"
-	i.Spec.Replicas = inactive.specReplicas
-	i.Status.Replicas = inactive.statusReplicas
-	i.Status.ReadyReplicas = inactive.readyReplicas
-	i.Status.AllocatedReplicas = inactive.allocatedReplicas
-	i.Status.ReservedReplicas = inactive.reservedReplicas
-
-	f.Status.ReadyReplicas = active.readyReplicas + inactive.readyReplicas
-	return a, []*agonesv1.GameServerSet{i}
+	f.Status.ReadyReplicas = active.readyReplicas
+	rest := make([]*agonesv1.GameServerSet, 0, len(inactive))
+	for index, fixture := range inactive {
+		i := f.GameServerSet()
+		i.ObjectMeta.Name = "inactive"
+		if index > 0 {
+			i.ObjectMeta.Name = fmt.Sprintf("inactive-%d", index)
+		}
+		i.Spec.Replicas = fixture.specReplicas
+		i.Status.Replicas = fixture.statusReplicas
+		i.Status.ReadyReplicas = fixture.readyReplicas
+		i.Status.AllocatedReplicas = fixture.allocatedReplicas
+		i.Status.ReservedReplicas = fixture.reservedReplicas
+		f.Status.ReadyReplicas += fixture.readyReplicas
+		rest = append(rest, i)
+	}
+	return a, rest
 }
 
 func TestControllerRollingUpdateDeploymentSurge(t *testing.T) {
@@ -550,4 +558,89 @@ func TestControllerRollingUpdateSurgeAllocationHeavyGrowingFleet(t *testing.T) {
 		require.NotNil(t, inactiveSpec, "inactive GameServerSet should be scaled down")
 		assert.Equal(t, int32(756), *inactiveSpec)
 	})
+}
+
+func TestControllerRollingUpdateSurgeMultipleInactiveGameServerSets(t *testing.T) {
+	t.Cleanup(func() {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+		require.NoError(t, utilruntime.ParseFeatures(""))
+	})
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateSurge)+"=true"))
+
+	fixtures := map[string]struct {
+		fleetReplicas int32
+		active        surgeGSSFixture
+		inactive      []surgeGSSFixture
+		expected      int32
+	}{
+		"counts each inactive target or status before summing": {
+			fleetReplicas: 100,
+			inactive: []surgeGSSFixture{
+				{specReplicas: 60, statusReplicas: 20, readyReplicas: 20},
+				{specReplicas: 10, statusReplicas: 40, readyReplicas: 10, allocatedReplicas: 30},
+			},
+			expected: 25,
+		},
+		"bounds retention by all inactive allocations and reservations": {
+			fleetReplicas: 70,
+			active:        surgeGSSFixture{specReplicas: 85, statusReplicas: 85, readyReplicas: 85},
+			inactive: []surgeGSSFixture{
+				{statusReplicas: 40, allocatedReplicas: 25, reservedReplicas: 15},
+				{statusReplicas: 20, allocatedReplicas: 5, reservedReplicas: 15},
+			},
+			expected: 28,
+		},
+		"scales down while the active gameserverset is creating": {
+			fleetReplicas: 70,
+			active:        surgeGSSFixture{specReplicas: 85, statusReplicas: 50, readyReplicas: 10, allocatedReplicas: 40},
+			inactive: []surgeGSSFixture{
+				{statusReplicas: 20, allocatedReplicas: 20},
+				{statusReplicas: 20, reservedReplicas: 20},
+			},
+			expected: 48,
+		},
+		"does not raise the target while the active gameserverset is creating": {
+			fleetReplicas: 100,
+			active:        surgeGSSFixture{specReplicas: 25, statusReplicas: 10, readyReplicas: 10},
+			inactive: []surgeGSSFixture{
+				{statusReplicas: 40, allocatedReplicas: 40},
+				{statusReplicas: 20, reservedReplicas: 20},
+			},
+			expected: 25,
+		},
+		"inactive servers exhaust the fleet and surge budget": {
+			fleetReplicas: 30,
+			active:        surgeGSSFixture{specReplicas: 10, statusReplicas: 10, readyReplicas: 10},
+			inactive: []surgeGSSFixture{
+				{statusReplicas: 20, allocatedReplicas: 20},
+				{statusReplicas: 20, reservedReplicas: 20},
+			},
+			expected: 0,
+		},
+	}
+
+	for name, fixture := range fixtures {
+		for _, reverse := range []bool{false, true} {
+			order := "forward"
+			if reverse {
+				order = "reverse"
+			}
+			t.Run(name+"/"+order, func(t *testing.T) {
+				f := defaultFixture()
+				f.Spec.Replicas = fixture.fleetReplicas
+				active, rest := surgeGameServerSets(f, fixture.active, fixture.inactive...)
+				if reverse {
+					rest[0], rest[1] = rest[1], rest[0]
+				}
+
+				c, _ := newFakeController()
+				replicas, err := c.rollingUpdateActive(f, active, rest)
+				require.NoError(t, err)
+				assert.Equal(t, fixture.expected, replicas)
+			})
+		}
+	}
 }
