@@ -195,9 +195,13 @@ func (pa *portRangeAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameSe
 		if amount <= 0 {
 			return ports
 		}
+		// a GameServer can't use the same host port twice, even if that port
+		// is free on more than one node
+		picked := make(map[int32]bool, amount)
 		for _, n := range pa.portAllocations {
 			for p, taken := range n {
-				if !taken {
+				if !taken && !picked[p] {
+					picked[p] = true
 					ports = append(ports, pn{pa: n, port: p})
 					// only allocate as many ports as are asked for by the GameServer
 					if len(ports) == amount {

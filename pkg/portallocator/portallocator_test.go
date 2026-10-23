@@ -15,6 +15,7 @@
 package portallocator
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -332,6 +333,56 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		assert.NotNil(t, gs)
 		assert.Equal(t, 0, countTotalAllocatedPorts(pa))
 	})
+}
+
+func TestPortRangeAllocatorAllocateUniqueHostPorts(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+	// a small range, so that the same ports are free on several nodes
+	pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 12, m.KubeInformerFactory, m.AgonesInformerFactory)
+	nodeWatch := watch.NewFake()
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+	ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+	defer cancel()
+
+	nodeWatch.Add(&n1)
+	nodeWatch.Add(&n2)
+	nodeWatch.Add(&n3)
+	require.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
+	require.NoError(t, pa.syncAll())
+
+	newGameServer := func(name string, ports int) *agonesv1.GameServer {
+		gs := dynamicGameServerFixture()
+		gs.ObjectMeta.UID = types.UID(name)
+		for i := 1; i < ports; i++ {
+			gs.Spec.Ports = append(gs.Spec.Ports,
+				agonesv1.GameServerPort{Name: fmt.Sprintf("port-%d", i), ContainerPort: 7777 + int32(i), PortPolicy: agonesv1.Dynamic, Range: agonesv1.DefaultPortRange})
+		}
+		return gs
+	}
+
+	for i := 0; i < 50; i++ {
+		// leave a single free port on the first node, so that the next
+		// GameServer needs ports from more than one node
+		first := pa.Allocate(newGameServer("first", 1))
+		second := pa.Allocate(newGameServer("second", 1))
+		require.NotNil(t, first)
+		require.NotNil(t, second)
+
+		gs := pa.Allocate(newGameServer("third", 3))
+		require.NotNil(t, gs)
+		seen := map[int32]bool{}
+		for _, p := range gs.Spec.Ports {
+			assert.False(t, seen[p.HostPort], "host port %d allocated twice to the same GameServer", p.HostPort)
+			seen[p.HostPort] = true
+		}
+
+		pa.DeAllocate(first)
+		pa.DeAllocate(second)
+		pa.DeAllocate(gs)
+	}
 }
 
 func TestPortRangeAllocatorAllocate_NamedRange(t *testing.T) {
