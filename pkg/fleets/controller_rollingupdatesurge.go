@@ -27,13 +27,6 @@ func (c *Controller) rollingUpdateActiveSurge(fleet *agonesv1.Fleet, active *ago
 		return 0, nil
 	}
 
-	// while the active GameServerSet is still creating GameServers, hold its current target so
-	// the GameServers already requested are neither removed nor topped up past the budget.
-	// Status above Spec is not waited on: Allocated GameServers can keep it there indefinitely.
-	if active.Spec.Replicas > active.Status.Replicas {
-		return fleet.UpperBoundReplicas(active.Spec.Replicas), nil
-	}
-
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
 	if err != nil {
 		return 0, c.errs.Wrapf(err, "error parsing MaxSurge value: %s", fleet.ObjectMeta.Name)
@@ -53,6 +46,13 @@ func (c *Controller) rollingUpdateActiveSurge(fleet *agonesv1.Fleet, active *ago
 	// Retain the current target without preventing an explicit Fleet scale down.
 	retained := max(min(active.Spec.Replicas, fleet.Spec.Replicas-blocked), 0)
 	replicas := max(retained, surged)
+
+	// while the active GameServerSet is still creating GameServers, do not raise its target past
+	// the GameServers already requested, but still lower it when the budget requires a scale down.
+	// Status above Spec is not waited on: Allocated GameServers can keep it there indefinitely.
+	if active.Spec.Replicas > active.Status.Replicas {
+		replicas = min(replicas, active.Spec.Replicas)
+	}
 
 	loggerForFleet(fleet, c.baseLogger).WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
 		WithField("surge", surge).WithField("restReplicas", restReplicas).

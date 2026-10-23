@@ -371,6 +371,14 @@ func TestControllerApplyDeploymentStrategySurge(t *testing.T) {
 			expectedDefault:   90,
 			expectedSurge:     85,
 		},
+		"fleet scale down while the active gameserverset is creating gameservers": {
+			// 25% of 70 rounds up to 18: 70 + 18 - 40 = 48, below the 85 requested
+			fleetSpecReplicas: 70,
+			active:            surgeGSSFixture{specReplicas: 85, statusReplicas: 50, readyReplicas: 10, allocatedReplicas: 40},
+			inactive:          surgeGSSFixture{statusReplicas: 40, allocatedReplicas: 40},
+			expectedDefault:   30,
+			expectedSurge:     48,
+		},
 		"active gameserverset held above its target by allocated gameservers": {
 			// 25% of 70 rounds up to 18: 70 + 18 - 20 = 68, so 8 Ready GameServers can be created
 			fleetSpecReplicas: 70,
