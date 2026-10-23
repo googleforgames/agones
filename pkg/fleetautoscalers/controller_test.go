@@ -78,7 +78,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 					Policy: autoscalingv1.FleetAutoscalerPolicy{
 						Type: autoscalingv1.BufferPolicyType,
 						Buffer: &autoscalingv1.BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
+							BufferSize:  intstr.FromInt32(5),
 							MaxReplicas: 100,
 						},
 					},
@@ -109,7 +109,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 					Policy: autoscalingv1.FleetAutoscalerPolicy{
 						Type: autoscalingv1.BufferPolicyType,
 						Buffer: &autoscalingv1.BufferPolicy{
-							BufferSize:  intstr.FromInt(5),
+							BufferSize:  intstr.FromInt32(5),
 							MaxReplicas: 100,
 						},
 					},
@@ -284,7 +284,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
 		fas, f := defaultFixtures()
-		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(7)
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt32(7)
 
 		f.Spec.Replicas = 5
 		f.Status.Replicas = 5
@@ -325,7 +325,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
 		fas, f := defaultFixtures()
-		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(7)
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt32(7)
 
 		f.Spec.Replicas = 5
 		f.Status.Replicas = 5
@@ -486,7 +486,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
 		fas, f := defaultFixtures()
-		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(8)
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt32(8)
 
 		f.Spec.Replicas = 20
 		f.Status.Replicas = 20
@@ -542,7 +542,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
 		fas, f := defaultFixtures()
-		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(8)
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt32(8)
 
 		f.Spec.Replicas = 20
 		f.Status.Replicas = 20
@@ -588,7 +588,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		f.Spec.Replicas = 10
 		f.Status.Replicas = 10
 		f.Status.ReadyReplicas = 5
-		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(5)
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt32(5)
 		fas.Status.CurrentReplicas = 10
 		fas.Status.DesiredReplicas = 10
 
@@ -1224,7 +1224,7 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 			Policy: autoscalingv1.FleetAutoscalerPolicy{
 				Type: autoscalingv1.BufferPolicyType,
 				Buffer: &autoscalingv1.BufferPolicy{
-					BufferSize:  intstr.FromInt(5),
+					BufferSize:  intstr.FromInt32(5),
 					MaxReplicas: 100,
 				},
 			},
