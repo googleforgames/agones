@@ -273,7 +273,7 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gs := pa.Allocate(morePortFixture.DeepCopy())
 		require.NotNil(t, gs)
 		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
-		assert.Len(t, pa.portAllocations, 2)
+		assert.Len(t, pa.portAllocations, 3)
 		logrus.WithField("Allocated", countTotalAllocatedPorts(pa)).WithField("Total", countTotalPorts(pa)).Info("Ports count")
 
 		// allocate extra 3 ports
@@ -364,8 +364,8 @@ func TestPortRangeAllocatorAllocateUniqueHostPorts(t *testing.T) {
 	}
 
 	for i := 0; i < 50; i++ {
-		// leave a single free port on the first node, so that the next
-		// GameServer needs ports from more than one node
+		// Leave a single free port on the first node. The next GameServer
+		// must use a different node with room for all of its ports.
 		first := pa.Allocate(newGameServer("first", 1))
 		second := pa.Allocate(newGameServer("second", 1))
 		require.NotNil(t, first)
@@ -382,6 +382,43 @@ func TestPortRangeAllocatorAllocateUniqueHostPorts(t *testing.T) {
 		pa.DeAllocate(first)
 		pa.DeAllocate(second)
 		pa.DeAllocate(gs)
+	}
+}
+
+func TestPortRangeAllocatorAllocateSingleNode(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		secondNode portAllocation
+		wantNode   int
+	}{
+		{name: "skip a node without enough free ports", secondNode: portAllocation{10: false, 11: false, 12: false}, wantNode: 1},
+		{name: "add a node when capacity is fragmented", secondNode: portAllocation{10: true, 11: false, 12: false}, wantNode: 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			pa := newRangeAllocator(agonesv1.DefaultPortRange, 10, 12, m.KubeInformerFactory, m.AgonesInformerFactory)
+			pa.portAllocations = []portAllocation{{10: true, 11: true, 12: false}, tc.secondNode}
+			gs := dynamicGameServerFixture()
+			for i := 1; i < 3; i++ {
+				gs.Spec.Ports = append(gs.Spec.Ports, agonesv1.GameServerPort{
+					Name: fmt.Sprintf("port-%d", i), ContainerPort: 7777 + int32(i),
+					PortPolicy: agonesv1.Dynamic, Range: agonesv1.DefaultPortRange,
+				})
+			}
+			allocated := pa.Allocate(gs)
+			require.NotNil(t, allocated)
+			require.Len(t, pa.portAllocations, tc.wantNode+1)
+			assert.Equal(t, portAllocation{10: true, 11: true, 12: false}, pa.portAllocations[0])
+			assert.Equal(t, portAllocation{10: true, 11: true, 12: true}, pa.portAllocations[tc.wantNode])
+			if tc.wantNode == 2 {
+				assert.Equal(t, portAllocation{10: true, 11: false, 12: false}, pa.portAllocations[1])
+			}
+			ports := []int32{}
+			for _, p := range allocated.Spec.Ports {
+				ports = append(ports, p.HostPort)
+			}
+			assert.ElementsMatch(t, []int32{10, 11, 12}, ports)
+		})
 	}
 }
 

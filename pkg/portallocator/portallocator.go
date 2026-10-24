@@ -195,13 +195,10 @@ func (pa *portRangeAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameSe
 		if amount <= 0 {
 			return ports
 		}
-		// a GameServer can't use the same host port twice, even if that port
-		// is free on more than one node
-		picked := make(map[int32]bool, amount)
 		for _, n := range pa.portAllocations {
+			ports = nil
 			for p, taken := range n {
-				if !taken && !picked[p] {
-					picked[p] = true
+				if !taken {
 					ports = append(ports, pn{pa: n, port: p})
 					// only allocate as many ports as are asked for by the GameServer
 					if len(ports) == amount {
@@ -210,7 +207,7 @@ func (pa *portRangeAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameSe
 				}
 			}
 		}
-		return ports
+		return nil
 	}
 
 	// this allows us to do recursion, within the mutex lock
