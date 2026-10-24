@@ -77,7 +77,8 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
 		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
 	)
-	gs := pa.Allocate(fixture)
+	gs, err := pa.Allocate(fixture)
+	require.NoError(t, err)
 
 	assert.NotNil(t, gs)
 	assert.GreaterOrEqual(t, gs.Spec.Ports[0].HostPort, int32(10))
@@ -111,11 +112,13 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		require.NoError(t, err)
 
 		// single port dynamic
-		gs := pa.Allocate(fixture.DeepCopy())
+		gs, err := pa.Allocate(fixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, 1, countTotalAllocatedPorts(pa))
 
-		gs = pa.Allocate(fixture.DeepCopy())
+		gs, err = pa.Allocate(fixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, 2, countTotalAllocatedPorts(pa))
 
@@ -123,7 +126,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gsCopy := fixture.DeepCopy()
 		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic, Range: agonesv1.DefaultPortRange})
 		require.Len(t, gsCopy.Spec.Ports, 2)
-		gs = pa.Allocate(gsCopy.DeepCopy())
+		gs, err = pa.Allocate(gsCopy.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, 4, countTotalAllocatedPorts(pa))
 
@@ -132,7 +136,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic, Range: agonesv1.DefaultPortRange})
 		require.Len(t, gsCopy.Spec.Ports, 3)
 
-		gs = pa.Allocate(gsCopy)
+		gs, err = pa.Allocate(gsCopy)
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, 7, countTotalAllocatedPorts(pa))
 
@@ -141,7 +146,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		expected := int32(9999)
 		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: agonesv1.Static, Range: agonesv1.DefaultPortRange})
 		require.Len(t, gsCopy.Spec.Ports, 4)
-		gs = pa.Allocate(gsCopy)
+		gs, err = pa.Allocate(gsCopy)
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, 10, countTotalAllocatedPorts(pa))
 		assert.Equal(t, agonesv1.Static, gsCopy.Spec.Ports[3].PortPolicy)
@@ -151,7 +157,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gsCopy = fixture.DeepCopy()
 		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough, Range: agonesv1.DefaultPortRange}
 
-		gs = pa.Allocate(gsCopy)
+		gs, err = pa.Allocate(gsCopy)
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.NotEmpty(t, gsCopy.Spec.Ports[0].HostPort)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[0].ContainerPort)
@@ -161,7 +168,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gsCopy = fixture.DeepCopy()
 		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "gameport", PortPolicy: agonesv1.Dynamic, Protocol: agonesv1.ProtocolTCPUDP, Range: agonesv1.DefaultPortRange}
 
-		gs = pa.Allocate(gsCopy)
+		gs, err = pa.Allocate(gsCopy)
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[1].HostPort)
 
@@ -175,7 +183,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		gsCopy = fixture.DeepCopy()
 		gsCopy.Spec.Ports = nil
 		assert.Empty(t, gsCopy.Spec.Ports)
-		pa.Allocate(gsCopy)
+		_, allocationErr := pa.Allocate(gsCopy)
+		require.NoError(t, allocationErr)
 		assert.Nil(t, gsCopy.Spec.Ports)
 		assert.NoError(t, err)
 		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
@@ -202,14 +211,16 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		for range 2 {
 			for range 11 {
 				var p int32
-				gs := pa.Allocate(fixture.DeepCopy())
+				gs, err := pa.Allocate(fixture.DeepCopy())
+				require.NoError(t, err)
 				require.NotNil(t, gs)
 				assert.True(t, 10 <= gs.Spec.Ports[0].HostPort && gs.Spec.Ports[0].HostPort <= 20, "%v is not between 10 and 20", p)
 			}
 		}
 
 		assert.Len(t, pa.portAllocations, 2)
-		gs := pa.Allocate(fixture.DeepCopy())
+		gs, err := pa.Allocate(fixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
 		assert.Len(t, pa.portAllocations, 3)
@@ -245,7 +256,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 			for i := range 3 {
 				gsCopy := morePortFixture.DeepCopy()
 				gsCopy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
-				gs := pa.Allocate(gsCopy)
+				gs, err := pa.Allocate(gsCopy)
+				require.NoError(t, err)
 				require.NotNil(t, gs)
 
 				// Dynamic
@@ -270,14 +282,16 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		logrus.WithField("Allocated", countTotalAllocatedPorts(pa)).WithField("Total", countTotalPorts(pa)).Info("Ports count")
 		assert.Len(t, pa.portAllocations, 2)
 		// allocate extra 3 ports
-		gs := pa.Allocate(morePortFixture.DeepCopy())
+		gs, err := pa.Allocate(morePortFixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
 		assert.Len(t, pa.portAllocations, 3)
 		logrus.WithField("Allocated", countTotalAllocatedPorts(pa)).WithField("Total", countTotalPorts(pa)).Info("Ports count")
 
 		// allocate extra 3 ports
-		gs = pa.Allocate(morePortFixture.DeepCopy())
+		gs, err = pa.Allocate(morePortFixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
 		assert.Len(t, pa.portAllocations, 3)
@@ -301,7 +315,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 
 		var ports []int32
 		for i := 10; i <= 20; i++ {
-			gs := pa.Allocate(fixture.DeepCopy())
+			gs, err := pa.Allocate(fixture.DeepCopy())
+			require.NoError(t, err)
 			require.NotNil(t, gs)
 			assert.NotContains(t, ports, gs.Spec.Ports[0].HostPort)
 			ports = append(ports, gs.Spec.Ports[0].HostPort)
@@ -329,7 +344,8 @@ func TestPortRangeAllocatorAllocate(t *testing.T) {
 		// single port empty
 		fd := fixture.DeepCopy()
 		fd.Spec.Ports[0].PortPolicy = ""
-		gs := pa.Allocate(fd)
+		gs, err := pa.Allocate(fd)
+		require.NoError(t, err)
 		assert.NotNil(t, gs)
 		assert.Equal(t, 0, countTotalAllocatedPorts(pa))
 	})
@@ -366,12 +382,15 @@ func TestPortRangeAllocatorAllocateUniqueHostPorts(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		// Leave a single free port on the first node. The next GameServer
 		// must use a different node with room for all of its ports.
-		first := pa.Allocate(newGameServer("first", 1))
-		second := pa.Allocate(newGameServer("second", 1))
+		first, err := pa.Allocate(newGameServer("first", 1))
+		require.NoError(t, err)
+		second, err := pa.Allocate(newGameServer("second", 1))
+		require.NoError(t, err)
 		require.NotNil(t, first)
 		require.NotNil(t, second)
 
-		gs := pa.Allocate(newGameServer("third", 3))
+		gs, err := pa.Allocate(newGameServer("third", 3))
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 		seen := map[int32]bool{}
 		for _, p := range gs.Spec.Ports {
@@ -405,7 +424,8 @@ func TestPortRangeAllocatorAllocateSingleNode(t *testing.T) {
 					PortPolicy: agonesv1.Dynamic, Range: agonesv1.DefaultPortRange,
 				})
 			}
-			allocated := pa.Allocate(gs)
+			allocated, err := pa.Allocate(gs)
+			require.NoError(t, err)
 			require.NotNil(t, allocated)
 			require.Len(t, pa.portAllocations, tc.wantNode+1)
 			assert.Equal(t, portAllocation{10: true, 11: true, 12: false}, pa.portAllocations[0])
@@ -450,7 +470,8 @@ func TestPortRangeAllocatorAllocate_NamedRange(t *testing.T) {
 		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
 		agonesv1.GameServerPort{Name: "passthrough", Range: "test", PortPolicy: agonesv1.Passthrough},
 	)
-	gs := pa.Allocate(fixture)
+	gs, err := pa.Allocate(fixture)
+	require.NoError(t, err)
 
 	assert.NotNil(t, gs)
 	assert.Empty(t, gs.Spec.Ports[0].HostPort)
@@ -472,7 +493,7 @@ func TestPortRangeAllocatorMultithreadAllocate(t *testing.T) {
 	defer cancel()
 
 	err := pa.syncAll()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	wg := sync.WaitGroup{}
 
@@ -483,7 +504,8 @@ func TestPortRangeAllocatorMultithreadAllocate(t *testing.T) {
 		go func(i int) {
 			for x := range 10 {
 				logrus.WithField("x", x).WithField("i", i).Info("allocating!")
-				gs := pa.Allocate(fixture.DeepCopy())
+				gs, err := pa.Allocate(fixture.DeepCopy())
+				assert.NoError(t, err)
 				if !assert.NotNil(t, gs) {
 					continue
 				}
@@ -518,7 +540,8 @@ func TestPortRangeAllocatorDeAllocate(t *testing.T) {
 	assert.NotEmpty(t, fixture.Spec.Ports)
 
 	for i := 0; i <= 100; i++ {
-		gs := pa.Allocate(fixture.DeepCopy())
+		gs, err := pa.Allocate(fixture.DeepCopy())
+		require.NoError(t, err)
 		require.NotNil(t, gs)
 
 		port := gs.Spec.Ports[0]
